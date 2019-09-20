@@ -10,39 +10,30 @@ import UIKit
 
 class ViewController: UIViewController {
 
-    let circle = UIView()
+    @IBOutlet weak var circle: UIView!
     let triangle = UIView()
+    var animator: AnimatorProtocol = Interval(0)
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        UIViewPropertyAnimator()
         
-        Parallel {
-            Sequential {
-                circle.ca.frame.size.width.set(circle.frame.width * 1).duration(0.2)
-                circle.ca.frame.size.width.set(circle.frame.width * 1.2).duration(0.1)
-                circle.ca.frame.size.width.set(circle.frame.width * 0.3)
-                Parallel {
-                    view.ca.backgroundColor.set(.clear)
-                    Sequential {
-                        Animator { self.view.bounds = .zero }.duration(0.1)
-                        Interval(0)
-                        view.ca.backgroundColor.set(.white)
-                    }
-                }
-            }
-            .duration(1)
-            Sequential {
-                circle.ca.backgroundColor.set(.white)
-                circle.ca.backgroundColor.set(.blue)
-            }
-            Sequential {
-                triangle.ca.frame.size.width.set(triangle.frame.width * 0.3)
-                Interval(0.3)
-                triangle.ca.frame.size.width.set(triangle.frame.width * 1)
-            }
-            .duration(0.5)
+        animator = Sequential {
+            self.circle.ca.transform.set(CGAffineTransform(rotationAngle: .pi))
+            self.circle.ca.backgroundColor.set(.systemGreen)
+            self.circle.ca.backgroundColor.set(.systemRed)
         }
-        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        animator.start {
+            print($0 == .end)
+        }
     }
 
+    @IBAction func slide(_ sender: UISlider) {
+        animator.progress = Double(sender.value)
+    }
+    
 }

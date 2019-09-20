@@ -8,119 +8,95 @@
 
 import UIKit
 
-public struct Parallel: AnimatorProtocol {
+public enum AnimationType {
+    case animator(AnimatorProtocol), modifier(AnimatorModifier)
+}
+
+public protocol AnimationTypeProtocol {
+    var animationType: AnimationType { get }
+}
+
+public protocol AnimatorProtocol: AnimationTypeProtocol {
+    var progress: Double { get set }
+    var isRunning: Bool { get }
+    var state: UIViewAnimatingState { get }
+    var timing: Animator.Timing { get }
+    var options: Animator.Options { get }
+    func start()
+    func pause()
+    func stop(at position: UIViewAnimatingPosition)
     
-    public init(_ animations: AnimatorProtocol...) {
-    }
-    
-    public init(@AnimationBuilder _ animations: () -> ()) {
-    }
-    
-    public init(@AnimationBuilder _ animations: () -> AnimatorProtocol) {
-    }
-    
-    public init(@AnimationBuilder _ animations: () -> [AnimatorProtocol]) {
-    }
-    
-    public func duration(_ value: Double) -> Parallel {
-        return self
+    func duration(_ value: Double) -> Self
+    func delay(_ value: Double) -> Self
+    func curve(_ value: Animator.Timing.Curve) -> Self
+    func onComplete(_ value: @escaping (UIViewAnimatingPosition) -> ()) -> Self
+    func `repeat`(_ count: Int, autoreverse: Bool) -> Self
+}
+
+extension AnimatorProtocol {
+    public var reverse: Self {
+        return self.repeat(1, autoreverse: true)
     }
 }
 
-public struct Sequential: AnimatorProtocol {
-    
-    public init(_ animations: AnimatorProtocol...) {
-    }
-    
-    public init(@AnimationBuilder _ animations: () -> ()) {
-    }
-    
-    public init(@AnimationBuilder _ animations: () -> AnimatorProtocol) {
-    }
-    
-    public init(@AnimationBuilder _ animations: () -> [AnimatorProtocol]) {
-        let view = UIView()
-    }
-    
-    public func duration(_ value: Double) -> Sequential {
-        return self
-    }
+extension AnimatorProtocol {
+    public var animationType: AnimationType { return .animator(self) }
 }
 
-public struct Animator: AnimatorProtocol {
-    private var animator: UIViewPropertyAnimator
+public protocol AnimatorModifier: AnimationTypeProtocol {
+    func modify(previous: AnimatorProtocol) -> AnimatorProtocol
+    func modify(next: AnimatorProtocol) -> AnimatorProtocol
+    func modify(previous: AnimatorProtocol, next: AnimatorProtocol) -> AnimatorProtocol
+}
+
+extension AnimatorModifier {
+    public var animationType: AnimationType { return .modifier(self) }
+}
+
+extension Animator {
     
-    init() {
-        animator = UIViewPropertyAnimator()
+    public struct Options {
+        public var scrubsLinearly: Bool
+        public var isUserInteractionEnabled: Bool
+        public var isReversed: Bool
+        public var isManualHitTestingEnabled: Bool
+        public var isInterruptible: Bool
+        public var repeatCount: Int
+        public var isAutoreversed: Bool
+        
+        public static let `default` = Options(
+            scrubsLinearly: true,
+            isUserInteractionEnabled: true,
+            isReversed: false,
+            isManualHitTestingEnabled: true,
+            isInterruptible: true,
+            repeatCount: 1,
+            isAutoreversed: false
+        )
     }
     
-    public init(_ animation: @escaping () -> ()) {
-        animator = UIViewPropertyAnimator(duration: 0, curve: .linear, animations: animation)
-    }
-    
-    public init<T: AnyObject>(_ object: T, _ animation: @escaping (T) -> () -> ()) {
-        self = Animator {[weak object] in
-            guard let it = object else { return }
-            animation(it)()
+    public struct Timing {
+        public var delay: Double
+        public var duration: Double
+        public var curve: Curve
+        
+        public static let `default` = Timing(
+            delay: 0,
+            duration: 0,
+            curve: .linear
+        )
+        
+        public struct Curve {
+            public static let linear = Curve(point1: .zero, point2: CGPoint(x: 1, y: 1))
+            var point1: CGPoint
+            var point2: CGPoint
         }
     }
     
-    public func duration(_ value: Double) -> Animator {
-        return self
-    }
 }
 
-public struct Interval: AnimatorProtocol, ExpressibleByFloatLiteral {
-    public init(_ value: Double) {}
-    
-    public init(floatLiteral value: Double) {
-        self = Interval(value)
-    }
-    
-}
-
-@_functionBuilder
-public struct AnimationBuilder {
-    
-    public static func buildBlock() {
-    }
-    
-    public static func buildBlock(_ animations: AnimatorProtocol...) -> [AnimatorProtocol] {
-        return animations
-    }
-    
-    public static func buildBlock(_ animation: AnimatorProtocol) -> AnimatorProtocol {
-        return animation
-    }
-    
-}
-
-public protocol AnimatorProtocol {
-    
-}
-
-public protocol ModifiableAnimator: AnimatorProtocol {
-    
-}
-
-extension ModifiableAnimator {
-    
-    public subscript<T>(dynamicMember keyPath: KeyPath<AnimatorModifier<Self>, T>) -> Self {
-        return AnimatorModifier<Self>(self).modify(keyPath)
-    }
-    
-}
-
-public struct AnimatorModifier<T: AnimatorProtocol> {
-    
-    private var value: T
-    
-    init(_ value: T) {
-        self.value = value
-    }
-    
-    public func modify<M>(_ keyPath: KeyPath<AnimatorModifier<T>, M>) -> T {
-        return value
-    }
-    
+struct AnyAnimator {
+    var animator: AnimatorProtocol
+    var expectingTiming: Animator.Timing
+    var givenTiming: Animator.Timing?
 }

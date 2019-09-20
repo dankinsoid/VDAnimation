@@ -8,6 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		5B6E226D2334E9240080719F /* Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6E226C2334E9240080719F /* Animations.swift */; };
+		5B6E226F233527B90080719F /* Sequential.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6E226E233527B90080719F /* Sequential.swift */; };
+		5B6E2271233527D80080719F /* Parallel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6E2270233527D80080719F /* Parallel.swift */; };
+		5B6E2273233527F00080719F /* Animator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6E2272233527F00080719F /* Animator.swift */; };
+		5B6E2275233528050080719F /* Interval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6E2274233528050080719F /* Interval.swift */; };
+		5B6E2277233528230080719F /* AnimatorBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6E2276233528230080719F /* AnimatorBuilder.swift */; };
 		5BD99DFE2334CB1B00B28B19 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BD99DFD2334CB1B00B28B19 /* AppDelegate.swift */; };
 		5BD99E002334CB1B00B28B19 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BD99DFF2334CB1B00B28B19 /* SceneDelegate.swift */; };
 		5BD99E022334CB1B00B28B19 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BD99E012334CB1B00B28B19 /* ViewController.swift */; };
@@ -19,6 +24,11 @@
 
 /* Begin PBXFileReference section */
 		5B6E226C2334E9240080719F /* Animations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animations.swift; sourceTree = "<group>"; };
+		5B6E226E233527B90080719F /* Sequential.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sequential.swift; sourceTree = "<group>"; };
+		5B6E2270233527D80080719F /* Parallel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parallel.swift; sourceTree = "<group>"; };
+		5B6E2272233527F00080719F /* Animator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animator.swift; sourceTree = "<group>"; };
+		5B6E2274233528050080719F /* Interval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interval.swift; sourceTree = "<group>"; };
+		5B6E2276233528230080719F /* AnimatorBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatorBuilder.swift; sourceTree = "<group>"; };
 		5BD99DFA2334CB1B00B28B19 /* SuperAnimations.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SuperAnimations.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5BD99DFD2334CB1B00B28B19 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		5BD99DFF2334CB1B00B28B19 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -64,6 +74,11 @@
 				5BD99DFF2334CB1B00B28B19 /* SceneDelegate.swift */,
 				5BD99E012334CB1B00B28B19 /* ViewController.swift */,
 				5B6E226C2334E9240080719F /* Animations.swift */,
+				5B6E2272233527F00080719F /* Animator.swift */,
+				5B6E226E233527B90080719F /* Sequential.swift */,
+				5B6E2270233527D80080719F /* Parallel.swift */,
+				5B6E2274233528050080719F /* Interval.swift */,
+				5B6E2276233528230080719F /* AnimatorBuilder.swift */,
 				5BD99E112334CB2D00B28B19 /* Bases.swift */,
 				5BD99E032334CB1B00B28B19 /* Main.storyboard */,
 				5BD99E062334CB1C00B28B19 /* Assets.xcassets */,
@@ -146,8 +161,13 @@
 			files = (
 				5B6E226D2334E9240080719F /* Animations.swift in Sources */,
 				5BD99E122334CB2D00B28B19 /* Bases.swift in Sources */,
+				5B6E2277233528230080719F /* AnimatorBuilder.swift in Sources */,
+				5B6E226F233527B90080719F /* Sequential.swift in Sources */,
 				5BD99E022334CB1B00B28B19 /* ViewController.swift in Sources */,
+				5B6E2273233527F00080719F /* Animator.swift in Sources */,
+				5B6E2275233528050080719F /* Interval.swift in Sources */,
 				5BD99DFE2334CB1B00B28B19 /* AppDelegate.swift in Sources */,
+				5B6E2271233527D80080719F /* Parallel.swift in Sources */,
 				5BD99E002334CB1B00B28B19 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

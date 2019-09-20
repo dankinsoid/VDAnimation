@@ -20,7 +20,10 @@ public struct AnimatedPropertySetter<R: AnyObject, T> {
     private let keyPath: ReferenceWritableKeyPath<R, T>
     
     public func set(_ value: T) -> Animator {
-        return Animator()
+        let kp = keyPath
+        return Animator {[weak object] in
+            object?[keyPath: kp] = value
+        }
     }
     
     fileprivate init(object: R?, keyPath: ReferenceWritableKeyPath<R, T>) {
