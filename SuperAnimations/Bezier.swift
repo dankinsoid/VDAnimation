@@ -60,6 +60,36 @@ public struct BezierCurve {
         return (curve1, curve2)
     }
     
+    private func findX(_ y: CGFloat) -> CGFloat {
+        guard y != 0 else { return 0 }
+        guard y != 1 else { return 1 }
+        let a = 1 - 3 * point2.y + 3 * point1.y
+        let b = 3 * point2.y - 6 * point1.y
+        let c = 3 * point2.y
+        let d = -y
+        let _y: (CGFloat) -> CGFloat = { $0 - b / (3 * a) }
+        let b2 = b * b
+        let b3 = b2 * b
+        let a2 = a * a
+        let a3 = a2 * a
+        let p = -b2 / (3 * a2) + c / a
+        let q = 2 * b3 / (27 * a3) - b * c / (3 * a2) + d / a
+        let q1 = (p * p * p / 27) + (q * q / 4)
+        let w = pow(-q / 2 + sqrt(q1), 1 / 3)
+        let z = pow(-q / 2 - sqrt(q1), 1 / 3)
+        let y1 = w + z
+        let x1 = _y(y1)
+        if q1 > 0 {
+            return x1
+        }
+
+    }
+    
+    
+    public static func between(_ c1: BezierCurve, _ c2: BezierCurve, k: CGFloat = 0.5) -> BezierCurve {
+        return BezierCurve(CGPoint.between(c1.point1, c2.point1, k: k), CGPoint.between(c1.point2, c2.point2, k: k))
+    }
+    
 }
 
 extension CGPoint {
