@@ -9,36 +9,23 @@
 import UIKit
 
 public final class Animator: AnimatorProtocol {
-    public var state: UIViewAnimatingState { return animator.state }
-    private(set) public var timing: Timing
-    private(set) public var options: Options
-    private var completion: (UIViewAnimatingPosition) -> ()
-    public var isRunning: Bool { return animator.isRunning }
-    private var copy: Animator {
-        let result = Animator(animation: animation, options: options, timing: timing, completion: completion)
-        result.animator = animator
-        return result
-    }
-    
+    public var state: UIViewAnimatingState { return animator?.state ?? .active }
+    public var parameters: AnimationParameters
+    public var isRunning: Bool { return animator?.isRunning ?? false }
     public var progress: Double {
-        get { return Double(animator.fractionComplete) }
-        set { return animator.fractionComplete = CGFloat(newValue) }
+        get { Double(animator?.fractionComplete ?? 0) }
+        set { resetAnimatorIfNeeded().fractionComplete = CGFloat(newValue) }
     }
-    private var animator: UIViewPropertyAnimator
-    
+    private var animator: VDViewAnimator?
     private let animation: () -> ()
     
-    private init(animation: @escaping () -> (), options: Options, timing: Timing, completion: @escaping (UIViewAnimatingPosition) -> ()) {
-        self.options = options
-        self.timing = timing
-        self.completion = completion
-        self.animator = UIViewPropertyAnimator()
+    private init(animation: @escaping () -> (), parameters: AnimationParameters) {
+        self.parameters = parameters
         self.animation = animation
-        resetAnimator()
     }
     
     public convenience init(_ animation: @escaping () -> ()) {
-        self.init(animation: animation, options: .default, timing: .default, completion: {_ in})
+        self.init(animation: animation, parameters: .default)
     }
     
     public convenience init<T: AnyObject>(_ object: T, _ animation: @escaping (T) -> () -> ()) {
@@ -48,65 +35,62 @@ public final class Animator: AnimatorProtocol {
         }
     }
     
-    public func duration(_ value: TimeInterval) -> Animator {
-        let result = self
-        return result
+    public func start(_ completion: @escaping (UIViewAnimatingPosition) -> ()) {
+        let c = parameters.completion
+        parameters.completion = {[weak self] in
+            c($0)
+            completion($0)
+            self?.parameters.completion = c
+        }
+        start()
     }
     
     public func start() {
-        
-        animator.startAnimation()
+        let anim = resetAnimatorIfNeeded()
+        anim.startAnimation(afterDelay: timing.delay)
     }
     
-    public func stop(at position: UIViewAnimatingPosition) {
-        
+    public func stop(at position: UIViewAnimatingPosition = .end) {
+        if animator?.state != .stopped {
+            animator?.stop()
+        }
+        animator?.finishAnimation(at: position)
     }
     
     public func pause() {
-        animator.pauseAnimation()
+        animator?.pause()
     }
     
-    public func stop() {
-        animator.stopAnimation(false)
-    }
-    
-    public func delay(_ value: Double) -> Animator {
-        return map(value, at: \.timing.delay)
-    }
-    
-    public func curve(_ value: Animator.Timing.Curve) -> Animator {
-        return map(value, at: \.timing.curve)
-    }
-    
-    public func onComplete(_ value: @escaping (UIViewAnimatingPosition) -> ()) -> Animator {
-        return copy {
-            let comp = $0.completion
-            $0.completion = {
-                comp($0)
-                value($0)
-            }
+    private func resetAnimatorIfNeeded() -> VDViewAnimator {
+        if let anim = animator, anim.state == .active {
+            return anim
         }
+        return resetAnimator()
     }
     
-    public func `repeat`(_ count: Int, autoreverse: Bool) -> Animator {
-        return map(count, at: \.options.repeatCount).map(autoreverse, at: \.options.isAutoreversed)
+    private func resetAnimator() -> VDViewAnimator {
+        let _animator = VDViewAnimator(duration: timing.duration, controlPoint1: timing.curve.point1, controlPoint2: timing.curve.point2, animations: animation)
+//        _animator.pausesOnCompletion = false
+        _animator.addCompletion(parameters.completion)
+        animator = _animator
+        setOptions()
+        return _animator
     }
     
-    private func map<T>(_ value: T, at keyPath: WritableKeyPath<Animator, T>) -> Animator {
-        var result = copy
-        result[keyPath: keyPath] = value
-        return result
+    private func setOptions() {
+        animator?.isInterruptible = isInterruptible
+        animator?.isManualHitTestingEnabled = isManualHitTestingEnabled
+        if isReversed, let an = animator {
+            an.fractionComplete = 1 - an.fractionComplete
+        }
+        animator?.isReversed = isReversed
+        animator?.reverseOnComplete = restoreOnFinish
+        animator?.isUserInteractionEnabled = isUserInteractionEnabled
+        animator?.scrubsLinearly = scrubsLinearly
     }
     
-    private func copy(_ modify: (inout Animator) -> ()) -> Animator {
-        var result = copy
-        modify(&result)
-        return result
-    }
-    
-    private func resetAnimator() {
-        self.animator = UIViewPropertyAnimator(duration: timing.duration, controlPoint1: timing.curve.point1, controlPoint2: timing.curve.point2, animations: animation)
-        self.animator.pausesOnCompletion = false
+    public func copy(with parameters: AnimationParameters) -> Animator {
+        return Animator(animation: animation, parameters: parameters)
     }
     
 }

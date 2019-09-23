@@ -8,47 +8,53 @@
 
 import UIKit
 
-public struct Parallel {
+public final class Parallel: AnimatorProtocol {
+    public var parameters: AnimationParameters
+    public var state: UIViewAnimatingState = .inactive
     public var isRunning: Bool = false
     public var progress: Double = 0
-    
     private var animations: [AnimatorProtocol]
     
-    public init(_ animations: [AnimatorProtocol]) {
+    init(_ animations: [AnimatorProtocol], parameters: AnimationParameters = .default) {
         self.animations = animations
+        self.parameters = parameters
     }
     
-    public init(_ animations: AnimatorProtocol...) {
-        self = Parallel(animations)
+    public convenience init(animations: [AnimatorProtocol]) {
+        self.init(animations, parameters: .default)
     }
     
-    public init(@AnimatorBuilder _ animations: () -> ()) {
+    public convenience init(_ animations: AnimatorProtocol...) {
+        self.init(animations)
+    }
+    
+    public convenience init(@AnimatorBuilder _ animations: () -> ()) {
         animations()
-        self = Parallel()
+        self.init()
     }
     
-    public init(@AnimatorBuilder _ animations: () -> AnimatorProtocol) {
-        self = Parallel(animations())
+    public convenience init(@AnimatorBuilder _ animations: () -> AnimatorProtocol) {
+        self.init(animations())
     }
     
-    public init(@AnimatorBuilder _ animations: () -> [AnimatorProtocol]) {
-        self = Parallel(animations())
+    public convenience init(@AnimatorBuilder _ animations: () -> [AnimatorProtocol]) {
+        self.init(animations())
     }
     
-    public func duration(_ value: Double) -> Parallel {
-        return self
-    }
-    
-    public func start(_ completion: ((UIViewAnimatingPosition) -> ())? = nil) {
-        animations.forEach { $0.start(nil) }
+    public func start(_ completion: @escaping (UIViewAnimatingPosition) -> ()) {
+        start()
     }
     
     public func pause() {
         animations.forEach { $0.pause() }
     }
     
-    public func stop() {
-        animations.forEach { $0.stop() }
+    public func stop(at position: UIViewAnimatingPosition) {
+        animations.forEach { $0.stop(at: position) }
+    }
+    
+    public func copy(with parameters: AnimationParameters) -> Parallel {
+        return Parallel(animations, parameters: parameters)
     }
     
 }

@@ -20,6 +20,11 @@
 		5BD99E072334CB1C00B28B19 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5BD99E062334CB1C00B28B19 /* Assets.xcassets */; };
 		5BD99E0A2334CB1C00B28B19 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5BD99E082334CB1C00B28B19 /* LaunchScreen.storyboard */; };
 		5BD99E122334CB2D00B28B19 /* Bases.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BD99E112334CB2D00B28B19 /* Bases.swift */; };
+		8308AC292337D31400933132 /* AnimationGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8308AC282337D31400933132 /* AnimationGroup.swift */; };
+		8308AC2B2338195A00933132 /* Bezier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8308AC2A2338195A00933132 /* Bezier.swift */; };
+		8390F7E92336621A007B942E /* VDViewAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8390F7E82336621A007B942E /* VDViewAnimator.swift */; };
+		8390F7EA233668BB007B942E /* RepeatAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8390F7E623362B6C007B942E /* RepeatAnimation.swift */; };
+		8390F7EC23367119007B942E /* AnimatorModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8390F7EB23367119007B942E /* AnimatorModifier.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +43,11 @@
 		5BD99E092334CB1C00B28B19 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		5BD99E0B2334CB1C00B28B19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5BD99E112334CB2D00B28B19 /* Bases.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bases.swift; sourceTree = "<group>"; };
+		8308AC282337D31400933132 /* AnimationGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationGroup.swift; sourceTree = "<group>"; };
+		8308AC2A2338195A00933132 /* Bezier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bezier.swift; sourceTree = "<group>"; };
+		8390F7E623362B6C007B942E /* RepeatAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatAnimation.swift; sourceTree = "<group>"; };
+		8390F7E82336621A007B942E /* VDViewAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VDViewAnimator.swift; sourceTree = "<group>"; };
+		8390F7EB23367119007B942E /* AnimatorModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatorModifier.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,7 +65,6 @@
 			isa = PBXGroup;
 			children = (
 				5BD99DFC2334CB1B00B28B19 /* SuperAnimations */,
-				5BD99DFB2334CB1B00B28B19 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
@@ -65,6 +74,7 @@
 				5BD99DFA2334CB1B00B28B19 /* SuperAnimations.app */,
 			);
 			name = Products;
+			path = ..;
 			sourceTree = "<group>";
 		};
 		5BD99DFC2334CB1B00B28B19 /* SuperAnimations */ = {
@@ -79,7 +89,13 @@
 				5B6E2270233527D80080719F /* Parallel.swift */,
 				5B6E2274233528050080719F /* Interval.swift */,
 				5B6E2276233528230080719F /* AnimatorBuilder.swift */,
+				8390F7E623362B6C007B942E /* RepeatAnimation.swift */,
 				5BD99E112334CB2D00B28B19 /* Bases.swift */,
+				8390F7E82336621A007B942E /* VDViewAnimator.swift */,
+				8390F7EB23367119007B942E /* AnimatorModifier.swift */,
+				8308AC282337D31400933132 /* AnimationGroup.swift */,
+				8308AC2A2338195A00933132 /* Bezier.swift */,
+				5BD99DFB2334CB1B00B28B19 /* Products */,
 				5BD99E032334CB1B00B28B19 /* Main.storyboard */,
 				5BD99E062334CB1C00B28B19 /* Assets.xcassets */,
 				5BD99E082334CB1C00B28B19 /* LaunchScreen.storyboard */,
@@ -165,8 +181,13 @@
 				5B6E226F233527B90080719F /* Sequential.swift in Sources */,
 				5BD99E022334CB1B00B28B19 /* ViewController.swift in Sources */,
 				5B6E2273233527F00080719F /* Animator.swift in Sources */,
+				8308AC2B2338195A00933132 /* Bezier.swift in Sources */,
+				8308AC292337D31400933132 /* AnimationGroup.swift in Sources */,
 				5B6E2275233528050080719F /* Interval.swift in Sources */,
+				8390F7E92336621A007B942E /* VDViewAnimator.swift in Sources */,
 				5BD99DFE2334CB1B00B28B19 /* AppDelegate.swift in Sources */,
+				8390F7EA233668BB007B942E /* RepeatAnimation.swift in Sources */,
+				8390F7EC23367119007B942E /* AnimatorModifier.swift in Sources */,
 				5B6E2271233527D80080719F /* Parallel.swift in Sources */,
 				5BD99E002334CB1B00B28B19 /* SceneDelegate.swift in Sources */,
 			);

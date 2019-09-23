@@ -8,12 +8,6 @@
 
 import UIKit
 
-infix operator =|: AssignmentPrecedence
-
-public func =|<R: AnyObject, T>(_ lhs: AnimatedPropertySetter<R, T>, _ rhs: T) -> Animator {
-    return lhs.set(rhs)
-}
-
 @dynamicMemberLookup
 public struct AnimatedPropertySetter<R: AnyObject, T> {
     private weak var object: R?
@@ -51,12 +45,37 @@ public struct AnimatedPropertyMaker<R: AnyObject> {
     
 }
 
+
+@dynamicMemberLookup
+public final class AnimatedPropertyValues<R: AnyObject> {
+    private var object: R
+    private var values: [PartialKeyPath<R>: Any] = [:]
+    
+    fileprivate init(object: R) {
+        self.object = object
+    }
+    
+    public subscript<D>(dynamicMember keyPath: ReferenceWritableKeyPath<R, D>) -> D {
+        get {
+            return object[keyPath: keyPath]
+        }
+        set {
+            values[keyPath] = newValue
+        }
+    }
+    
+}
+
 public protocol AnimatedPropertySettable: class {}
 
 extension AnimatedPropertySettable {
     
     public var ca: AnimatedPropertyMaker<Self> {
         return AnimatedPropertyMaker(object: self)
+    }
+    
+    public var animate: AnimatedPropertyValues<Self> {
+        return AnimatedPropertyValues(object: self)
     }
     
 }
