@@ -85,7 +85,7 @@ extension Animator {
         )
         
         static func setted(_ timing: SettedTiming) -> Timing {
-            return Timing(duration: timing.duration ?? 0, curve: timing.curve ?? .linear)
+            return Timing(duration: timing.duration?.fixed ?? 0, curve: timing.curve ?? .linear)
         }
         
         public struct Curve {

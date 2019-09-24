@@ -160,17 +160,12 @@ public final class Sequential: AnimatorProtocol {
     
     private func configureChildren() {
         guard firstStart else { return }
-        setDelay()
         setDuration()
         setCurve()
         firstStart = false
     }
     
     private func setDuration() {
-        
-    }
-    
-    private func setDelay() {
         
     }
     

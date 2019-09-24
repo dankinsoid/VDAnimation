@@ -23,7 +23,7 @@ public struct SettedTiming {
     static let `default` = SettedTiming()
     
     public func or(_ other: SettedTiming) -> SettedTiming {
-        SettedTiming(duration: duration ?? other.delay,
+        SettedTiming(duration: duration ?? other.duration,
                      curve: curve ?? other.curve)
     }
     
@@ -62,14 +62,6 @@ extension AnimatorProtocol {
         map(.relative(value), at: \.settedTiming.duration)
     }
     
-    public func relative(delay value: Double) -> Self {
-        map(.relative(value), at: \.settedTiming.delay)
-    }
-    
-    public func delay(_ value: Double) -> Self {
-        map(.absolute(value), at: \.settedTiming.delay)
-    }
-    
     public func curve(_ value: Animator.Timing.Curve) -> Self {
         map(value, at: \.settedTiming.curve)
     }
@@ -101,16 +93,12 @@ extension AnimatorProtocol {
         return copy(with: parameters)
     }
 
-    func set(duration: Double?, delay: Double?, curve: Animator.Timing.Curve?) {
+    func set(duration: Double?, curve: Animator.Timing.Curve?) {
         var dur: Animator.Duration?
-        var del: Animator.Duration?
         if let d = duration {
             dur = .absolute(d)
         }
-        if let d = delay {
-            del = .absolute(d)
-        }
-        parameters.realTiming = SettedTiming(delay: del, duration: dur, curve: curve).or(parameters.settedTiming)
+        parameters.realTiming = SettedTiming(duration: dur, curve: curve).or(parameters.settedTiming)
     }
     
 }

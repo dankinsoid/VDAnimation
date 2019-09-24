@@ -29,18 +29,18 @@ public struct BezierCurve {
 //    x(t) = 3t(1-t)^2 * x1 + 3t^2 * (1-t) * x2 + t^3
 //    y(t) = 3t(1-t)^2 * y1 + 3t^2 * (1-t) * y2 + t^3
     
-         x = p123.x + (p234.x - p123.x) * k //= p123.x * (1 - k) + k * p234.x
-    p123.x = p12.x + (p23.x - p12.x) * k
-    p234.x = p23.x + (p34.x - p23.x) * k
-     p12.x = p1.x * k
-     p23.x = p1.x + (p2.x - p1.x) * k
-     p34.x = p2.x + (1 - p2.x) * k
-    
-    
-    p123.x = p1.x * k + (p1.x + p2.x * k - 2 * p1.x * k) * k
-    p234.x = p1.x + p2.x * k - p1.x * k + p2.x * k + k^2 - p1.x * k - 2 * p2.x * k^2 + p1.x * k^2
-    
-    p234.x = p1.x + 2 * k * (p2.x - p1.x) + k^2 * (1 - 2 * p2.x + p1.x)
+//         x = p123.x + (p234.x - p123.x) * k //= p123.x * (1 - k) + k * p234.x
+//    p123.x = p12.x + (p23.x - p12.x) * k
+//    p234.x = p23.x + (p34.x - p23.x) * k
+//     p12.x = p1.x * k
+//     p23.x = p1.x + (p2.x - p1.x) * k
+//     p34.x = p2.x + (1 - p2.x) * k
+//
+//
+//    p123.x = p1.x * k + (p1.x + p2.x * k - 2 * p1.x * k) * k
+//    p234.x = p1.x + p2.x * k - p1.x * k + p2.x * k + k^2 - p1.x * k - 2 * p2.x * k^2 + p1.x * k^2
+//
+//    p234.x = p1.x + 2 * k * (p2.x - p1.x) + k^2 * (1 - 2 * p2.x + p1.x)
     
     
     public func split(at coefficient: CGFloat) -> (BezierCurve, BezierCurve) {
@@ -82,7 +82,7 @@ public struct BezierCurve {
         if q1 > 0 {
             return x1
         }
-
+        return 0
     }
     
     

@@ -99,7 +99,6 @@ public final class RepeatAnimator<T: AnimatorProtocol>: AnimatorProtocol {
     
     private func configureChildren() {
         guard firstStart else { return }
-        setDelay()
         setDuration()
         setCurve()
         firstStart = false
@@ -113,7 +112,7 @@ public final class RepeatAnimator<T: AnimatorProtocol>: AnimatorProtocol {
         } else {
             parameters.realTiming.duration = .absolute(count == nil ? .infinity : animator.timing.duration * cnt)
         }
-        animator.set(duration: duration, delay: nil, curve: nil)
+        animator.set(duration: duration, curve: nil)
     }
     
     private func setCurve() {

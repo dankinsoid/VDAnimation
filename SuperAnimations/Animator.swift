@@ -47,7 +47,7 @@ public final class Animator: AnimatorProtocol {
     
     public func start() {
         let anim = resetAnimatorIfNeeded()
-        anim.startAnimation(afterDelay: timing.delay)
+        anim.startAnimation()
     }
     
     public func stop(at position: UIViewAnimatingPosition = .end) {
