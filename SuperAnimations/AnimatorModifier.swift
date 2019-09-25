@@ -8,12 +8,12 @@
 
 import UIKit
 
-public final class AnimationParameters {
-    static var `default` = AnimationParameters()
+public struct AnimationParameters {
+    static var `default`: AnimationParameters { AnimationParameters() }
     var completion: (UIViewAnimatingPosition) -> () = {_ in}
     var options: Animator.Options = .default
-    var settedTiming: SettedTiming = .default
-    var realTiming: SettedTiming = .default
+    var userTiming: SettedTiming = .default
+    var parentTiming: SettedTiming = .default
 }
 
 public struct SettedTiming {
@@ -23,7 +23,11 @@ public struct SettedTiming {
     static let `default` = SettedTiming()
     
     public func or(_ other: SettedTiming) -> SettedTiming {
-        SettedTiming(duration: duration ?? other.duration,
+//        var _curve = curve ?? other.curve
+//        if let par = curve, let oth = other.curve {
+//            _curve = BezierCurve.between(par, oth)
+//        }
+        return SettedTiming(duration: duration ?? other.duration,
                      curve: curve ?? other.curve)
     }
     
@@ -37,7 +41,7 @@ extension AnimatorProtocol {
     public var isManualHitTestingEnabled: Bool { parameters.options.isManualHitTestingEnabled }
     public var isInterruptible: Bool { parameters.options.isInterruptible }
     public var restoreOnFinish: Bool { parameters.options.restoreOnFinish }
-    public var timing: Animator.Timing { .setted(parameters.realTiming.or(parameters.settedTiming)) }
+    public var timing: Animator.Timing { .setted(parameters.parentTiming.or(parameters.userTiming)) }
     
     public func start() {
         start {_ in}
@@ -55,15 +59,15 @@ extension AnimatorProtocol {
     }
     
     public func duration(_ value: Double) -> Self {
-        map(.absolute(value), at: \.settedTiming.duration)
+        map(.absolute(value), at: \.userTiming.duration)
     }
     
-    public func relative(duration value: Double) -> Self {
-        map(.relative(value), at: \.settedTiming.duration)
+    public func relativeDuration(_ value: Double) -> Self {
+        map(.relative(value), at: \.userTiming.duration)
     }
     
     public func curve(_ value: Animator.Timing.Curve) -> Self {
-        map(value, at: \.settedTiming.curve)
+        map(value, at: \.userTiming.curve)
     }
     
     public func restoreOnFinish(_ value: Bool) -> Self {
@@ -98,7 +102,7 @@ extension AnimatorProtocol {
         if let d = duration {
             dur = .absolute(d)
         }
-        parameters.realTiming = SettedTiming(duration: dur, curve: curve).or(parameters.settedTiming)
+        parameters.parentTiming = SettedTiming(duration: dur, curve: curve).or(parameters.userTiming)
     }
     
 }

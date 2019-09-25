@@ -36,13 +36,8 @@ public final class Animator: AnimatorProtocol {
     }
     
     public func start(_ completion: @escaping (UIViewAnimatingPosition) -> ()) {
-        let c = parameters.completion
-        parameters.completion = {[weak self] in
-            c($0)
-            completion($0)
-            self?.parameters.completion = c
-        }
-        start()
+        let anim = resetAnimatorIfNeeded()
+        anim.startAnimation(completion)
     }
     
     public func start() {
@@ -91,6 +86,10 @@ public final class Animator: AnimatorProtocol {
     
     public func copy(with parameters: AnimationParameters) -> Animator {
         return Animator(animation: animation, parameters: parameters)
+    }
+    
+    public func withoutAnimation() -> NotAnAnimation {
+        return NotAnAnimation(animation)
     }
     
 }

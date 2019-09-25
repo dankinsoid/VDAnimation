@@ -107,10 +107,10 @@ public final class RepeatAnimator<T: AnimatorProtocol>: AnimatorProtocol {
     private func setDuration() {
         let cnt = Double(count ?? 1)
         var duration: Double?
-        if let _duration = (parameters.realTiming.duration ?? parameters.settedTiming.duration)?.fixed {
+        if let _duration = (parameters.parentTiming.duration ?? parameters.userTiming.duration)?.fixed {
             duration = cnt > 0 ? _duration / cnt : 0
         } else {
-            parameters.realTiming.duration = .absolute(count == nil ? .infinity : animator.timing.duration * cnt)
+            parameters.parentTiming.duration = .absolute(count == nil ? .infinity : animator.timing.duration * cnt)
         }
         animator.set(duration: duration, curve: nil)
     }

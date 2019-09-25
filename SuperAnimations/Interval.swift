@@ -8,17 +8,51 @@
 
 import UIKit
 
-public struct Interval: ExpressibleByFloatLiteral {
-    public var isRunning: Bool = false
+public final class Interval: ExpressibleByFloatLiteral, AnimatorProtocol {
+    public var parameters: AnimationParameters = .default
+    public var state: UIViewAnimatingState = .inactive
+    private(set) public var isRunning: Bool = false
     public var progress: Double = 0
     
-    public init(_ value: Double) {}
+    public init() {}
     
-    public init(floatLiteral value: Double) {
-        self = Interval(value)
+    public init(_ value: Double) {
+        self.parameters.userTiming.duration = .absolute(value)
     }
     
-    public func start(_ completion: ((UIViewAnimatingPosition) -> ())?) {}
-    public func pause() {}
-    public func stop() {}
+    public init(relative value: Double) {
+        self.parameters.userTiming.duration = .relative(value)
+    }
+    
+    public init(floatLiteral value: Double) {
+        self.parameters.userTiming.duration = .absolute(value)
+    }
+    
+    public func copy(with parameters: AnimationParameters) -> Interval {
+        let copy = Interval()
+        copy.parameters.userTiming = parameters.userTiming
+        return copy
+    }
+    
+    public func start(_ completion: @escaping (UIViewAnimatingPosition) -> ()) {
+        state = .active
+        DispatchQueue.main.asyncAfter(deadline: .now() + timing.duration) {
+            guard self.isRunning else { return }
+            completion(.end)
+        }
+        isRunning = true
+    }
+    
+    public func stop(at position: UIViewAnimatingPosition) {
+        state = .stopped
+        if isRunning {
+            
+        }
+        isRunning = false
+    }
+    
+    public func pause() {
+        isRunning = false
+    }
+    
 }

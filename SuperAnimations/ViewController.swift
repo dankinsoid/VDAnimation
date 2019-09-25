@@ -24,12 +24,19 @@ class ViewController: UIViewController, CAAnimationDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        animator = Sequential {
-            circle.ca.backgroundColor.set(.systemBlue).duration(1)
-            circle.ca.backgroundColor.set(.systemRed).duration(1)
-            circle.ca.backgroundColor.set(.systemGreen).duration(1)
+        animator =
+        Sequential {
+            circle.ca.backgroundColor.set(.black).withoutAnimation()
+            circle.ca.backgroundColor.set(.systemBlue).relativeDuration(0.5)
+            circle.ca.backgroundColor.set(.systemRed)
+            circle.ca.backgroundColor.set(.systemGreen)
         }
-        animator?.start()
+        .duration(2)
+        
+        let date = Date()
+        animator?.start { _ in
+            print(Date().timeIntervalSince(date))
+        }
     }
 
     @IBAction func slide(_ sender: UISlider) {

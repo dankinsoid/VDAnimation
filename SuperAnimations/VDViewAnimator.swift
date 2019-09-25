@@ -9,7 +9,7 @@
 import UIKit
 
 class VDViewAnimator: UIViewPropertyAnimator {
-    private var observers: [(UIViewAnimatingPosition) -> ()] = []
+    private var observers: [UUID: (UIViewAnimatingPosition) -> ()] = [:]
     var reverseOnComplete = false
     var isPaused = false
     
@@ -59,13 +59,27 @@ class VDViewAnimator: UIViewPropertyAnimator {
         }
     }
     
+    func startAnimation(_ completion: @escaping (UIViewAnimatingPosition) -> Void) {
+        let id = UUID()
+        observers[id] = {[weak self] in
+            completion($0)
+            self?.removeCompletion(id: id)
+        }
+        startAnimation()
+    }
+    
     private func notify() {
         let value = position
-        observers.forEach { $0(value) }
+        observers.forEach { $0.value(value) }
+    }
+    
+    func removeCompletion(id: UUID) {
+        observers[id] = nil
     }
     
     override func addCompletion(_ completion: @escaping (UIViewAnimatingPosition) -> Void) {
-        observers.append(completion)
+        let id = UUID()
+        observers[id] = completion
     }
     
 }

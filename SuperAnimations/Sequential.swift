@@ -119,7 +119,6 @@ public final class Sequential: AnimatorProtocol {
         guard full > 0 else {
             currentIndex = max(0, min(currentIndex, animations.count - 1))
             animations[currentIndex].progress = value
-            print(value)
             return
         }
         let expected = value * full
@@ -132,7 +131,6 @@ public final class Sequential: AnimatorProtocol {
         }
         let newValue = max(0, min(1, (expected - dur) / animations[i].timing.duration))
         guard i != currentIndex else {
-            print(i, newValue)
             animations[i].progress = newValue
             return
         }
@@ -151,26 +149,90 @@ public final class Sequential: AnimatorProtocol {
             }
         }
         guard i < animations.count else {
-            print("last", 1)
             return
         }
-        print(i, newValue)
         animations[i].progress = newValue
     }
     
     private func configureChildren() {
         guard firstStart else { return }
         setDuration()
-        setCurve()
         firstStart = false
     }
     
     private func setDuration() {
-        
+        if parameters.parentTiming.duration == nil {
+            if let dur = parameters.userTiming.duration?.fixed {
+                parameters.parentTiming.duration = .absolute(dur)
+            } else {
+                let dur = animations.reduce(0, { $0 + $1.timing.duration })
+                var rel = min(1, animations.reduce(0, { $0 + ($1.parameters.userTiming.duration?.relative ?? 0) }))
+                rel = rel == 1 ? 0 : rel
+                let full = dur / (1 - rel)
+                parameters.parentTiming.duration = .absolute(full)
+            }
+        }
+        guard !animations.isEmpty else { return }
+        let full = timing.duration
+        var ks: [Double?] = []
+        var childrenRelativeTime = 0.0
+        for anim in animations {
+            var k: Double?
+            if let absolute = anim.parameters.userTiming.duration?.fixed {
+                k = absolute / full
+            } else if let relative = anim.parameters.userTiming.duration?.relative {
+                k = relative
+            }
+            childrenRelativeTime += k ?? 0
+            ks.append(k)
+        }
+        let cnt = ks.filter({ $0 == nil }).count
+        let relativeK = cnt > 0 ? max(1, childrenRelativeTime) : childrenRelativeTime
+        var add = (1 - min(1, childrenRelativeTime))
+        if cnt > 0 {
+            add /= Double(cnt)
+        }
+        var k = relativeK == 0 ? [Double](repeating: 1 / Double(animations.count), count: animations.count) : ks.map({ ($0 ?? add) / relativeK })
+        for i in 0..<k.count {
+            k[i] *= full
+        }
+        setCurve(k)
     }
     
-    private func setCurve() {
-        
+    private var progresses: [ClosedRange<Double>] = []
+    
+    private func setCurve(_ durations: [Double]) {
+        setProgresses(durations)
+        guard let fullCurve = parameters.parentTiming.curve ?? parameters.userTiming.curve else {
+            for i in 0..<animations.count {
+                animations[i].set(duration: durations[i], curve: nil)
+            }
+            return
+        }
+        for i in 0..<animations.count {
+            var curve1 = fullCurve.split(at: 0.5).0
+            if let curve2 = animations[i].parameters.userTiming.curve {
+                curve1 = BezierCurve.between(curve1, curve2)
+            }
+            animations[i].set(duration: durations[i], curve: curve1)
+        }
+    }
+    
+    private func setProgresses(_ durations: [Double]) {
+        progresses = []
+        guard !animations.isEmpty else { return }
+        guard timing.duration > 0 else {
+            progresses = Array(repeating: 0...0, count: durations.count)
+            return
+        }
+        var dur = 0.0
+        var start = 0.0
+        for anim in durations {
+            dur += anim
+            let end = dur / timing.duration
+            progresses.append(start...end)
+            start = end
+        }
     }
     
 }

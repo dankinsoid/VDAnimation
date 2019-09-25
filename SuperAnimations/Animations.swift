@@ -21,7 +21,7 @@ public protocol AnimatorProtocol {
     var isRunning: Bool { get }
     var state: UIViewAnimatingState { get }
     var timing: Animator.Timing { get }
-    var parameters: AnimationParameters { get }
+    var parameters: AnimationParameters { get nonmutating set }
     func copy(with parameters: AnimationParameters) -> Self
     func start(_ completion: @escaping (UIViewAnimatingPosition) -> ())
     func start()
@@ -73,6 +73,12 @@ extension Animator {
             }
             return nil
         }
+        var relative: Double? {
+            if case .relative(let value) = self {
+                return value
+            }
+            return nil
+        }
     }
     
     public struct Timing {
@@ -88,11 +94,7 @@ extension Animator {
             return Timing(duration: timing.duration?.fixed ?? 0, curve: timing.curve ?? .linear)
         }
         
-        public struct Curve {
-            public static let linear = Curve(point1: .zero, point2: CGPoint(x: 1, y: 1))
-            var point1: CGPoint
-            var point2: CGPoint
-        }
+        public typealias Curve = BezierCurve
     }
     
 }

@@ -34,6 +34,28 @@ struct SwiftUIView: View {
             Spacer().frame(width: CGFloat(40), height: nil, alignment: .center)
         }
     }
+    
+}
+
+struct ModifiedView<T: View>: View {
+    var view: T
+    var properties: Properties
+    
+    var body: some View {
+        view.frame(width: properties.frame.width, height: properties.frame.height, alignment: .center)
+    }
+    
+}
+
+extension View {
+    func properties(_ value: Properties) -> ModifiedView<Self> {
+        ModifiedView(view: self, properties: value)
+    }
+}
+
+struct Properties {
+    var frame: CGRect
+    
 }
 
 struct SwiftUIView_Previews: PreviewProvider {
