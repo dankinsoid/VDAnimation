@@ -47,17 +47,6 @@ extension AnimatorProtocol {
         start {_ in}
     }
     
-    public func `repeat`(_ count: Int?) -> RepeatAnimator<Self> {
-        RepeatAnimator(on: self, count, parameters: .default)
-    }
-    
-    public func autoreverse() -> Sequential {
-        Sequential {
-            self
-            self.reversed()
-        }
-    }
-    
     public func duration(_ value: Double) -> Self {
         map(.absolute(value), at: \.userTiming.duration)
     }
@@ -74,6 +63,21 @@ extension AnimatorProtocol {
         map(value, at: \.options.restoreOnFinish)
     }
     
+    public func reversed() -> Self {
+        map(true, at: \.options.isReversed)
+    }
+    
+    public func autoreverse() -> Sequential {
+        Sequential {
+            self
+            self.reversed()
+        }
+    }
+    
+    public func `repeat`(_ count: Int?) -> RepeatAnimator<Self> {
+        RepeatAnimator(on: self, count, parameters: .default)
+    }
+    
     public func onComplete(_ value: @escaping (UIViewAnimatingPosition) -> ()) -> Self {
         let prev = self.parameters.completion
         let comlpetion: (UIViewAnimatingPosition) -> () = {
@@ -83,15 +87,11 @@ extension AnimatorProtocol {
         return map(comlpetion, at: \.completion)
     }
     
-    public func reversed() -> Self {
-        map(true, at: \.options.isReversed)
-    }
-    
     func removeCompletion() -> Self {
         map({_ in}, at: \.completion)
     }
     
-    private func map<T>(_ value: T, at kp: WritableKeyPath<AnimationParameters, T>) -> Self {
+    fileprivate func map<T>(_ value: T, at kp: WritableKeyPath<AnimationParameters, T>) -> Self {
         var parameters = self.parameters
         parameters[keyPath: kp] = value
         return copy(with: parameters)

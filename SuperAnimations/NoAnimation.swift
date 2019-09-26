@@ -28,13 +28,16 @@ public final class NotAnAnimation: AnimatorProtocol {
     }
     
     public func copy(with parameters: AnimationParameters) -> NotAnAnimation {
-        return NotAnAnimation(block)
+        let result = NotAnAnimation(block)
+        result.parameters.completion = parameters.completion
+        return result
     }
     
     public func pause() {}
     
     public func start(_ completion: @escaping (UIViewAnimatingPosition) -> ()) {
         UIView.performWithoutAnimation(block)
+        parameters.completion(.end)
         completion(.end)
     }
     

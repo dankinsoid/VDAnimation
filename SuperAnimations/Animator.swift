@@ -84,6 +84,10 @@ public final class Animator: AnimatorProtocol {
         animator?.scrubsLinearly = scrubsLinearly
     }
     
+    var expectedDuration: Double {
+        return timing.duration
+    }
+    
     public func copy(with parameters: AnimationParameters) -> Animator {
         return Animator(animation: animation, parameters: parameters)
     }

@@ -31,7 +31,7 @@ class ViewController: UIViewController, CAAnimationDelegate {
             circle.ca.backgroundColor.set(.systemRed)
             circle.ca.backgroundColor.set(.systemGreen)
         }
-        .duration(2)
+        .duration(0.3)
         
         let date = Date()
         animator?.start { _ in
