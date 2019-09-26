@@ -19,6 +19,8 @@ public final class Sequential: AnimatorProtocol {
     private var animations: [AnimatorProtocol]
     private var currentIndex = 0
     private var firstStart = true
+    public var timing: Animate.Timing { getTiming() }
+    private var _timing: Animate.Timing?
     private var currentAnimation: AnimatorProtocol? {
         if currentIndex < animations.count, currentIndex >= 0 {
             return isReversed ? animations[currentIndex].reversed() : animations[currentIndex]
@@ -160,27 +162,32 @@ public final class Sequential: AnimatorProtocol {
         firstStart = false
     }
     
-    private func setDuration() {
-        if parameters.parentTiming.duration == nil {
-            if let dur = parameters.userTiming.duration?.fixed {
-                parameters.parentTiming.duration = .absolute(dur)
-            } else {
-                let dur = animations.reduce(0, { $0 + $1.timing.duration })
-                var rel = min(1, animations.reduce(0, { $0 + ($1.parameters.userTiming.duration?.relative ?? 0) }))
-                rel = rel == 1 ? 0 : rel
-                let full = dur / (1 - rel)
-                parameters.parentTiming.duration = .absolute(full)
-            }
+    private func getTiming() -> Animate.Timing {
+        if let dur = parameters.settedTiming.duration?.fixed {
+            return Animate.Timing(duration: dur, curve: parameters.settedTiming.curve ?? .linear)
+        } else if let computed = _timing {
+            return computed
+        } else {
+            let dur = animations.reduce(0, { $0 + $1.timing.duration })
+            var rel = min(1, animations.reduce(0, { $0 + ($1.parameters.settedTiming.duration?.relative ?? 0) }))
+            rel = rel == 1 ? 0 : rel
+            let full = dur / (1 - rel)
+            let result = Animate.Timing(duration: full, curve: parameters.settedTiming.curve ?? .linear)
+            _timing = result
+            return result
         }
+    }
+    
+    private func setDuration() {
         guard !animations.isEmpty else { return }
         let full = timing.duration
         var ks: [Double?] = []
         var childrenRelativeTime = 0.0
         for anim in animations {
             var k: Double?
-            if let absolute = anim.parameters.userTiming.duration?.fixed {
+            if let absolute = anim.parameters.settedTiming.duration?.fixed {
                 k = absolute / full
-            } else if let relative = anim.parameters.userTiming.duration?.relative {
+            } else if let relative = anim.parameters.settedTiming.duration?.relative {
                 k = relative
             }
             childrenRelativeTime += k ?? 0
@@ -203,18 +210,22 @@ public final class Sequential: AnimatorProtocol {
     
     private func setCurve(_ durations: [Double]) {
         setProgresses(durations)
-        guard let fullCurve = parameters.parentTiming.curve ?? parameters.userTiming.curve else {
+        guard let fullCurve = parameters.settedTiming.curve, fullCurve != .linear else {
             for i in 0..<animations.count {
                 animations[i].set(duration: durations[i], curve: nil)
             }
             return
         }
+        var newD: [String] = [timing.curve.exportWith(name: "common")]
+        var newT: [Double] = []
         for i in 0..<animations.count {
-            var curve1 = fullCurve.split(at: 0.5).0
-            if let curve2 = animations[i].parameters.userTiming.curve {
+            var (curve1, newDuration) = fullCurve.split(range: progresses[i])
+            if let curve2 = animations[i].parameters.settedTiming.curve {
                 curve1 = BezierCurve.between(curve1, curve2)
             }
-            animations[i].set(duration: durations[i], curve: curve1)
+            newD.append(curve1.exportWith(name: "curve\(i)"))
+            newT.append(newDuration)
+            animations[i].set(duration: timing.duration * newDuration, curve: curve1)
         }
     }
     
@@ -233,6 +244,7 @@ public final class Sequential: AnimatorProtocol {
             progresses.append(start...end)
             start = end
         }
+        progresses[progresses.count - 1] = progresses[progresses.count - 1].lowerBound...1
     }
     
 }

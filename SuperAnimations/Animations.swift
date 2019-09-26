@@ -20,14 +20,13 @@ public protocol AnimatorProtocol {
     var progress: Double { get set }
     var isRunning: Bool { get }
     var state: UIViewAnimatingState { get }
-    var timing: Animator.Timing { get }
+    var timing: Animate.Timing { get }
     var parameters: AnimationParameters { get nonmutating set }
     func copy(with parameters: AnimationParameters) -> Self
     func start(_ completion: @escaping (UIViewAnimatingPosition) -> ())
     func start()
     func pause()
     func stop(at position: UIViewAnimatingPosition)
-    
 }
 
 //extension AnimatorProtocol {
@@ -44,7 +43,7 @@ public protocol AnimatorProtocol {
 //    public var animationType: AnimationType { return .modifier(self) }
 //}
 
-extension Animator {
+extension Animate {
     
     public struct Options {
         public var scrubsLinearly: Bool
@@ -101,8 +100,8 @@ extension Animator {
 
 struct AnyAnimator {
     var animator: AnimatorProtocol
-    var expectingTiming: Animator.Timing
-    var givenTiming: Animator.Timing?
+    var expectingTiming: Animate.Timing
+    var givenTiming: Animate.Timing?
 }
 
 protocol _Modified {

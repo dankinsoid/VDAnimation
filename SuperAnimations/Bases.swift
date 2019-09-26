@@ -13,9 +13,9 @@ public struct AnimatedPropertySetter<R: AnyObject, T> {
     private weak var object: R?
     private let keyPath: ReferenceWritableKeyPath<R, T>
     
-    public func set(_ value: T) -> Animator {
+    public func set(_ value: T) -> Animate {
         let kp = keyPath
-        return Animator {[weak object] in
+        return Animate {[weak object] in
             object?[keyPath: kp] = value
         }
     }

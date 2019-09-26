@@ -5,18 +5,29 @@
 //  Created by Daniil on 23.09.2019.
 //  Copyright © 2019 crypto_user. All rights reserved.
 //
+//https://cubic-bezier.com/
 
 import UIKit
 
-public struct BezierCurve {
+public struct BezierCurve: Equatable {
     public static let linear = BezierCurve(.zero, .one)
     public static let ease = BezierCurve(CGPoint(x: 0.25, y: 0.1), CGPoint(x: 0.25, y: 1))
     public static let easeIn = BezierCurve(CGPoint(x: 0.42, y: 0), .one)
     public static let easeOut = BezierCurve(.zero, CGPoint(x: 0.58, y: 1))
     public static let easeInOut = BezierCurve(easeIn.point1, easeOut.point2)
     
+    private var start: CGPoint = .zero
     public var point1: CGPoint
     public var point2: CGPoint
+    private var end: CGPoint = .one
+    
+    var export: String {
+        return point1.export + "," + point2.export
+    }
+    
+    func exportWith(name: String) -> String {
+        return "\"\(name)\":\"\(export)\""
+    }
     
     public init(_ p1: CGPoint, _ p2: CGPoint) {
         point1 = p1
@@ -43,9 +54,12 @@ public struct BezierCurve {
 //    p234.x = p1.x + 2 * k * (p2.x - p1.x) + k^2 * (1 - 2 * p2.x + p1.x)
     
     
-    public func split(at coefficient: CGFloat) -> (BezierCurve, BezierCurve) {
+    private func split(at coefficient: CGFloat) -> (BezierCurve, BezierCurve) {
         guard coefficient > 0 else {
             return (.linear, self)
+        }
+        guard coefficient < 1 else {
+            return (self, .linear)
         }
         let p12 = CGPoint.between(.zero, point1, k: coefficient)
         let p23 = CGPoint.between(point1, point2, k: coefficient)
@@ -54,10 +68,54 @@ public struct BezierCurve {
         let p234 = CGPoint.between(p23, p34, k: coefficient)
         let p1234 = CGPoint.between(p123, p234, k: coefficient)
         
-        let k2 = .one - p1234
-        let curve1 = BezierCurve(p12 / p1234, p123 / p1234)
-        let curve2 = BezierCurve((p234 - p1234) / k2, (p34 - p1234) / k2)
+        var curve1 = BezierCurve(p12, p123)
+        curve1.end = p1234
+        var curve2 = BezierCurve(p234, p34)
+        curve2.start = p1234
         return (curve1, curve2)
+    }
+    
+    public var normalized: BezierCurve {
+        let length = end - start
+        return BezierCurve((point1 - start) / length, (point2 - start) / length)
+    }
+    
+    public func split(ranges: [ClosedRange<Double>]) -> [(BezierCurve, Double)] {
+        return ranges.map(split)
+    }
+    
+    public func split(range: ClosedRange<Double>) -> (BezierCurve, Double) {
+        let start = CGFloat(range.lowerBound)
+        let end = CGFloat(range.upperBound)
+        let t1 = findT(start)
+        print("///")
+        print(t1, value(t: t1, axe: .vertical), value(t: t1, axe: .horizontal))
+        let b1 = split(at: t1).1
+        let t2 = b1.findT(end)
+        let time2 = b1.value(t: t2, axe: .horizontal)
+        let b2 = b1.split(at: t2).0
+        let bezier = b2.normalized
+        let duration = Double(time2 - value(t: t1, axe: .horizontal))
+        print("///\n")
+        return (bezier, duration)
+    }
+    
+    private func findT(_ y: CGFloat) -> CGFloat {
+        guard y > 0, y < 1 else { return y }
+        var t: CGFloat = 0.0
+        var y1: CGFloat = 0.0
+        while t < 1, y1 < y {
+            t += 0.02
+            y1 = value(t: t, axe: .vertical)
+        }
+        return max(0, t - 0.01)
+    }
+    
+    private func value(t: CGFloat, axe: NSLayoutConstraint.Axis) -> CGFloat {
+        let a = 3 * t * (1 - t) * (1 - t)
+        let b = 3 * t * t * (1 - t)
+        let m = (1 - t) * (1 - t) * (1 - t)
+        return m * start[axe] + a * point1[axe] + b * point2[axe] + t * t * t * end[axe]
     }
     
     private func findX(_ y: CGFloat) -> CGFloat {
@@ -94,6 +152,10 @@ public struct BezierCurve {
 
 extension CGPoint {
     
+    var export: String {
+        return x.export + "," + y.export
+    }
+    
     static let one = CGPoint(x: 1, y: 1)
     
     static func between(_ p1: CGPoint, _ p2: CGPoint, k: CGFloat) -> CGPoint {
@@ -116,5 +178,18 @@ extension CGPoint {
         return CGPoint(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
     }
     
+    subscript(_ axe: NSLayoutConstraint.Axis) -> CGFloat {
+        switch axe {
+        case .horizontal: return x
+        case .vertical: return y
+        }
+    }
     
+}
+
+extension CGFloat {
+    
+    var export: String {
+        return "\(self)".replacingOccurrences(of: "0.", with: ".")
+    }
 }

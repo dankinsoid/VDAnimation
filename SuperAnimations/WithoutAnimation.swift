@@ -8,7 +8,7 @@
 
 import UIKit
 
-public final class NotAnAnimation: AnimatorProtocol {
+public final class WithoutAnimation: AnimatorProtocol {
     public var progress: Double {
         get { 1 }
         set {
@@ -20,15 +20,16 @@ public final class NotAnAnimation: AnimatorProtocol {
     public let isRunning: Bool = false
     public let state: UIViewAnimatingState = .inactive
     public var parameters: AnimationParameters = .default
+    public let timing = Animate.Timing.default
     let block: () -> ()
     
     public init(_ block: @escaping () -> ()) {
         self.block = block
-        parameters.userTiming.duration = .absolute(0)
+        parameters.settedTiming.duration = .absolute(0)
     }
     
-    public func copy(with parameters: AnimationParameters) -> NotAnAnimation {
-        let result = NotAnAnimation(block)
+    public func copy(with parameters: AnimationParameters) -> WithoutAnimation {
+        let result = WithoutAnimation(block)
         result.parameters.completion = parameters.completion
         return result
     }

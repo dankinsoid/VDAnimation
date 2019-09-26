@@ -25,14 +25,23 @@ class ViewController: UIViewController, CAAnimationDelegate {
         super.viewDidAppear(animated)
         
         animator =
-        Sequential {
-            circle.ca.backgroundColor.set(.black).withoutAnimation()
-            circle.ca.backgroundColor.set(.systemBlue).relativeDuration(0.5)
-            circle.ca.backgroundColor.set(.systemRed)
-            circle.ca.backgroundColor.set(.systemGreen)
+        Parallel {
+            Sequential {
+                Interval(1)
+                circle.ca.transform.set(CGAffineTransform(scaleX: 1.3, y: 1.3))
+                circle.ca.transform.set(CGAffineTransform(scaleX: 1.6, y: 1.6))
+//                Interval()
+//                circle.ca.backgroundColor.set(.systemRed).duration(relative: 0.5)
+//                Animate {[weak self] in
+//                    self?.circle.backgroundColor = .systemGreen
+//                }
+            }
+            Sequential {
+                circle.ca.backgroundColor.set(.systemRed).duration(relative: 0.5)
+            }
         }
-        .duration(0.3)
-        
+        .curve(.easeInOut)
+        .duration(2)
         let date = Date()
         animator?.start { _ in
             print(Date().timeIntervalSince(date))

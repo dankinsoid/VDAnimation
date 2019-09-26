@@ -11,14 +11,13 @@ import UIKit
 public struct AnimationParameters {
     static var `default`: AnimationParameters { AnimationParameters() }
     var completion: (UIViewAnimatingPosition) -> () = {_ in}
-    var options: Animator.Options = .default
-    var userTiming: SettedTiming = .default
-    var parentTiming: SettedTiming = .default
+    var options: Animate.Options = .default
+    var settedTiming: SettedTiming = .default
 }
 
 public struct SettedTiming {
-    var duration: Animator.Duration?
-    var curve: Animator.Timing.Curve?
+    var duration: Animate.Duration?
+    var curve: Animate.Timing.Curve?
     
     static let `default` = SettedTiming()
     
@@ -41,22 +40,25 @@ extension AnimatorProtocol {
     public var isManualHitTestingEnabled: Bool { parameters.options.isManualHitTestingEnabled }
     public var isInterruptible: Bool { parameters.options.isInterruptible }
     public var restoreOnFinish: Bool { parameters.options.restoreOnFinish }
-    public var timing: Animator.Timing { .setted(parameters.parentTiming.or(parameters.userTiming)) }
     
     public func start() {
         start {_ in}
     }
     
     public func duration(_ value: Double) -> Self {
-        map(.absolute(value), at: \.userTiming.duration)
+        map(.absolute(value), at: \.settedTiming.duration)
     }
     
-    public func relativeDuration(_ value: Double) -> Self {
-        map(.relative(value), at: \.userTiming.duration)
+    public func duration(relative value: Double) -> Self {
+        map(.relative(value), at: \.settedTiming.duration)
     }
     
-    public func curve(_ value: Animator.Timing.Curve) -> Self {
-        map(value, at: \.userTiming.curve)
+    public func curve(_ value: Animate.Timing.Curve) -> Self {
+        map(value, at: \.settedTiming.curve)
+    }
+    
+    public func curve(_ p1: CGPoint, _ p2: CGPoint) -> Self {
+        map(Animate.Timing.Curve(p1, p2), at: \.settedTiming.curve)
     }
     
     public func restoreOnFinish(_ value: Bool) -> Self {
@@ -78,13 +80,20 @@ extension AnimatorProtocol {
         RepeatAnimator(on: self, count, parameters: .default)
     }
     
-    public func onComplete(_ value: @escaping (UIViewAnimatingPosition) -> ()) -> Self {
+    public func onComplete(_ value: @escaping () -> ()) -> Self {
         let prev = self.parameters.completion
         let comlpetion: (UIViewAnimatingPosition) -> () = {
             prev($0)
-            value($0)
+            value()
         }
         return map(comlpetion, at: \.completion)
+    }
+    
+    public func delay(_ value: Double) -> Sequential {
+        return Sequential {
+            Interval(value)
+            self
+        }
     }
     
     func removeCompletion() -> Self {
@@ -97,12 +106,13 @@ extension AnimatorProtocol {
         return copy(with: parameters)
     }
 
-    func set(duration: Double?, curve: Animator.Timing.Curve?) {
-        var dur: Animator.Duration?
+    func set(duration: Double?, curve: Animate.Timing.Curve?) {
+        var dur: Animate.Duration?
         if let d = duration {
             dur = .absolute(d)
         }
-        parameters.parentTiming = SettedTiming(duration: dur, curve: curve).or(parameters.userTiming)
+        let prev = parameters.settedTiming
+        parameters.settedTiming = SettedTiming(duration: dur, curve: curve).or(prev)
     }
     
 }

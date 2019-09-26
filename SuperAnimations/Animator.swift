@@ -1,5 +1,5 @@
 //
-//  Animator.swift
+//  Animate.swift
 //  SuperAnimations
 //
 //  Created by crypto_user on 20/09/2019.
@@ -8,10 +8,11 @@
 
 import UIKit
 
-public final class Animator: AnimatorProtocol {
+public final class Animate: AnimatorProtocol {
     public var state: UIViewAnimatingState { return animator?.state ?? .active }
     public var parameters: AnimationParameters
     public var isRunning: Bool { return animator?.isRunning ?? false }
+    public var timing: Animate.Timing { .setted(parameters.settedTiming) }
     public var progress: Double {
         get { Double(animator?.fractionComplete ?? 0) }
         set { resetAnimatorIfNeeded().fractionComplete = CGFloat(newValue) }
@@ -84,16 +85,12 @@ public final class Animator: AnimatorProtocol {
         animator?.scrubsLinearly = scrubsLinearly
     }
     
-    var expectedDuration: Double {
-        return timing.duration
+    public func copy(with parameters: AnimationParameters) -> Animate {
+        return Animate(animation: animation, parameters: parameters)
     }
     
-    public func copy(with parameters: AnimationParameters) -> Animator {
-        return Animator(animation: animation, parameters: parameters)
-    }
-    
-    public func withoutAnimation() -> NotAnAnimation {
-        return NotAnAnimation(animation)
+    public func withoutAnimation() -> WithoutAnimation {
+        return WithoutAnimation(animation)
     }
     
 }
