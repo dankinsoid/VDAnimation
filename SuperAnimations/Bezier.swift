@@ -21,6 +21,16 @@ public struct BezierCurve: Equatable {
     public var point2: CGPoint
     private var end: CGPoint = .one
     
+    public var builtin: UIView.AnimationCurve? {
+        switch self {
+        case .easeIn: return .easeIn
+        case .easeOut: return .easeOut
+        case .easeInOut: return .easeInOut
+        case .linear: return .linear
+        default: return nil
+        }
+    }
+    
     var export: String {
         return point1.export + "," + point2.export
     }
@@ -88,15 +98,12 @@ public struct BezierCurve: Equatable {
         let start = CGFloat(range.lowerBound)
         let end = CGFloat(range.upperBound)
         let t1 = findT(start)
-        print("///")
-        print(t1, value(t: t1, axe: .vertical), value(t: t1, axe: .horizontal))
         let b1 = split(at: t1).1
         let t2 = b1.findT(end)
         let time2 = b1.value(t: t2, axe: .horizontal)
         let b2 = b1.split(at: t2).0
         let bezier = b2.normalized
         let duration = Double(time2 - value(t: t1, axe: .horizontal))
-        print("///\n")
         return (bezier, duration)
     }
     

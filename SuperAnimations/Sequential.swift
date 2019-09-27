@@ -216,15 +216,15 @@ public final class Sequential: AnimatorProtocol {
             }
             return
         }
-        var newD: [String] = [timing.curve.exportWith(name: "common")]
-        var newT: [Double] = []
+//        var newD: [String] = [timing.curve.exportWith(name: "common")]
+//        var newT: [Double] = []
         for i in 0..<animations.count {
             var (curve1, newDuration) = fullCurve.split(range: progresses[i])
             if let curve2 = animations[i].parameters.settedTiming.curve {
                 curve1 = BezierCurve.between(curve1, curve2)
             }
-            newD.append(curve1.exportWith(name: "curve\(i)"))
-            newT.append(newDuration)
+//            newD.append(curve1.exportWith(name: "curve\(i)"))
+//            newT.append(newDuration)
             animations[i].set(duration: timing.duration * newDuration, curve: curve1)
         }
     }
@@ -240,7 +240,7 @@ public final class Sequential: AnimatorProtocol {
         var start = 0.0
         for anim in durations {
             dur += anim
-            let end = dur / timing.duration
+            let end = min(1, dur / timing.duration)
             progresses.append(start...end)
             start = end
         }

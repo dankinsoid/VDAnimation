@@ -46,7 +46,9 @@ public final class RepeatAnimator<T: AnimatorProtocol>: AnimatorProtocol {
             return
         }
         if current > 0 {
-            animator.progress = 0
+            animator.stop(at: .start)
+            resetAnimator()
+//            animator.progress = 0
         }
         current += 1
         animator.start {[weak self] _ in self?._start(completion) }
@@ -65,11 +67,16 @@ public final class RepeatAnimator<T: AnimatorProtocol>: AnimatorProtocol {
     }
     
     public func stop(at position: UIViewAnimatingPosition) {
+        let oldCur = current
         animator.stop(at: position)
         switch position {
         case .start:    current = 0
         case .end:      current = count ?? 0
         default:        break
+        }
+        if current != oldCur {
+            resetAnimator()
+            animator.stop(at: position)
         }
     }
     
@@ -101,23 +108,56 @@ public final class RepeatAnimator<T: AnimatorProtocol>: AnimatorProtocol {
     private func configureChildren() {
         guard firstStart else { return }
         setDuration()
-        setCurve()
         firstStart = false
     }
     
     private func setDuration() {
         let cnt = Double(count ?? 1)
-        var duration: Double?
         if let _duration = parameters.settedTiming.duration?.fixed {
-            duration = cnt > 0 ? _duration / cnt : 0
+            setCurve(cnt > 0 ? _duration / cnt : 0)
         } else {
-            parameters.settedTiming.duration = .absolute(count == nil ? .infinity : animator.timing.duration * cnt)
+            let duration = animator.timing.duration * cnt
+            parameters.settedTiming.duration = .absolute(count == nil ? .infinity : duration)
+            setCurve(nil)
         }
-        animator.set(duration: duration, curve: nil)
     }
     
-    private func setCurve() {
-        
+    private func resetAnimator() {
+        guard (count ?? 1) > 1 else { return }
+        let pos = animator.progress
+        animator = animator.copy(with: animator.parameters)
+        animator.progress = pos
+        setDuration()
+    }
+    
+    private func setCurve(_ duration: Double?) {
+//        setProgresses(durations)
+        let cnt = count ?? 1
+        guard cnt > 1, let fullCurve = parameters.settedTiming.curve, fullCurve != .linear else {
+            animator.set(duration: duration, curve: nil)
+            return
+        }
+        let start = Double(current) / Double(cnt)
+        let end = Double(current + 1) / Double(cnt)
+        var (curve1, newDuration) = fullCurve.split(range: start...end)
+        if let curve2 = animator.parameters.settedTiming.curve {
+            curve1 = BezierCurve.between(curve1, curve2)
+        }
+        animator.set(duration: timing.duration * newDuration, curve: curve1)
+    }
+    
+    func check() {
+        let cnt = count ?? 1
+        let fullCurve = parameters.settedTiming.curve!
+        var array: [Double] = []
+        for current in 0..<cnt {
+            let start = Double(current) / Double(cnt)
+            let end = Double(current + 1) / Double(cnt)
+            var (curve1, newDuration) = fullCurve.split(range: start...end)
+            array.append(newDuration)
+        }
+        print(array)
+        print(timing.duration, timing.duration * array.dropLast().reduce(0, +))
     }
     
 }

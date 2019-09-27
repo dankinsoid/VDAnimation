@@ -70,9 +70,13 @@ extension AnimatorProtocol {
     }
     
     public func autoreverse() -> Sequential {
-        Sequential {
-            self
-            self.reversed()
+        let first = self
+        let second = reversed()
+        return Sequential {
+            first
+            WithoutAnimation { first.stop(at: .start) }
+            second
+            WithoutAnimation { second.stop(at: .start) }
         }
     }
     
@@ -94,6 +98,10 @@ extension AnimatorProtocol {
             Interval(value)
             self
         }
+    }
+    
+    public func copy() -> Self {
+        copy(with: parameters)
     }
     
     func removeCompletion() -> Self {

@@ -126,24 +126,24 @@ public final class Parallel: AnimatorProtocol {
             }
             return
         }
-        var newD: [String] = [timing.curve.exportWith(name: "common")]
-        var newT: [Double] = []
+//        var newD: [String] = [timing.curve.exportWith(name: "common")]
+//        var newT: [Double] = []
         for i in 0..<animations.count {
             var (curve1, newDuration) = fullCurve.split(range: progresses[i])
             if let curve2 = animations[i].parameters.settedTiming.curve {
                 curve1 = BezierCurve.between(curve1, curve2)
             }
-            newD.append(curve1.exportWith(name: "curve\(i)"))
-            newT.append(newDuration)
+//            newD.append(curve1.exportWith(name: "curve\(i)"))
+//            newT.append(newDuration)
             animations[i].set(duration: timing.duration * newDuration, curve: curve1)
         }
-        print("{\(newD.joined(separator: ","))}")
-        print(durations.reduce(0, +))
-        print(timing.duration)
-        print(durations.map({ $0 / timing.duration }))
-        print(newT.reduce(0, +))
-        print(newT)
-        print()
+//        print("{\(newD.joined(separator: ","))}")
+//        print(durations.reduce(0, +))
+//        print(timing.duration)
+//        print(durations.map({ $0 / timing.duration }))
+//        print(newT.reduce(0, +))
+//        print(newT)
+//        print()
     }
     
     

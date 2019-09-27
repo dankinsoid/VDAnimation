@@ -30,6 +30,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5B176AC4233E1A1400ACE228 /* PropertiesAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertiesAnimation.swift; sourceTree = "<group>"; };
 		5B6E226C2334E9240080719F /* Animations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animations.swift; sourceTree = "<group>"; };
 		5B6E226E233527B90080719F /* Sequential.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sequential.swift; sourceTree = "<group>"; };
 		5B6E2270233527D80080719F /* Parallel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parallel.swift; sourceTree = "<group>"; };
@@ -99,6 +100,7 @@
 				8390F7E82336621A007B942E /* VDViewAnimator.swift */,
 				8390F7EB23367119007B942E /* AnimatorModifier.swift */,
 				8308AC282337D31400933132 /* AnimationGroup.swift */,
+				5B176AC4233E1A1400ACE228 /* PropertiesAnimation.swift */,
 				5BBE3756233BCFD80090960B /* WithoutAnimation.swift */,
 				8308AC2A2338195A00933132 /* Bezier.swift */,
 				5BD99DFB2334CB1B00B28B19 /* Products */,

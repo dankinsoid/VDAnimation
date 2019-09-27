@@ -49,6 +49,7 @@ extension Animate {
         public var scrubsLinearly: Bool
         public var isUserInteractionEnabled: Bool
         public var isReversed: Bool
+        public var isAutoReversed: Bool
         public var isManualHitTestingEnabled: Bool
         public var isInterruptible: Bool
         public var restoreOnFinish: Bool
@@ -57,6 +58,7 @@ extension Animate {
             scrubsLinearly: true,
             isUserInteractionEnabled: true,
             isReversed: false,
+            isAutoReversed: false,
             isManualHitTestingEnabled: true,
             isInterruptible: true,
             restoreOnFinish: false
