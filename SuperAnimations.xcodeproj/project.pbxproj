@@ -13,6 +13,7 @@
 		5B6E2273233527F00080719F /* Animator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6E2272233527F00080719F /* Animator.swift */; };
 		5B6E2275233528050080719F /* Interval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6E2274233528050080719F /* Interval.swift */; };
 		5B6E2277233528230080719F /* AnimatorBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B6E2276233528230080719F /* AnimatorBuilder.swift */; };
+		5BB35A2C233E6A9E0085CDEC /* SwiftUIAnimatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BB35A2B233E6A9E0085CDEC /* SwiftUIAnimatable.swift */; };
 		5BBE36DC233A7B810090960B /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BBE36DB233A7B810090960B /* SwiftUIView.swift */; };
 		5BBE3757233BCFD80090960B /* WithoutAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BBE3756233BCFD80090960B /* WithoutAnimation.swift */; };
 		5BD99DFE2334CB1B00B28B19 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BD99DFD2334CB1B00B28B19 /* AppDelegate.swift */; };
@@ -37,6 +38,7 @@
 		5B6E2272233527F00080719F /* Animator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animator.swift; sourceTree = "<group>"; };
 		5B6E2274233528050080719F /* Interval.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interval.swift; sourceTree = "<group>"; };
 		5B6E2276233528230080719F /* AnimatorBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatorBuilder.swift; sourceTree = "<group>"; };
+		5BB35A2B233E6A9E0085CDEC /* SwiftUIAnimatable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIAnimatable.swift; sourceTree = "<group>"; };
 		5BBE36DB233A7B810090960B /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
 		5BBE3756233BCFD80090960B /* WithoutAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WithoutAnimation.swift; sourceTree = "<group>"; };
 		5BD99DFA2334CB1B00B28B19 /* SuperAnimations.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SuperAnimations.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -103,6 +105,7 @@
 				5B176AC4233E1A1400ACE228 /* PropertiesAnimation.swift */,
 				5BBE3756233BCFD80090960B /* WithoutAnimation.swift */,
 				8308AC2A2338195A00933132 /* Bezier.swift */,
+				5BB35A2B233E6A9E0085CDEC /* SwiftUIAnimatable.swift */,
 				5BD99DFB2334CB1B00B28B19 /* Products */,
 				5BD99E032334CB1B00B28B19 /* Main.storyboard */,
 				5BD99E062334CB1C00B28B19 /* Assets.xcassets */,
@@ -188,6 +191,7 @@
 				5BBE36DC233A7B810090960B /* SwiftUIView.swift in Sources */,
 				5B6E2277233528230080719F /* AnimatorBuilder.swift in Sources */,
 				5B6E226F233527B90080719F /* Sequential.swift in Sources */,
+				5BB35A2C233E6A9E0085CDEC /* SwiftUIAnimatable.swift in Sources */,
 				5BD99E022334CB1B00B28B19 /* ViewController.swift in Sources */,
 				5B6E2273233527F00080719F /* Animator.swift in Sources */,
 				8308AC2B2338195A00933132 /* Bezier.swift in Sources */,

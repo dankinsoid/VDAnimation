@@ -11,27 +11,39 @@ import SwiftUI
 struct SwiftUIView: View {
     
     @State var scale: CGFloat = 1
+    @State var color: Color = .red
+    
+    var animation1: AnimatorProtocol {
+        Parallel {
+            self.ca.scale.set(2.4 - self.scale)
+            self.ca.color.set(.blue)
+        }
+    }
+    
+    @State var scale1: Double = 0
     
     var body: some View {
-        HStack {
+        print(scale)
+        return HStack {
             Spacer().frame(width: CGFloat(40), height: nil, alignment: .center)
             VStack {
                 Spacer()
-                Button(action: {
-                    withAnimation {
-                        self.scale = 2.4 - self.scale
-                    }
+                Button.init(action: {
+                    self.animation1.start()
                 }) {
                     ZStack {
                         Color.blue
-                        Text("Press").foregroundColor(.white)
+                        Text("\(scale1)").foregroundColor(.white)
                     }
                 }.frame(width: nil, height: 50, alignment: .center)
                 Spacer()
-                Color.red.aspectRatio(1, contentMode: .fill).scaleEffect(scale, anchor: .center).animation(.spring())
+                self.color
+                    .aspectRatio(1, contentMode: .fill)
+                    .scaleEffect(scale, anchor: .center)
                 Spacer()
             }
-            Spacer().frame(width: CGFloat(40), height: nil, alignment: .center)
+            Spacer()
+                .frame(width: CGFloat(40), height: nil, alignment: .center)
         }
     }
     
