@@ -25,6 +25,7 @@
 		5BD99E122334CB2D00B28B19 /* Bases.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BD99E112334CB2D00B28B19 /* Bases.swift */; };
 		8308AC292337D31400933132 /* AnimationGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8308AC282337D31400933132 /* AnimationGroup.swift */; };
 		8308AC2B2338195A00933132 /* Bezier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8308AC2A2338195A00933132 /* Bezier.swift */; };
+		83324A98233F1C6E0068CD96 /* ModelPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83324A97233F1C6E0068CD96 /* ModelPreview.swift */; };
 		8390F7E92336621A007B942E /* VDViewAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8390F7E82336621A007B942E /* VDViewAnimator.swift */; };
 		8390F7EA233668BB007B942E /* RepeatAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8390F7E623362B6C007B942E /* RepeatAnimation.swift */; };
 		8390F7EC23367119007B942E /* AnimatorModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8390F7EB23367119007B942E /* AnimatorModifier.swift */; };
@@ -52,6 +53,7 @@
 		5BD99E112334CB2D00B28B19 /* Bases.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bases.swift; sourceTree = "<group>"; };
 		8308AC282337D31400933132 /* AnimationGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationGroup.swift; sourceTree = "<group>"; };
 		8308AC2A2338195A00933132 /* Bezier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bezier.swift; sourceTree = "<group>"; };
+		83324A97233F1C6E0068CD96 /* ModelPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPreview.swift; sourceTree = "<group>"; };
 		8390F7E623362B6C007B942E /* RepeatAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepeatAnimation.swift; sourceTree = "<group>"; };
 		8390F7E82336621A007B942E /* VDViewAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VDViewAnimator.swift; sourceTree = "<group>"; };
 		8390F7EB23367119007B942E /* AnimatorModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatorModifier.swift; sourceTree = "<group>"; };
@@ -106,6 +108,7 @@
 				5BBE3756233BCFD80090960B /* WithoutAnimation.swift */,
 				8308AC2A2338195A00933132 /* Bezier.swift */,
 				5BB35A2B233E6A9E0085CDEC /* SwiftUIAnimatable.swift */,
+				83324A97233F1C6E0068CD96 /* ModelPreview.swift */,
 				5BD99DFB2334CB1B00B28B19 /* Products */,
 				5BD99E032334CB1B00B28B19 /* Main.storyboard */,
 				5BD99E062334CB1C00B28B19 /* Assets.xcassets */,
@@ -188,6 +191,7 @@
 			files = (
 				5B6E226D2334E9240080719F /* Animations.swift in Sources */,
 				5BD99E122334CB2D00B28B19 /* Bases.swift in Sources */,
+				83324A98233F1C6E0068CD96 /* ModelPreview.swift in Sources */,
 				5BBE36DC233A7B810090960B /* SwiftUIView.swift in Sources */,
 				5B6E2277233528230080719F /* AnimatorBuilder.swift in Sources */,
 				5B6E226F233527B90080719F /* Sequential.swift in Sources */,

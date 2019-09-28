@@ -19,12 +19,13 @@ public final class Parallel: AnimatorProtocol {
     private var firstStart = true
     public var timing: Animate.Timing { getTiming() }
     private var _timing: Animate.Timing?
-    private var animations: [AnimatorProtocol]
+    var animations: [AnimatorProtocol]
     private var completion: ParallelCompletion?
     
     init(_ animations: [AnimatorProtocol], parameters: AnimationParameters = .default) {
         self.animations = animations
         self.parameters = parameters
+        configureChildren()
     }
     
     public convenience init(animations: [AnimatorProtocol]) {

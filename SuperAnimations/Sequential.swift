@@ -16,10 +16,12 @@ public final class Sequential: AnimatorProtocol {
         get { getProgress() }
         set { setProgress(newValue) }
     }
-    private var animations: [AnimatorProtocol]
+    var animations: [AnimatorProtocol]
     private var currentIndex = 0
     private var firstStart = true
-    public var timing: Animate.Timing { getTiming() }
+    public var timing: Animate.Timing {
+        return getTiming()
+    }
     private var _timing: Animate.Timing?
     private var currentAnimation: AnimatorProtocol? {
         if currentIndex < animations.count, currentIndex >= 0 {
@@ -31,6 +33,7 @@ public final class Sequential: AnimatorProtocol {
     init(_ animations: [AnimatorProtocol], parameters: AnimationParameters) {
         self.animations = animations
         self.parameters = parameters
+        configureChildren()
     }
     
     public convenience init(_ animations: [AnimatorProtocol]) {
@@ -156,7 +159,7 @@ public final class Sequential: AnimatorProtocol {
         animations[i].progress = newValue
     }
     
-    private func configureChildren() {
+    func configureChildren() {
         guard firstStart else { return }
         setDuration()
         firstStart = false
