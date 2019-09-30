@@ -42,7 +42,7 @@ struct SwiftUIView: View {
                 Slider(value: $progress)
                 Spacer()
                 Button.init(action: {
-                    self.animate(to: 1) { it in
+                    self.animate(to: 0.5) { it in
                         it.scale = 2.4 - it.scale
                         it.color = #colorLiteral(red: 0.3647058904, green: 0.06666667014, blue: 0.9686274529, alpha: 1)
                     }
