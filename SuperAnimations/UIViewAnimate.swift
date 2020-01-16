@@ -28,9 +28,9 @@ public struct UIViewAnimate: AnimationProviderProtocol {
         let provider = VDTimingProvider(bezier: options?.curve, spring: springTiming)
         let animator = VDViewAnimator(duration: options?.duration?.absolute ?? 0, timingParameters: provider)
         animator.addAnimations(animation)
-        animator.reverseOnComplete = false
-        animator.isReversed = true
-        animator.fractionComplete = 0
+//        animator.reverseOnComplete = false
+//        animator.isReversed = true
+//        animator.fractionComplete = 0
         animator.startAnimation { position in
             completion(position == .end)
         }
