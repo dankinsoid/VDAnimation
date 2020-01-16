@@ -7,7 +7,7 @@
 
 
 ## Description
-This repository provides declarative way to describe animations
+This repository provides a new declarative way to describe animations
 
 ## Example
 
