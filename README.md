@@ -13,22 +13,22 @@ This repository provides declarative way to describe animations
 
 ```swift
 Sequential {
-Parallel {
-someView.ca.frame.origin.y.set(100)
-someView.ca.backgroundColor.set(.red).duration(relative: 0.2)
-}
-Parallel {
-someView.ca.transform.set(CGAffineTransform(rotationAngle: CGFloat.pi / 3))
-someView.ca.backgroundColor.set(.white).duration(0.1)
-Sequential {
-someView.ca.backgroundColor.set(.blue)
-someView.ca.backgroundColor.set(.green)
-}
-}
-UIViewAnimate {
-self.imageHeightContraint.constant = 50
-self.view.layoutIfNeeded()
-}
+  Parallel {
+    someView.ca.frame.origin.y.set(100)
+    someView.ca.backgroundColor.set(.red).duration(relative: 0.2)
+  }
+  Parallel {
+    someView.ca.transform.set(CGAffineTransform(rotationAngle: CGFloat.pi / 3))
+    someView.ca.backgroundColor.set(.white).duration(0.1)
+    Sequential {
+      someView.ca.backgroundColor.set(.blue)
+      someView.ca.backgroundColor.set(.green)
+    }
+  }
+  UIViewAnimate {
+    self.imageHeightContraint.constant = 50
+    self.view.layoutIfNeeded()
+  }
 }
 .curve(.easeInOut)
 .duration(3)
@@ -54,13 +54,13 @@ Create a `Package.swift` file.
 import PackageDescription
 
 let package = Package(
-name: "SomeProject",
-dependencies: [
-.package(url: "https://github.com/dankinsoid/VDAnimation.git", from: "0.1.3")
-],
-targets: [
-.target(name: "SomeProject", dependencies: ["VDAnimation"])
-]
+  name: "SomeProject",
+  dependencies: [
+    .package(url: "https://github.com/dankinsoid/VDAnimation.git", from: "0.1.3")
+  ],
+  targets: [
+    .target(name: "SomeProject", dependencies: ["VDAnimation"])
+  ]
 )
 ```
 ```ruby
