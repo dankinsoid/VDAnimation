@@ -13,9 +13,9 @@ public struct AnimatedPropertySetter<R: AnyObject, T> {
     private weak var object: R?
     private let keyPath: ReferenceWritableKeyPath<R, T>
     
-    public func set(_ value: T) -> Animate {
+    public func set(_ value: T) -> UIViewAnimate {
         let kp = keyPath
-        return Animate {[weak object] in
+        return UIViewAnimate {[weak object] in
             object?[keyPath: kp] = value
         }
     }
@@ -45,37 +45,12 @@ public struct AnimatedPropertyMaker<R: AnyObject> {
     
 }
 
-
-@dynamicMemberLookup
-public final class AnimatedPropertyValues<R: AnyObject> {
-    private var object: R
-    private var values: [PartialKeyPath<R>: Any] = [:]
-    
-    fileprivate init(object: R) {
-        self.object = object
-    }
-    
-    public subscript<D>(dynamicMember keyPath: ReferenceWritableKeyPath<R, D>) -> D {
-        get {
-            return object[keyPath: keyPath]
-        }
-        set {
-            values[keyPath] = newValue
-        }
-    }
-    
-}
-
 public protocol AnimatedPropertySettable: class {}
 
 extension AnimatedPropertySettable {
     
     public var ca: AnimatedPropertyMaker<Self> {
         return AnimatedPropertyMaker(object: self)
-    }
-    
-    public var animate: AnimatedPropertyValues<Self> {
-        return AnimatedPropertyValues(object: self)
     }
     
 }

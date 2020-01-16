@@ -61,9 +61,11 @@ class VDViewAnimator: UIViewPropertyAnimator {
     
     func startAnimation(_ completion: @escaping (UIViewAnimatingPosition) -> Void) {
         let id = UUID()
-        observers[id] = {[weak self] in
+        let ref = Ref(self)
+        observers[id] = {
             completion($0)
-            self?.removeCompletion(id: id)
+            ref.ref?.removeCompletion(id: id)
+            ref.ref = nil
         }
         startAnimation()
     }
@@ -82,4 +84,12 @@ class VDViewAnimator: UIViewPropertyAnimator {
         observers[id] = completion
     }
     
+}
+
+private class Ref<T: AnyObject> {
+    var ref: T?
+    
+    init(_ root: T) {
+        ref = root
+    }
 }

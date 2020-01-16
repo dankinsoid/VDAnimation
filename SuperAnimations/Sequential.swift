@@ -6,191 +6,63 @@
 //  Copyright © 2019 crypto_user. All rights reserved.
 //
 
-import UIKit
+import Foundation
 
-public final class Sequential: AnimatorProtocol {
-    public var parameters: AnimationParameters = .default
-    public var state: UIViewAnimatingState { currentAnimation?.state ?? .inactive }
-    public var isRunning: Bool { currentAnimation?.isRunning ?? false }
-    public var progress: Double {
-        get { getProgress() }
-        set { setProgress(newValue) }
-    }
-    var animations: [AnimatorProtocol]
-    private var currentIndex = 0
-    private var firstStart = true
-    public var timing: Animate.Timing {
-        return getTiming()
-    }
-    private var _timing: Animate.Timing?
-    private var currentAnimation: AnimatorProtocol? {
-        if currentIndex < animations.count, currentIndex >= 0 {
-            return isReversed ? animations[currentIndex].reversed() : animations[currentIndex]
-        }
-        return nil
-    }
+public struct Sequential: AnimationProviderProtocol {
+    private let animations: [AnimationProviderProtocol]
     
-    init(_ animations: [AnimatorProtocol], parameters: AnimationParameters) {
+    private init(_ animations: [AnimationProviderProtocol]) {
         self.animations = animations
-        self.parameters = parameters
-        configureChildren()
     }
     
-    public convenience init(_ animations: [AnimatorProtocol]) {
-        self.init(animations, parameters: .default)
+    public init(_ animations: AnimationProviderProtocol...) {
+        self = .init(animations)
     }
     
-    public convenience init(_ animations: AnimatorProtocol...) {
-        self.init(animations)
+    public init(@AnimatorBuilder _ animations: () -> [AnimationProviderProtocol]) {
+        self = .init(animations())
     }
     
-    public convenience init(@AnimatorBuilder _ animations: () -> AnimatorProtocol) {
-        self.init(animations())
+    public func start(with options: AnimationOptions?, _ completion: @escaping (Bool) -> ()) {
+        let array = getOptions(for: options)
+        start(completion, index: 0, options: array)
     }
     
-    public convenience init(@AnimatorBuilder _ animations: () -> [AnimatorProtocol]) {
-        self.init(animations())
-    }
-    
-    public func start(_ completion: @escaping (UIViewAnimatingPosition) -> ()) {
-        configureChildren()
-        guard !isRunning else {
-            let c = parameters.completion
-            parameters.completion = {[weak self] in
-                c($0)
-                completion($0)
-                self?.parameters.completion = c
-            }
+    private func start(_ completion: @escaping (Bool) -> (), index: Int, options: [AnimationOptions?]) {
+        guard index < animations.count else {
+            completion(true)
             return
         }
-        if isReversed {
-            (0..<(animations.count)).forEach {
-                animations[$0].progress = 1
+        animations[index].start(with: options[index]) {
+            guard $0 else {
+                return completion(false)
             }
-        }
-        _start(completion)
-    }
-    
-    private func _start(_ completion: ((UIViewAnimatingPosition) -> ())?) {
-        guard !animations.isEmpty, currentIndex < animations.count else {
-            parameters.completion(.end)
-            completion?(.end)
-            return
-        }
-        currentAnimation?.start {
-            guard $0 != .current else {
-                self.parameters.completion($0)
-                completion?($0)
-                return
-            }
-            self.currentIndex += 1
-            self._start(completion)
+            self.start(completion, index: index + 1, options: options)
         }
     }
     
-    public func pause() {
-        currentAnimation?.pause()
-    }
-    
-    public func stop(at position: UIViewAnimatingPosition) {
-        currentAnimation?.stop(at: position)
-        switch position {
-        case .start:    currentIndex = 0
-        case .end:      currentIndex = animations.count
-        default:        break
-        }
-    }
-    
-    public func copy(with parameters: AnimationParameters) -> Sequential {
-        return Sequential(animations, parameters: parameters)
-    }
-    
-    private func getProgress() -> Double {
-        configureChildren()
-        guard animations.count != 1 else { return currentAnimation?.progress ?? 0 }
-        guard !animations.isEmpty else { return 0 }
-        guard currentIndex < animations.count else { return 1 }
-        let full = animations.reduce(0, { $0 + $1.timing.duration })
-        guard full > 0 else { return currentAnimation?.progress ?? 1 }
-        var current = (currentAnimation?.progress ?? 0) * (currentAnimation?.timing.duration ?? 0)
-        current += animations.prefix(currentIndex).reduce(0, { $0 + $1.timing.duration })
-        return current / full
-    }
-    
-    private func setProgress(_ value: Double) {
-        guard !animations.isEmpty else { return }
-        configureChildren()
-        let full = animations.reduce(0, { $0 + $1.timing.duration })
-        guard full > 0 else {
-            currentIndex = max(0, min(currentIndex, animations.count - 1))
-            animations[currentIndex].progress = value
-            return
-        }
-        let expected = value * full
-        var i = 0
-        var dur = 0.0
-        while i < animations.count {
-            guard dur + animations[i].timing.duration < expected else { break }
-            dur += animations[i].timing.duration
-            i += 1
-        }
-        let newValue = max(0, min(1, (expected - dur) / animations[i].timing.duration))
-        guard i != currentIndex else {
-            animations[i].progress = newValue
-            return
-        }
-        currentIndex = i
-        animations[i].stop(at: .current)
-        if i < animations.count - 1 {
-            for j in (i + 1)..<animations.count {
-                animations[j].progress = 0
-                animations[j].stop(at: .start)
-            }
-        }
-        if i > 0 {
-            for j in 0..<i {
-                animations[j].progress = 1
-                animations[j].stop(at: .end)
-            }
-        }
-        guard i < animations.count else {
-            return
-        }
-        animations[i].progress = newValue
-    }
-    
-    func configureChildren() {
-        guard firstStart else { return }
-        setDuration()
-        firstStart = false
-    }
-    
-    private func getTiming() -> Animate.Timing {
-        if let dur = parameters.settedTiming.duration?.fixed {
-            return Animate.Timing(duration: dur, curve: parameters.settedTiming.curve ?? .linear)
-        } else if let computed = _timing {
-            return computed
+    private func getOptions(for options: AnimationOptions?) -> [AnimationOptions?] {
+        guard !animations.isEmpty else { return [] }
+        if let dur = options?.duration?.absolute {
+            return setDuration(duration: dur, options: options)
         } else {
-            let dur = animations.reduce(0, { $0 + $1.timing.duration })
-            var rel = min(1, animations.reduce(0, { $0 + ($1.parameters.settedTiming.duration?.relative ?? 0) }))
+            let dur = animations.reduce(0, { $0 + ($1.modificators.duration?.absolute ?? 0) })
+            var rel = min(1, animations.reduce(0, { $0 + ($1.modificators.duration?.relative ?? 0) }))
             rel = rel == 1 ? 0 : rel
             let full = dur / (1 - rel)
-            let result = Animate.Timing(duration: full, curve: parameters.settedTiming.curve ?? .linear)
-            _timing = result
-            return result
+            return setDuration(duration: full, options: options)
         }
     }
     
-    private func setDuration() {
-        guard !animations.isEmpty else { return }
-        let full = timing.duration
+    private func setDuration(duration full: TimeInterval, options: AnimationOptions?) -> [AnimationOptions?] {
+        guard !animations.isEmpty else { return [] }
         var ks: [Double?] = []
         var childrenRelativeTime = 0.0
         for anim in animations {
             var k: Double?
-            if let absolute = anim.parameters.settedTiming.duration?.fixed {
+            if let absolute = anim.modificators.duration?.absolute {
                 k = absolute / full
-            } else if let relative = anim.parameters.settedTiming.duration?.relative {
+            } else if let relative = anim.modificators.duration?.relative {
                 k = relative
             }
             childrenRelativeTime += k ?? 0
@@ -206,48 +78,40 @@ public final class Sequential: AnimatorProtocol {
         for i in 0..<k.count {
             k[i] *= full
         }
-        setCurve(k)
+        var result = k.map({ AnimationOptions(duration: .absolute($0)) as AnimationOptions? })
+        setCurve(&result, duration: full, options: options)
+        return result
     }
     
-    private var progresses: [ClosedRange<Double>] = []
-    
-    private func setCurve(_ durations: [Double]) {
-        setProgresses(durations)
-        guard let fullCurve = parameters.settedTiming.curve, fullCurve != .linear else {
-            for i in 0..<animations.count {
-                animations[i].set(duration: durations[i], curve: nil)
-            }
-            return
-        }
-//        var newD: [String] = [timing.curve.exportWith(name: "common")]
-//        var newT: [Double] = []
+    private func setCurve(_ array: inout [AnimationOptions?], duration: Double, options: AnimationOptions?) {
+        guard let fullCurve = options?.curve, fullCurve != .linear else { return }
+        let progresses = getProgresses(array, duration: duration, options: options)
         for i in 0..<animations.count {
             var (curve1, newDuration) = fullCurve.split(range: progresses[i])
-            if let curve2 = animations[i].parameters.settedTiming.curve {
+            if let curve2 = animations[i].modificators.curve {
                 curve1 = BezierCurve.between(curve1, curve2)
             }
-//            newD.append(curve1.exportWith(name: "curve\(i)"))
-//            newT.append(newDuration)
-            animations[i].set(duration: timing.duration * newDuration, curve: curve1)
+            array[i]?.duration = .absolute(duration * newDuration)
+            array[i]?.curve = curve1
         }
     }
-    
-    private func setProgresses(_ durations: [Double]) {
-        progresses = []
-        guard !animations.isEmpty else { return }
-        guard timing.duration > 0 else {
-            progresses = Array(repeating: 0...0, count: durations.count)
-            return
+
+    private func getProgresses(_ array: [AnimationOptions?], duration: Double, options: AnimationOptions?) -> [ClosedRange<Double>] {
+        guard !array.isEmpty else { return [] }
+        guard duration > 0 else {
+            return Array(repeating: 0...0, count: array.count)
         }
+        var progresses: [ClosedRange<Double>] = []
         var dur = 0.0
         var start = 0.0
-        for anim in durations {
-            dur += anim
-            let end = min(1, dur / timing.duration)
+        for anim in array {
+            dur += anim?.duration?.absolute ?? 0
+            let end = min(1, dur / duration)
             progresses.append(start...end)
             start = end
         }
         progresses[progresses.count - 1] = progresses[progresses.count - 1].lowerBound...1
+        return progresses
     }
     
 }

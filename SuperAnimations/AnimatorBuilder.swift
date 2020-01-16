@@ -11,15 +11,18 @@ import UIKit
 @_functionBuilder
 public struct AnimatorBuilder {
     
-    public static func buildBlock() {
-    }
+//    public static func buildBlock() {}
     
-    public static func buildBlock(_ animations: AnimatorProtocol...) -> [AnimatorProtocol] {
+    public static func buildBlock(_ animations: AnimationProviderProtocol...) -> [AnimationProviderProtocol] {
         return animations
     }
     
-    public static func buildBlock(_ animation: AnimatorProtocol) -> AnimatorProtocol {
-        return animation
-    }
+//    public static func buildBlock(_ animation: AnimationProviderProtocol) -> AnimationProviderProtocol {
+//        return animation
+//    }
+//
+//    public static func buildBlock() -> [AnimationProviderProtocol] {
+//        return []
+//    }
     
 }
