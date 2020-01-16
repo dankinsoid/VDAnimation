@@ -10,7 +10,7 @@ import UIKit
 
 public final class Animate: AnimatorProtocol {
     public var state: UIViewAnimatingState { return animator?.state ?? .active }
-    public var parameters: AnimationParameters
+    public let parameters: AnimationParameters
     public var isRunning: Bool { return animator?.isRunning ?? false }
     public var timing: Animate.Timing { .setted(parameters.settedTiming) }
     public var progress: Double {
