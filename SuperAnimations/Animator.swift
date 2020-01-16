@@ -17,7 +17,7 @@ public final class Animate: AnimatorProtocol {
         get { Double(animator?.fractionComplete ?? 0) }
         set { resetAnimatorIfNeeded().fractionComplete = CGFloat(newValue) }
     }
-    private var animator: VDViewAnimator?
+    private var _animator: VDViewAnimator?
     private let animation: () -> ()
     private var springTiming: UISpringTimingParameters?
     
@@ -60,7 +60,7 @@ public final class Animate: AnimatorProtocol {
     }
     
     private func resetAnimatorIfNeeded() -> VDViewAnimator {
-        if let anim = animator, anim.state == .active {
+        if let anim = _animator, anim.state == .active {
             return anim
         }
         return resetAnimator()
@@ -71,22 +71,22 @@ public final class Animate: AnimatorProtocol {
         let _animator = VDViewAnimator(duration: timing.duration, timingParameters: provider)
         _animator.addAnimations(animation)
         _animator.addCompletion(parameters.completion)
-        animator = _animator
+        _animator = _animator
         setOptions()
         return _animator
     }
     
     private func setOptions() {
-        animator?.isInterruptible = isInterruptible
-        animator?.isManualHitTestingEnabled = isManualHitTestingEnabled
-        if isReversed, let an = animator {
+        _animator?.isInterruptible = isInterruptible
+        _animator?.isManualHitTestingEnabled = isManualHitTestingEnabled
+        if isReversed, let an = _animator {
             an.fractionComplete = 1 - an.fractionComplete
         }
-        animator?.isReversed = isReversed
-        animator?.reverseOnComplete = restoreOnFinish
-        if animator?.state != .active {
-            animator?.isUserInteractionEnabled = isUserInteractionEnabled
-            animator?.scrubsLinearly = scrubsLinearly
+        _animator?.isReversed = isReversed
+        _animator?.reverseOnComplete = restoreOnFinish
+        if _animator?.state != .active {
+            _animator?.isUserInteractionEnabled = isUserInteractionEnabled
+            _animator?.scrubsLinearly = scrubsLinearly
         }
     }
     
@@ -106,7 +106,7 @@ public final class Animate: AnimatorProtocol {
 }
 
 @objc(_TtC15SuperAnimationsVDTimingProvider)
-fileprivate class VDTimingProvider: NSObject, UITimingCurveProvider {
+class VDTimingProvider: NSObject, UITimingCurveProvider {
     let timingCurveType: UITimingCurveType
     let cubicTimingParameters: UICubicTimingParameters?
     let springTimingParameters: UISpringTimingParameters?

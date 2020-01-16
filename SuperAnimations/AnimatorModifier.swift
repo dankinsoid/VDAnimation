@@ -10,9 +10,8 @@ import UIKit
 
 public struct AnimationParameters {
     static var `default`: AnimationParameters { AnimationParameters() }
-    var completion: (UIViewAnimatingPosition) -> () = {_ in}
     var options: Animate.Options = .default
-    var settedTiming: SettedTiming = .default
+    var timing: Animate.Timing = .default
 }
 
 public struct SettedTiming {

@@ -21,7 +21,7 @@ public protocol AnimatorProtocol {
     var isRunning: Bool { get }
     var state: UIViewAnimatingState { get }
     var timing: Animate.Timing { get }
-    var parameters: AnimationParameters { get nonmutating set }
+    var parameters: AnimationParameters { get set }
     func copy(with parameters: AnimationParameters) -> Self
     func start(_ completion: @escaping (UIViewAnimatingPosition) -> ())
     func start()
