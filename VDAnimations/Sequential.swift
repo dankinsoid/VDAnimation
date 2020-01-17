@@ -74,11 +74,12 @@ public struct Sequential: AnimationProviderProtocol {
         if cnt > 0 {
             add /= Double(cnt)
         }
-        var k = relativeK == 0 ? [Double](repeating: 1 / Double(animations.count), count: animations.count) : ks.map({ ($0 ?? add) / relativeK })
-        for i in 0..<k.count {
-            k[i] *= full
+        var result: [AnimationOptions?]
+        if relativeK == 0 {
+            result = [AnimationOptions?](repeating: AnimationOptions(duration: .absolute(full / Double(animations.count))), count: animations.count)
+        } else {
+            result = ks.map({ AnimationOptions(duration: .absolute(full * ($0 ?? add) / relativeK)) })
         }
-        var result = k.map({ AnimationOptions(duration: .absolute($0)) as AnimationOptions? })
         setCurve(&result, duration: full, options: options)
         return result
     }

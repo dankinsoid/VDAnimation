@@ -46,12 +46,12 @@ public struct Parallel: AnimationProviderProtocol {
         let maxDuration = animations.reduce(0, { max($0, $1.modificators.duration?.absolute ?? 0) })
         let k = maxDuration == 0 ? 1 : full / maxDuration
         let childrenDurations: [Double] = animations.map {
-        guard let setted = $0.modificators.duration else {
-            return full
-        }
-        switch setted {
-        case .absolute(let time):   return time * k
-        case .relative(let r):      return full * min(1, r)
+            guard let setted = $0.modificators.duration else {
+                return full
+            }
+            switch setted {
+            case .absolute(let time):   return time * k
+            case .relative(let r):      return full * min(1, r)
             }
         }
         var result = childrenDurations.map({ AnimationOptions(duration: .absolute($0)) as AnimationOptions? })
