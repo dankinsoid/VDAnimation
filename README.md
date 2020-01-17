@@ -26,7 +26,7 @@ Sequential {
     }
   }
   UIViewAnimate {
-    self.imageHeightContraint.constant = 50
+    self.imageHeightConstraint.constant = 50
     self.view.layoutIfNeeded()
   }
 }
