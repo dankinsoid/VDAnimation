@@ -35,7 +35,7 @@ Sequential {
 .start()
 ```
 ## Usage
-####Basic animations
+#### Basic animations
 1. UIViewAnimate - simple UIKit animation, it's initialized by closure
 2. Animate (beta) - simple SwiftUI animation, it's initialized by closure
 3. Sequential - sequential animations running one after another
@@ -43,7 +43,7 @@ Sequential {
 5. Interval - TODO
 6. WithoutAnimation - TODO
 
-####Modifiers
+#### Modifiers
 1. duration(TimeInterval) - sets the animation duration in seconds
 2. duration(relative: Double) - sets the animation duration relative to the parent animation in 0...1
 3. curve(BezierCurve) - sets the animation curve
