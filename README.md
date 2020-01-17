@@ -35,7 +35,23 @@ Sequential {
 .start()
 ```
 ## Usage
-TODO
+####Basic animations
+1. UIViewAnimate - simple UIKit animation, it's initialized by closure
+2. Animate (beta) - simple SwiftUI animation, it's initialized by closure
+3. Sequential - sequential animations running one after another
+4. Parallel - parallel animations running simultaneously
+5. Interval - TODO
+6. WithoutAnimation - TODO
+
+####Modifiers
+1. duration(TimeInterval) - sets the animation duration in seconds
+2. duration(relative: Double) - sets the animation duration relative to the parent animation in 0...1
+3. curve(BezierCurve) - sets the animation curve
+4. spring(dampingRatio: CGFloat = 0.3) - sets spring animation curve (UIViewAnimate and Animate)
+5. ca - UIView, CALayer and View extension to describe an animation of one property
+```swift 
+	let animation = someView.ca.anyMutableViewProperty.set(newValue)
+```
 
 ## Installation
 1.  [CocoaPods](https://cocoapods.org)
@@ -74,3 +90,4 @@ dankinsoid, voidilov@gmail.com
 ## License
 
 VDAnimation is available under the MIT license. See the LICENSE file for more info.
+
