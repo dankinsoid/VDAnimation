@@ -25,7 +25,7 @@ public struct Parallel: AnimationProviderProtocol {
     
     public func start(with options: AnimationOptions?, _ completion: @escaping (Bool) -> ()) {
         let array = getOptions(for: options)
-        let parallelCompletion = ParallelCompletion(common: animations.count, functions: animations.enumerated().map { arg in
+        let parallelCompletion = ParallelCompletion(animations.enumerated().map { arg in
             { arg.element.start(with: array[arg.offset], $0) }
         })
         parallelCompletion.start(completion: completion)
@@ -95,8 +95,8 @@ fileprivate final class ParallelCompletion {
     var current = 0
     let functions: [(@escaping T) -> ()]
     
-    init(common: Int, functions: [(@escaping T) -> ()]) {
-        self.common = common
+    init(_ functions: [(@escaping T) -> ()]) {
+        self.common = functions.count
         self.functions = functions
     }
     
