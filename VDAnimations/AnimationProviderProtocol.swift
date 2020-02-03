@@ -9,8 +9,14 @@
 import Foundation
 
 public protocol AnimationProviderProtocol {
-    func start(with options: AnimationOptions?, _ completion: @escaping (Bool) -> ())
+    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ())
     var asModifier: AnimationModifier { get }
+    func canSet(state: AnimationState) -> Bool
+    func set(state: AnimationState)
+}
+
+public protocol AnimationClosureProviderProtocol: AnimationProviderProtocol {
+    init(_ closure: @escaping () -> ())
 }
 
 extension AnimationProviderProtocol {

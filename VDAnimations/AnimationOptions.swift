@@ -12,6 +12,16 @@ public struct AnimationOptions {
     static let empty = AnimationOptions()
     public var duration: AnimationDuration?
     public var curve: BezierCurve?
-    public var repeatCount: Int = 1
-    public var autoreverses: Bool = false
+    var chain: Chainer<AnimationOptions> { Chainer(root: self) }
+    
+    public func or(_ other: AnimationOptions) -> AnimationOptions {
+        AnimationOptions(
+            duration: duration ?? other.duration,
+            curve: curve ?? other.curve
+        )
+    }
+}
+
+public enum AnimationState {
+    case start, progress(Double), end
 }

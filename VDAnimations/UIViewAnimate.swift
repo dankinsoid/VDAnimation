@@ -9,30 +9,44 @@
 import UIKit
 
 ///UIKit animation
-public struct UIViewAnimate: AnimationProviderProtocol {
+public struct UIViewAnimate: AnimationClosureProviderProtocol {
     private let animation: () -> ()
-    private let prepare: () -> ()
     private var springTiming: UISpringTimingParameters?
     
     public init(_ block: @escaping () -> ()) {
         animation = block
-        prepare = {}
     }
     
-    init(_ block: @escaping () -> (), before: @escaping () -> ()) {
-        animation = block
-        prepare = before
-    }
-    
-    public func start(with options: AnimationOptions?, _ completion: @escaping (Bool) -> ()) {
-        let provider = VDTimingProvider(bezier: options?.curve, spring: springTiming)
-        let animator = VDViewAnimator(duration: options?.duration?.absolute ?? 0, timingParameters: provider)
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+        guard options.duration?.absolute ?? 0 > 0 else {
+            animation()
+            completion(true)
+            return
+        }
+        let provider = VDTimingProvider(bezier: options.curve, spring: springTiming)
+        let animator = VDViewAnimator(duration: options.duration?.absolute ?? 0, timingParameters: provider)
         animator.addAnimations(animation)
 //        animator.reverseOnComplete = false
 //        animator.isReversed = true
 //        animator.fractionComplete = 0
         animator.startAnimation { position in
             completion(position == .end)
+        }
+    }
+    
+    public func canSet(state: AnimationState) -> Bool {
+        switch state {
+        case .start:    return false
+        case .progress: return false
+        case .end:      return true
+        }
+    }
+    
+    public func set(state: AnimationState) {
+        switch state {
+        case .start:    return
+        case .progress: return
+        case .end:      animation()
         }
     }
     

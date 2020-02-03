@@ -14,12 +14,12 @@ public struct SwiftUIPropertySetter<R, T> {
     private let object: R
     private let keyPath: ReferenceWritableKeyPath<R, T>
     
-    public func set(_ value: T) -> Animate {
-        let kp = keyPath
-        return Animate {[object] in
-            object[keyPath: kp] = value
-        }
-    }
+//    public func set(_ value: T) -> Animate {
+//        let kp = keyPath
+//        return Animate {[object] in
+//            object[keyPath: kp] = value
+//        }
+//    }
     
     fileprivate init(object: R, keyPath: ReferenceWritableKeyPath<R, T>) {
         self.object = object

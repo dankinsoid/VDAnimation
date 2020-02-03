@@ -157,39 +157,47 @@ public struct BezierCurve: Equatable {
     
 }
 
-extension CGPoint {
+extension CGPoint: AdditiveArithmetic {
     
     var export: String {
         return x.export + "," + y.export
     }
     
-    static let one = CGPoint(x: 1, y: 1)
+    public static let one = CGPoint(x: 1, y: 1)
     
-    static func between(_ p1: CGPoint, _ p2: CGPoint, k: CGFloat) -> CGPoint {
+    public static func between(_ p1: CGPoint, _ p2: CGPoint, k: CGFloat) -> CGPoint {
         return CGPoint(x: p1.x + (p2.x - p1.x) * k, y: p1.y + (p2.y - p1.y) * k)
     }
     
-    static func /(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
+    public static func /(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
         return CGPoint(x: lhs.x / rhs.x, y: lhs.y / rhs.y)
     }
     
-    static func *(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
+    public static func *(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
         return CGPoint(x: lhs.x * rhs.x, y: lhs.y * rhs.y)
     }
     
-    static func *(_ lhs: CGPoint, _ rhs: CGSize) -> CGPoint {
+    public static func *(_ lhs: CGPoint, _ rhs: CGSize) -> CGPoint {
         return CGPoint(x: lhs.x * rhs.width, y: lhs.y * rhs.height)
     }
     
-    static func +(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
+    public static func +(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
         return CGPoint(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
     }
     
-    static func -(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
+    public static func -(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
         return CGPoint(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
     }
     
-    subscript(_ axe: NSLayoutConstraint.Axis) -> CGFloat {
+    public static func +=(lhs: inout CGPoint, rhs: CGPoint) {
+        lhs = lhs + rhs
+    }
+    
+    public static func -=(lhs: inout CGPoint, rhs: CGPoint) {
+        lhs = lhs - rhs
+    }
+    
+    public subscript(_ axe: NSLayoutConstraint.Axis) -> CGFloat {
         switch axe {
         case .horizontal: return x
         case .vertical: return y
