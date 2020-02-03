@@ -7,20 +7,14 @@
 //
 
 import UIKit
+import SwiftUI
 
 @dynamicMemberLookup
-public struct AnimatedPropertySetter<R: AnyObject, T> {
-    private weak var object: R?
+public struct AnimatedPropertySetter<R, T> {
+    private let object: R
     private let keyPath: ReferenceWritableKeyPath<R, T>
     
-    public func set(_ value: T) -> UIViewAnimate {
-        let kp = keyPath
-        return UIViewAnimate {[weak object] in
-            object?[keyPath: kp] = value
-        }
-    }
-    
-    fileprivate init(object: R?, keyPath: ReferenceWritableKeyPath<R, T>) {
+    fileprivate init(object: R, keyPath: ReferenceWritableKeyPath<R, T>) {
         self.object = object
         self.keyPath = keyPath
     }
@@ -31,11 +25,160 @@ public struct AnimatedPropertySetter<R: AnyObject, T> {
     
 }
 
-@dynamicMemberLookup
-public struct AnimatedPropertyMaker<R: AnyObject> {
-    private weak var object: R?
+extension AnimatedPropertySetter where R: AnimatedPropertySettable, T: ScalableConvertable {
     
-    fileprivate init(object: R?) {
+    public func set(_ a: T, _ b: T, _ values: T...) -> Sequential {
+        set([a, b] + values)
+    }
+    
+    public func set(_ values: [T]) -> Sequential {
+        set(from: object[keyPath: keyPath], values)
+    }
+    
+    public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> Sequential {
+        set(from: initial, [a, b] + values)
+    }
+    
+    public func set(_ value: T) -> PropertyAnimator<T, UIViewAnimate> {
+        _set(from: object[keyPath: keyPath], value)
+    }
+    
+    public func set(from initial: T, _ values: [T]) -> Sequential {
+        guard values.count > 1 else {
+            return Sequential([_set(from: initial, initial)])
+        }
+        var array = [initial] + values
+        var from = initial
+        var animations: [PropertyAnimator<T, UIViewAnimate>] = []
+        while !array.isEmpty {
+            let second = array.removeFirst()
+            animations.append(_set(from: from, second))
+            from = second
+        }
+        return Sequential(animations)
+    }
+    
+    private func _set(from initial: T, _ value: T) -> PropertyAnimator<T, UIViewAnimate> {
+        let kp = keyPath
+        return PropertyAnimator(
+            from: initial,
+            getter: {[object] in object[keyPath: kp] },
+            setter: {[object] in
+                guard let v = $0 else { return }
+                object[keyPath: kp] = v
+            },
+            value: value,
+            animatorType: UIViewAnimate.self
+        )
+    }
+    
+}
+
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
+extension AnimatedPropertySetter where T: Animatable, R: View {
+    
+    public func set(_ a: T, _ b: T, _ values: T...) -> Sequential {
+        set([a, b] + values)
+    }
+    
+    public func set(_ values: [T]) -> Sequential {
+        set(from: object[keyPath: keyPath], values)
+    }
+    
+    public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> Sequential {
+        set(from: initial, [a, b] + values)
+    }
+    
+    public func set(_ value: T) -> PropertyAnimator<T, Animate> {
+        _set(from: object[keyPath: keyPath], value)
+    }
+    
+    public func set(from initial: T, _ values: [T]) -> Sequential {
+        guard values.count > 1 else {
+            return Sequential([_set(from: initial, initial)])
+        }
+        var array = [initial] + values
+        var from = initial
+        var animations: [PropertyAnimator<T, Animate>] = []
+        while !array.isEmpty {
+            let second = array.removeFirst()
+            animations.append(_set(from: from, second))
+            from = second
+        }
+        return Sequential(animations)
+    }
+    
+    private func _set(from initial: T, _ value: T) -> PropertyAnimator<T, Animate> {
+        let kp = keyPath
+        return PropertyAnimator(
+            from: initial,
+            getter: {[object] in object[keyPath: kp] },
+            setter: {[object] in
+                guard let v = $0 else { return }
+                object[keyPath: kp] = v
+            },
+            value: value,
+            animatorType: Animate.self
+        )
+    }
+    
+}
+
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
+extension AnimatedPropertySetter where T: VectorArithmetic, R: View {
+    
+    public func set(_ a: T, _ b: T, _ values: T...) -> Sequential {
+        set([a, b] + values)
+    }
+    
+    public func set(_ values: [T]) -> Sequential {
+        set(from: object[keyPath: keyPath], values)
+    }
+    
+    public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> Sequential {
+        set(from: initial, [a, b] + values)
+    }
+    
+    public func set(_ value: T) -> PropertyAnimator<T, Animate> {
+        _set(from: object[keyPath: keyPath], value)
+    }
+    
+    public func set(from initial: T, _ values: [T]) -> Sequential {
+        guard values.count > 1 else {
+            return Sequential([_set(from: initial, initial)])
+        }
+        var array = [initial] + values
+        var from = initial
+        var animations: [PropertyAnimator<T, Animate>] = []
+        while !array.isEmpty {
+            let second = array.removeFirst()
+            animations.append(_set(from: from, second))
+            from = second
+        }
+        return Sequential(animations)
+    }
+    
+    private func _set(from initial: T, _ value: T) -> PropertyAnimator<T, Animate> {
+        let kp = keyPath
+        return PropertyAnimator(
+            from: initial,
+            getter: {[object] in object[keyPath: kp] },
+            setter: {[object] in
+                guard let v = $0 else { return }
+                object[keyPath: kp] = v
+            },
+            value: value,
+            animatorType: Animate.self
+        )
+    }
+    
+}
+
+@dynamicMemberLookup
+public struct AnimatedPropertyMaker<R> {
+    private var object: R
+    
+    fileprivate init(object: R) {
         self.object = object
     }
     
@@ -48,12 +191,16 @@ public struct AnimatedPropertyMaker<R: AnyObject> {
 public protocol AnimatedPropertySettable: class {}
 
 extension AnimatedPropertySettable {
-    
     public var ca: AnimatedPropertyMaker<Self> {
         return AnimatedPropertyMaker(object: self)
     }
-    
 }
 
 extension UIView: AnimatedPropertySettable {}
 extension CALayer: AnimatedPropertySettable {}
+
+extension View {
+    public var ca: AnimatedPropertyMaker<Self> {
+        return AnimatedPropertyMaker(object: self)
+    }
+}

@@ -10,7 +10,7 @@ import SwiftUI
 
 ///SwiftUI animation
 @available(iOS 13.0, macOS 10.15, *)
-public struct Animate: AnimationProviderProtocol {
+public struct Animate: AnimationClosureProviderProtocol {
     private let block: () -> ()
     
     public init(_ block: @escaping () -> ()) {
@@ -27,14 +27,6 @@ public struct Animate: AnimationProviderProtocol {
             }
         } else {
             animation = nil
-        }
-        if let count = options.repeatCount, count > 1 || options.autoreverses == true {
-            let reverse = options.autoreverses ?? true
-            if count < .max {
-                animation = animation?.repeatCount(count, autoreverses: reverse)
-            } else {
-                animation = animation?.repeatForever(autoreverses: reverse)
-            }
         }
         withAnimation(animation) {[block] in
             block()

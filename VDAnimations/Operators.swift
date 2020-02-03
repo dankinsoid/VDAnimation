@@ -22,12 +22,12 @@ extension AnimationProviderProtocol {
         asModifier.chain.modificators.curve[value]
     }
     
-//    public func repeatCount(_ repeatCount: Int, autoreverses: Bool = true) -> AnimationModifier {
-//        asModifier.chain.modificators.repeatCount[max(1, repeatCount)].chain.modificators.autoreverses[autoreverses]
-//    }
-//    
-//    public func repeatForever(autoreverses: Bool) -> AnimationModifier {
-//        asModifier.chain.modificators.repeatCount[.max].chain.modificators.autoreverses[autoreverses]
-//    }
+    public func `repeat`(_ count: Int) -> AnimationModifier {
+        RepeatAnimation(count, for: self).asModifier
+    }
+    
+    public func `repeat`() -> AnimationModifier {
+        RepeatAnimation(nil, for: self).asModifier
+    }
     
 }
