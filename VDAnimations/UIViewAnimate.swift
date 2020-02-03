@@ -1,5 +1,5 @@
 //
-//  Animate.swift
+//  SwiftUIAnimate.swift
 //  CA
 //
 //  Created by crypto_user on 16.01.2020.
@@ -9,7 +9,7 @@
 import UIKit
 
 ///UIKit animation
-public struct UIViewAnimate: AnimationClosureProviderProtocol {
+public struct Animate: AnimationClosureProviderProtocol {
     private let animation: () -> ()
     private var springTiming: UISpringTimingParameters?
     
@@ -47,7 +47,7 @@ public struct UIViewAnimate: AnimationClosureProviderProtocol {
         }
     }
     
-    public func spring(_ dampingRatio: CGFloat = 0.3) -> UIViewAnimate {
+    public func spring(_ dampingRatio: CGFloat = 0.3) -> Animate {
         chain.springTiming[UISpringTimingParameters(dampingRatio: dampingRatio)]
     }
     

@@ -39,7 +39,7 @@ extension AnimatedPropertySetter where R: AnimatedPropertySettable, T: ScalableC
         set(from: initial, [a, b] + values)
     }
     
-    public func set(_ value: T) -> PropertyAnimator<T, UIViewAnimate> {
+    public func set(_ value: T) -> PropertyAnimator<T, Animate> {
         _set(from: object[keyPath: keyPath], value)
     }
     
@@ -49,7 +49,7 @@ extension AnimatedPropertySetter where R: AnimatedPropertySettable, T: ScalableC
         }
         var array = [initial] + values
         var from = initial
-        var animations: [PropertyAnimator<T, UIViewAnimate>] = []
+        var animations: [PropertyAnimator<T, Animate>] = []
         while !array.isEmpty {
             let second = array.removeFirst()
             animations.append(_set(from: from, second))
@@ -58,7 +58,7 @@ extension AnimatedPropertySetter where R: AnimatedPropertySettable, T: ScalableC
         return Sequential(animations)
     }
     
-    private func _set(from initial: T, _ value: T) -> PropertyAnimator<T, UIViewAnimate> {
+    private func _set(from initial: T, _ value: T) -> PropertyAnimator<T, Animate> {
         let kp = keyPath
         return PropertyAnimator(
             from: initial,
@@ -68,7 +68,7 @@ extension AnimatedPropertySetter where R: AnimatedPropertySettable, T: ScalableC
                 object[keyPath: kp] = v
             },
             value: value,
-            animatorType: UIViewAnimate.self
+            animatorType: Animate.self
         )
     }
     
@@ -89,7 +89,7 @@ extension AnimatedPropertySetter where T: Animatable, R: View {
         set(from: initial, [a, b] + values)
     }
     
-    public func set(_ value: T) -> PropertyAnimator<T, Animate> {
+    public func set(_ value: T) -> PropertyAnimator<T, SwiftUIAnimate> {
         _set(from: object[keyPath: keyPath], value)
     }
     
@@ -99,7 +99,7 @@ extension AnimatedPropertySetter where T: Animatable, R: View {
         }
         var array = [initial] + values
         var from = initial
-        var animations: [PropertyAnimator<T, Animate>] = []
+        var animations: [PropertyAnimator<T, SwiftUIAnimate>] = []
         while !array.isEmpty {
             let second = array.removeFirst()
             animations.append(_set(from: from, second))
@@ -108,7 +108,7 @@ extension AnimatedPropertySetter where T: Animatable, R: View {
         return Sequential(animations)
     }
     
-    private func _set(from initial: T, _ value: T) -> PropertyAnimator<T, Animate> {
+    private func _set(from initial: T, _ value: T) -> PropertyAnimator<T, SwiftUIAnimate> {
         let kp = keyPath
         return PropertyAnimator(
             from: initial,
@@ -118,7 +118,7 @@ extension AnimatedPropertySetter where T: Animatable, R: View {
                 object[keyPath: kp] = v
             },
             value: value,
-            animatorType: Animate.self
+            animatorType: SwiftUIAnimate.self
         )
     }
     
@@ -139,7 +139,7 @@ extension AnimatedPropertySetter where T: VectorArithmetic, R: View {
         set(from: initial, [a, b] + values)
     }
     
-    public func set(_ value: T) -> PropertyAnimator<T, Animate> {
+    public func set(_ value: T) -> PropertyAnimator<T, SwiftUIAnimate> {
         _set(from: object[keyPath: keyPath], value)
     }
     
@@ -149,7 +149,7 @@ extension AnimatedPropertySetter where T: VectorArithmetic, R: View {
         }
         var array = [initial] + values
         var from = initial
-        var animations: [PropertyAnimator<T, Animate>] = []
+        var animations: [PropertyAnimator<T, SwiftUIAnimate>] = []
         while !array.isEmpty {
             let second = array.removeFirst()
             animations.append(_set(from: from, second))
@@ -158,7 +158,7 @@ extension AnimatedPropertySetter where T: VectorArithmetic, R: View {
         return Sequential(animations)
     }
     
-    private func _set(from initial: T, _ value: T) -> PropertyAnimator<T, Animate> {
+    private func _set(from initial: T, _ value: T) -> PropertyAnimator<T, SwiftUIAnimate> {
         let kp = keyPath
         return PropertyAnimator(
             from: initial,
@@ -168,7 +168,7 @@ extension AnimatedPropertySetter where T: VectorArithmetic, R: View {
                 object[keyPath: kp] = v
             },
             value: value,
-            animatorType: Animate.self
+            animatorType: SwiftUIAnimate.self
         )
     }
     

@@ -1,5 +1,5 @@
 //
-//  Animate.swift
+//  SwiftUIAnimate.swift
 //  CA
 //
 //  Created by crypto_user on 16.01.2020.
@@ -10,7 +10,7 @@ import SwiftUI
 
 ///SwiftUI animation
 @available(iOS 13.0, macOS 10.15, *)
-public struct Animate: AnimationClosureProviderProtocol {
+public struct SwiftUIAnimate: AnimationClosureProviderProtocol {
     private let block: () -> ()
     
     public init(_ block: @escaping () -> ()) {
