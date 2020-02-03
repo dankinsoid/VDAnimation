@@ -8,31 +8,24 @@
 
 import UIKit
 
-public struct Transition {
+public struct Transition: AnimationProviderProtocol {
     
-    func ff(_ action: () -> ()) {
-        guard let window = UIApplication.shared.keyWindow else { return }
-        let all = [window.layer] + window.layer.allSublayers()
-        print(all.count)
-        let before = Dictionary(uniqueKeysWithValues: all.map { ($0, $0.allProperties()) })
-        action()
-        let after = Dictionary(uniqueKeysWithValues: all.map { ($0, $0.allProperties()) })
-        before.forEach {
-            let (layer, dict) = $0
-            guard let new = after[layer] else { return }
-            dict.forEach {
-                print($0.key)
-                print($0.value as? CGRect)
-                print($0.value as? CGFloat)
-                print($0.value as? CGSize)
-                let cg = $0.value as! CGColor
-                if cg.components?.isEmpty == false {
-                    print(cg.components!)
-                    print(UIColor(cgColor: cg))
-                }
-                print()
-            }
-        }
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+        UIView.transition(
+            with: <#T##UIView#>,
+            duration: <#T##TimeInterval#>,
+            options: <#T##UIView.AnimationOptions#>,
+            animations: <#T##(() -> Void)?##(() -> Void)?##() -> Void#>,
+            completion: <#T##((Bool) -> Void)?##((Bool) -> Void)?##(Bool) -> Void#>
+        )
+    }
+    
+    public func canSet(state: AnimationState) -> Bool {
+        <#code#>
+    }
+    
+    public func set(state: AnimationState) {
+        <#code#>
     }
     
 }
@@ -73,6 +66,30 @@ extension CALayer {
         return rv
     }
     
+    static func ff(_ action: () -> ()) {
+        guard let window = UIApplication.shared.keyWindow else { return }
+        let all = [window.layer] + window.layer.allSublayers()
+        print(all.count)
+        let before = Dictionary(uniqueKeysWithValues: all.map { ($0, $0.allProperties()) })
+        action()
+        let after = Dictionary(uniqueKeysWithValues: all.map { ($0, $0.allProperties()) })
+        before.forEach {
+            let (layer, dict) = $0
+            guard let new = after[layer] else { return }
+            dict.forEach {
+                print($0.key)
+                print($0.value as? CGRect)
+                print($0.value as? CGFloat)
+                print($0.value as? CGSize)
+                let cg = $0.value as! CGColor
+                if cg.components?.isEmpty == false {
+                    print(cg.components!)
+                    print(UIColor(cgColor: cg))
+                }
+                print()
+            }
+        }
+    }
 }
 
 class MyAnimation: CAAction {

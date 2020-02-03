@@ -74,6 +74,14 @@ extension AnimatedPropertySetter where R: AnimatedPropertySettable, T: ScalableC
     
 }
 
+extension AnimatedPropertySetter where R: AnimatedPropertySettable, T: Scalable, T: Comparable {
+    
+    public func set(_ range: ClosedRange<T>) -> PropertyAnimator<T, Animate> {
+        _set(from: range.lowerBound, range.upperBound)
+    }
+    
+}
+
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 extension AnimatedPropertySetter where T: Animatable, R: View {
     
@@ -120,6 +128,15 @@ extension AnimatedPropertySetter where T: Animatable, R: View {
             value: value,
             animatorType: SwiftUIAnimate.self
         )
+    }
+    
+}
+
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
+extension AnimatedPropertySetter where R: View, T: Animatable, T: Comparable {
+    
+    public func set(_ range: ClosedRange<T>) -> PropertyAnimator<T, SwiftUIAnimate> {
+        _set(from: range.lowerBound, range.upperBound)
     }
     
 }
@@ -174,6 +191,15 @@ extension AnimatedPropertySetter where T: VectorArithmetic, R: View {
     
 }
 
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
+extension AnimatedPropertySetter where R: View, T: VectorArithmetic, T: Comparable {
+    
+    public func set(_ range: ClosedRange<T>) -> PropertyAnimator<T, SwiftUIAnimate> {
+        _set(from: range.lowerBound, range.upperBound)
+    }
+    
+}
+
 @dynamicMemberLookup
 public struct AnimatedPropertyMaker<R> {
     private var object: R
@@ -199,6 +225,7 @@ extension AnimatedPropertySettable {
 extension UIView: AnimatedPropertySettable {}
 extension CALayer: AnimatedPropertySettable {}
 
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 extension View {
     public var ca: AnimatedPropertyMaker<Self> {
         return AnimatedPropertyMaker(object: self)

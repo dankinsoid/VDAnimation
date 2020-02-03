@@ -26,9 +26,10 @@ public struct Animate: AnimationClosureProviderProtocol {
         let provider = VDTimingProvider(bezier: options.curve, spring: springTiming)
         let animator = VDViewAnimator(duration: options.duration?.absolute ?? 0, timingParameters: provider)
         animator.addAnimations(animation)
-        animator.startAnimation { position in
+        animator.addCompletion { position in
             completion(position == .end)
         }
+        animator.startAnimation()
     }
     
     public func canSet(state: AnimationState) -> Bool {

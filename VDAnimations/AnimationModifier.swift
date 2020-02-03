@@ -31,12 +31,3 @@ public struct AnimationModifier: AnimationProviderProtocol {
         animation.set(state: state)
     }
 }
-
-//public struct AnyModifier<T> {
-//    public let root: T
-//    private let modification: (inout T) -> ()
-//    
-//    init(_ root: T, _ modification: @escaping (inout T) -> ()) {
-//        
-//    }
-//}

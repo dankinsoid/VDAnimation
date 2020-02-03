@@ -12,16 +12,27 @@ public struct AnimationOptions {
     static let empty = AnimationOptions()
     public var duration: AnimationDuration?
     public var curve: BezierCurve?
+    var priority: OptionsPriority = .usual
     var chain: Chainer<AnimationOptions> { Chainer(root: self) }
     
     public func or(_ other: AnimationOptions) -> AnimationOptions {
         AnimationOptions(
             duration: duration ?? other.duration,
-            curve: curve ?? other.curve
+            curve: curve ?? other.curve,
+            priority: max(other.priority, priority)
         )
     }
 }
 
 public enum AnimationState {
     case start, progress(Double), end
+}
+
+enum OptionsPriority: Double, Comparable {
+    case usual = 0, required = 1
+    
+    static func <(lhs: OptionsPriority, rhs: OptionsPriority) -> Bool {
+        lhs.rawValue < rhs.rawValue
+    }
+    
 }

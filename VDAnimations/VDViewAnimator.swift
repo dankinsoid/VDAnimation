@@ -9,6 +9,17 @@
 import UIKit
 
 class VDViewAnimator: UIViewPropertyAnimator {
+    
+    deinit {
+        if state != .stopped, !isRunning {
+            stopAnimation(false)
+            finishAnimation(at: .end)
+        }
+    }
+    
+}
+
+class _VDViewAnimator: UIViewPropertyAnimator {
     private var observers: [UUID: (UIViewAnimatingPosition) -> ()] = [:]
     var reverseOnComplete = false
     var isPaused = false
