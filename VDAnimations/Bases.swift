@@ -140,7 +140,7 @@ extension AnimatedPropertySetter where T: VectorArithmetic, R: View {
     }
     
     public func set(_ value: T) -> PropertyAnimator<T, SwiftUIAnimate> {
-        _set(from: object[keyPath: keyPath], value)
+        _set(from: nil, value)
     }
     
     public func set(from initial: T, _ values: [T]) -> Sequential {
@@ -158,7 +158,7 @@ extension AnimatedPropertySetter where T: VectorArithmetic, R: View {
         return Sequential(animations)
     }
     
-    private func _set(from initial: T, _ value: T) -> PropertyAnimator<T, SwiftUIAnimate> {
+    private func _set(from initial: T?, _ value: T) -> PropertyAnimator<T, SwiftUIAnimate> {
         let kp = keyPath
         return PropertyAnimator(
             from: initial,

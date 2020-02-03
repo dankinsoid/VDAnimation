@@ -19,7 +19,7 @@ public struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderPr
     init(_ cnt: Int?, for anim: A) {
         count = cnt
         animation = anim
-        duration = nil
+        duration = RepeatAnimation.duration(for: cnt, from: anim.modificators.duration)
     }
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
@@ -29,7 +29,7 @@ public struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderPr
                 completion(true)
                 return
             }
-            let option = options.chain.duration[RepeatAnimation.duration(for: cnt, from: options.duration ?? duration)]
+            let option = getOptions(options: options, i: i)
             start(with: option, completion, i: 0, condition: { $0 < cnt })
         } else {
             start(with: options, completion, i: 0, condition: { _ in true })
@@ -46,7 +46,7 @@ public struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderPr
         }
         animation.start(with: options) {
             if $0 {
-                self.start(with: options, completion, i: i &+ 1, condition: condition)
+                self.start(with: options, completion, i: max(0, i &+ 1), condition: condition)
             } else {
                 completion($0)
             }
@@ -84,7 +84,35 @@ public struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderPr
     }
     
     private static func duration(for count: Int?, from dur: AnimationDuration?) -> AnimationDuration? {
-        nil
+        guard let cnt = count, let duration = dur, cnt > 0 else { return nil }
+        switch duration {
+        case .absolute(let time):   return .absolute(time * Double(cnt))
+        case .relative(let time):   return .relative(time)
+        }
+    }
+    
+    private func getOptions(options: AnimationOptions, i: Int) -> AnimationOptions {
+        let full = options.duration?.absolute ?? duration?.absolute ?? animation.modificators.duration?.absolute ?? 0
+        var result = options
+        guard let fullCurve = options.curve, fullCurve != .linear else {
+            result.duration = .absolute(full / Double(count ?? 1))
+            return result
+        }
+        let progresses = getProgress(i: i)
+        let (curve1, newDuration) = fullCurve.split(range: progresses)
+        result.duration = .absolute(full * newDuration)
+        result.curve = curve1
+        return result
+    }
+    
+    private func getProgress(i: Int) -> ClosedRange<Double> {
+        guard let cnt = count, cnt > 0 else { return 0...1 }
+        let lenght = 1 / Double(cnt)
+        var progress = (lenght * Double(i)...(lenght * Double(i) + lenght))
+        if i == cnt - 1 {
+            progress = min(1, progress.lowerBound)...1
+        }
+        return progress
     }
     
 }

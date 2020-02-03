@@ -18,12 +18,12 @@ extension Scalable {
 }
 
 public struct PropertyAnimator<T, A: AnimationClosureProviderProtocol>: AnimationProviderProtocol {
-    private let initial: T
+    private let initial: () -> T?
     private let value: T
     private let scale: (T, Double, T) -> T
     private let setter: (T?) -> ()
         
-    init(from initial: T, getter: @escaping () -> T?, setter: @escaping (T?) -> (), scale: @escaping (T, Double, T) -> T, value: T, animatorType: A.Type) {
+    init(from initial: @escaping () -> T?, getter: @escaping () -> T?, setter: @escaping (T?) -> (), scale: @escaping (T, Double, T) -> T, value: T, animatorType: A.Type) {
         self.scale = scale
         self.setter = setter
         self.initial = initial
@@ -39,9 +39,9 @@ public struct PropertyAnimator<T, A: AnimationClosureProviderProtocol>: Animatio
     public func set(state: AnimationState) {
         switch state {
         case .start:
-            setter(initial)
+            setter(initial())
         case .progress(let k):
-            setter(scale(initial, k, value))
+            setter(scale(initial() ?? value, k, value))
         case .end:
             setter(value)
         }
@@ -52,9 +52,9 @@ public struct PropertyAnimator<T, A: AnimationClosureProviderProtocol>: Animatio
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 extension PropertyAnimator where T: Animatable {
     
-    init(from initial: T, getter: @escaping () -> T?, setter: @escaping (T?) -> (), value: T, animatorType: A.Type) {
+    init(from initial: T?, getter: @escaping () -> T?, setter: @escaping (T?) -> (), value: T, animatorType: A.Type) {
         self = PropertyAnimator(
-            from: initial, getter: getter, setter: setter,
+            from: { initial ?? getter() }, getter: getter, setter: setter,
             scale: {
                 var result = $0
                 var lenght = $2.animatableData - $0.animatableData
@@ -71,9 +71,9 @@ extension PropertyAnimator where T: Animatable {
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 extension PropertyAnimator where T: VectorArithmetic {
     
-    init(from initial: T, getter: @escaping () -> T?, setter: @escaping (T?) -> (), value: T, animatorType: A.Type) {
+    init(from initial: T?, getter: @escaping () -> T?, setter: @escaping (T?) -> (), value: T, animatorType: A.Type) {
         self = PropertyAnimator(
-            from: initial, getter: getter, setter: setter,
+            from: { initial ?? getter() }, getter: getter, setter: setter,
             scale: {
                 var lenght = $2 - $0
                 lenght.scale(by: $1)
@@ -87,9 +87,9 @@ extension PropertyAnimator where T: VectorArithmetic {
 
 extension PropertyAnimator where T: ScalableConvertable {
     
-    init(from initial: T, getter: @escaping () -> T?, setter: @escaping (T?) -> (), value: T, animatorType: A.Type) {
+    init(from initial: T?, getter: @escaping () -> T?, setter: @escaping (T?) -> (), value: T, animatorType: A.Type) {
         self = PropertyAnimator(
-            from: initial, getter: getter, setter: setter,
+            from: { initial ?? getter() }, getter: getter, setter: setter,
             scale: { T.init(scaleData: $0.scaleData + ($2.scaleData - $0.scaleData).scaled(by: $1)) },
             value: value, animatorType: animatorType
         )
