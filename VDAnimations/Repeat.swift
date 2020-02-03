@@ -84,7 +84,7 @@ public struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderPr
     }
     
     private static func duration(for count: Int?, from dur: AnimationDuration?) -> AnimationDuration? {
-        
+        nil
     }
     
 }

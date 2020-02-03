@@ -157,6 +157,7 @@ fileprivate final class ParallelCompletion {
     typealias T = (Bool) -> ()
     let common: Int
     var current = 0
+    var error = false
     let functions: [(@escaping T) -> ()]
     
     init(_ functions: [(@escaping T) -> ()]) {
@@ -167,10 +168,14 @@ fileprivate final class ParallelCompletion {
     func start(completion: @escaping T) {
         for function in functions {
             function { state in
+                guard !self.error else { return }
                 self.current += 1
-                if self.current == self.common {
+                if self.current >= self.common {
                     self.current = 0
                     completion(state)
+                } else if !state {
+                    self.error = true
+                    completion(false)
                 }
             }
         }
