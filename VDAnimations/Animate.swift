@@ -18,15 +18,15 @@ public struct SwiftUIAnimate: AnimationClosureProviderProtocol {
     }
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
-        var animation: Animation?
-        if let dur = options.duration?.absolute {
-            if let curve = options.curve {
-                animation = .timingCurve(Double(curve.point1.x), Double(curve.point1.y), Double(curve.point2.x), Double(curve.point2.y), duration: dur)
-            } else {
-                animation = .linear(duration: dur)
-            }
+        guard let dur = options.duration?.absolute, dur > 0 else {
+            completion(true)
+            return
+        }
+        let animation: Animation
+        if let curve = options.curve {
+            animation = .timingCurve(Double(curve.point1.x), Double(curve.point1.y), Double(curve.point2.x), Double(curve.point2.y), duration: dur)
         } else {
-            animation = nil
+            animation = .linear(duration: dur)
         }
         withAnimation(animation) {[block] in
             block()
