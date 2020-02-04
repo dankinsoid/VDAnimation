@@ -10,7 +10,7 @@ import UIKit
 
 public struct WithoutAnimation: AnimationClosureProviderProtocol {
     
-    public var asModifier: AnimationModifier { AnimationModifier(modificators: AnimationOptions.empty.chain.priority[.required], animation: self) }
+    public var asModifier: AnimationModifier { AnimationModifier(modificators: AnimationOptions.empty.chain.duration[.absolute(0)], animation: self) }
     
     private let block: () -> ()
     
