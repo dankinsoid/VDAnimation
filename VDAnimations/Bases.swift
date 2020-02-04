@@ -40,25 +40,25 @@ extension AnimatedPropertySetter where R: AnimatedPropertySettable, T: ScalableC
     }
     
     public func set(_ value: T) -> PropertyAnimator<T, Animate> {
-        _set(from: object[keyPath: keyPath], value)
+        set(from: object[keyPath: keyPath], value)
     }
     
     public func set(from initial: T, _ values: [T]) -> Sequential {
         guard values.count > 1 else {
-            return Sequential([_set(from: initial, initial)])
+            return Sequential([set(from: initial, initial)])
         }
         var array = [initial] + values
         var from = initial
         var animations: [PropertyAnimator<T, Animate>] = []
         while !array.isEmpty {
             let second = array.removeFirst()
-            animations.append(_set(from: from, second))
+            animations.append(set(from: from, second))
             from = second
         }
         return Sequential(animations)
     }
     
-    private func _set(from initial: T, _ value: T) -> PropertyAnimator<T, Animate> {
+    public func set(from initial: T, _ value: T) -> PropertyAnimator<T, Animate> {
         let kp = keyPath
         return PropertyAnimator(
             from: initial,
@@ -77,7 +77,7 @@ extension AnimatedPropertySetter where R: AnimatedPropertySettable, T: ScalableC
 extension AnimatedPropertySetter where R: AnimatedPropertySettable, T: Scalable, T: Comparable {
     
     public func set(_ range: ClosedRange<T>) -> PropertyAnimator<T, Animate> {
-        _set(from: range.lowerBound, range.upperBound)
+        set(from: range.lowerBound, range.upperBound)
     }
     
 }
@@ -231,3 +231,11 @@ extension View {
         return AnimatedPropertyMaker(object: self)
     }
 }
+
+//extension NSLayoutConstraint {
+//
+//    public var ca: AnimatedPropertySetter<NSLayoutConstraint, CGFloat> {
+//        AnimatedPropertySetter(object: self, keyPath: \.constant)
+//    }
+//
+//}

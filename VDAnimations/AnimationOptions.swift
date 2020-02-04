@@ -12,14 +12,13 @@ public struct AnimationOptions {
     static let empty = AnimationOptions()
     public var duration: AnimationDuration?
     public var curve: BezierCurve?
-    var priority: OptionsPriority = .usual
+//    var priority: OptionsPriority = .usual
     var chain: Chainer<AnimationOptions> { Chainer(root: self) }
     
     public func or(_ other: AnimationOptions) -> AnimationOptions {
         AnimationOptions(
             duration: duration ?? other.duration,
-            curve: curve ?? other.curve,
-            priority: max(other.priority, priority)
+            curve: curve ?? other.curve
         )
     }
 }

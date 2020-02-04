@@ -10,7 +10,9 @@ import UIKit
 
 public struct WithoutAnimation: AnimationClosureProviderProtocol {
     
-    public var asModifier: AnimationModifier { AnimationModifier(modificators: AnimationOptions.empty.chain.duration[.absolute(0)], animation: self) }
+    public var asModifier: AnimationModifier {
+        AnimationModifier(modificators: AnimationOptions.empty.chain.duration[.absolute(0)], animation: self)
+    }
     
     private let block: () -> ()
     
@@ -19,7 +21,16 @@ public struct WithoutAnimation: AnimationClosureProviderProtocol {
     }
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
-        execute(completion)
+        let duration = options.duration?.absolute ?? 0
+        if duration == 0 {
+            execute(completion)
+        } else {
+            execute { result in
+                Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { _ in
+                    completion(result)
+                }
+            }
+        }
     }
     
     public func canSet(state: AnimationState) -> Bool {

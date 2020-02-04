@@ -90,7 +90,9 @@ extension PropertyAnimator where T: ScalableConvertable {
     init(from initial: T?, getter: @escaping () -> T?, setter: @escaping (T?) -> (), value: T, animatorType: A.Type) {
         self = PropertyAnimator(
             from: { initial ?? getter() }, getter: getter, setter: setter,
-            scale: { T.init(scaleData: $0.scaleData + ($2.scaleData - $0.scaleData).scaled(by: $1)) },
+            scale: {
+                T.init(scaleData: $0.scaleData + ($2.scaleData - $0.scaleData).scaled(by: $1))
+            },
             value: value, animatorType: animatorType
         )
     }
@@ -173,7 +175,15 @@ extension ScalableConvertable where Self: Scalable, ScaledData == Self {
 extension ScalableConvertable where Self == UIColor {
     
     public init(scaleData: UIColor.ScaledData) {
-        self = UIColor(red: scaleData.red, green: scaleData.green, blue: scaleData.blue, alpha: scaleData.alpha)
+        self = UIColor(red: scaleData.red.mod(1), green: scaleData.green.mod(1), blue: scaleData.blue.mod(1), alpha: scaleData.alpha.mod(1))
+    }
+    
+}
+
+fileprivate extension CGFloat {
+    
+    func mod(_ divider: CGFloat) -> CGFloat {
+        self == divider ? divider : truncatingRemainder(dividingBy: divider)
     }
     
 }
@@ -184,17 +194,10 @@ extension UIColor: ScalableConvertable {
         
         public static var zero: ScaledData { ScaledData(red: 0, green: 0, blue: 0, alpha: 0) }
         
-        public let red: CGFloat
-        public let green: CGFloat
-        public let blue: CGFloat
-        public let alpha: CGFloat
-        
-        public init(red r: CGFloat, green g: CGFloat, blue b: CGFloat, alpha a: CGFloat) {
-            red = r.truncatingRemainder(dividingBy: 1)
-            green = g.truncatingRemainder(dividingBy: 1)
-            blue = b.truncatingRemainder(dividingBy: 1)
-            alpha = a.truncatingRemainder(dividingBy: 1)
-        }
+        public var red: CGFloat
+        public var green: CGFloat
+        public var blue: CGFloat
+        public var alpha: CGFloat
         
         public func scaled(by rhs: Double) -> ScaledData {
             let rhs = CGFloat(rhs)
@@ -237,11 +240,12 @@ extension CGAffineTransform: Scalable {
     public static var zero: CGAffineTransform { .identity }
     
     public func scaled(by rhs: Double) -> CGAffineTransform {
-        concatenating(CGAffineTransform(a: CGFloat(rhs), b: 0, c: 0, d: CGFloat(rhs), tx: 0, ty: 0))
+        let k = CGFloat(rhs)
+        return CGAffineTransform(a: a * k, b: b * k, c: c * k, d: d * k, tx: tx * k, ty: ty * k)
     }
     
     public static func +(lhs: CGAffineTransform, rhs: CGAffineTransform) -> CGAffineTransform {
-        lhs.concatenating(rhs)
+        CGAffineTransform(a: (lhs.a + rhs.a) / 1, b: (lhs.b + rhs.b) / 1, c: (lhs.c + rhs.c) / 1, d: (lhs.d + rhs.d) / 1, tx: (lhs.tx + rhs.tx) / 1, ty: (lhs.ty + rhs.ty) / 1)//.scaledBy(x: 2, y: 2)
     }
     
     public static func +=(lhs: inout CGAffineTransform, rhs: CGAffineTransform) {
@@ -249,7 +253,7 @@ extension CGAffineTransform: Scalable {
     }
     
     public static func -(lhs: CGAffineTransform, rhs: CGAffineTransform) -> CGAffineTransform {
-        lhs.concatenating(rhs.inverted())
+        lhs + CGAffineTransform(a: -rhs.a, b: -rhs.b, c: -rhs.c, d: -rhs.d, tx: -rhs.tx, ty: -rhs.ty)
     }
     
     public static func -=(lhs: inout CGAffineTransform, rhs: CGAffineTransform) {
