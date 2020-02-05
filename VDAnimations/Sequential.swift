@@ -159,23 +159,38 @@ public struct Sequential: AnimationProviderProtocol {
     private func getProgresses(_ array: [AnimationOptions], duration: Double, options: AnimationOptions) -> [ClosedRange<Double>] {
         guard !array.isEmpty else { return [] }
         guard duration > 0 else {
-            let dif = 1 / Double(array.count)
-            var progresses = (0..<array.count).map { (Double($0) * dif)...(Double($0 + 1) * dif) }
-            progresses[progresses.count - 1] = progresses[progresses.count - 1].lowerBound...1
-            return progresses
+            return getProgresses(array)
         }
         var progresses: [ClosedRange<Double>] = []
         var dur = 0.0
         var start = 0.0
-        array.filter({ $0.duration == nil }).count
         
         for anim in array {
             if let rel = anim.duration?.relative {
                 dur += min(1, max(0, rel))
             } else if let abs = anim.duration?.absolute {
                 dur += abs / duration
+            }
+            let end = min(1, dur)
+            progresses.append(start...end)
+            start = end
+        }
+        progresses[progresses.count - 1] = progresses[progresses.count - 1].lowerBound...1
+        return progresses
+    }
+    
+    private func getProgresses(_ array: [AnimationOptions]) -> [ClosedRange<Double>] {
+        let cnt = Double(array.filter({ $0.duration?.relative == nil }).count)
+        let full = min(1, array.reduce(0, { $0 + ($1.duration?.relative ?? 0) }))
+        let each = (1 - full) / cnt
+        var progresses: [ClosedRange<Double>] = []
+        var dur = 0.0
+        var start = 0.0
+        for anim in array {
+            if let rel = anim.duration?.relative {
+                dur += min(1, max(0, rel))
             } else {
-                
+                dur += each
             }
             let end = min(1, dur)
             progresses.append(start...end)

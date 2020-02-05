@@ -8,10 +8,10 @@
 
 import Foundation
 
-public struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderProtocol {
+struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderProtocol {
     private let count: Int?
     private let animation: A
-    public var asModifier: AnimationModifier {
+    var asModifier: AnimationModifier {
         AnimationModifier(modificators: AnimationOptions.empty.chain.duration[duration], animation: self)
     }
     private let duration: AnimationDuration?
@@ -22,7 +22,7 @@ public struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderPr
         duration = RepeatAnimation.duration(for: cnt, from: anim.modificators.duration)
     }
     
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
         if let i = count {
             let cnt = max(0, i)
             guard cnt > 0 else {
@@ -53,7 +53,7 @@ public struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderPr
         }
     }
     
-    public func canSet(state: AnimationState) -> Bool {
+    func canSet(state: AnimationState) -> Bool {
         switch state {
         case .start, .end: return animation.canSet(state: state)
         case .progress(let k):
@@ -65,7 +65,7 @@ public struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderPr
         }
     }
     
-    public func set(state: AnimationState) {
+    func set(state: AnimationState) {
         switch state {
         case .start, .end:
             animation.set(state: state)
