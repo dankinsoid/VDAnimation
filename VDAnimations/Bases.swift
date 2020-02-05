@@ -47,7 +47,7 @@ extension AnimatedPropertySetter where R: AnimatedPropertySettable, T: ScalableC
         guard values.count > 1 else {
             return Sequential([set(from: initial, initial)])
         }
-        var array = [initial] + values
+        var array = values
         var from = initial
         var animations: [PropertyAnimator<T, Animate>] = []
         while !array.isEmpty {
@@ -105,7 +105,7 @@ extension AnimatedPropertySetter where T: Animatable, R: View {
         guard values.count > 1 else {
             return Sequential([_set(from: initial, initial)])
         }
-        var array = [initial] + values
+        var array = values
         var from = initial
         var animations: [PropertyAnimator<T, SwiftUIAnimate>] = []
         while !array.isEmpty {
@@ -164,7 +164,7 @@ extension AnimatedPropertySetter where T: VectorArithmetic, R: View {
         guard values.count > 1 else {
             return Sequential([_set(from: initial, initial)])
         }
-        var array = [initial] + values
+        var array = values
         var from = initial
         var animations: [PropertyAnimator<T, SwiftUIAnimate>] = []
         while !array.isEmpty {

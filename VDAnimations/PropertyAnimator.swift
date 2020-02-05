@@ -245,7 +245,7 @@ extension CGAffineTransform: Scalable {
     }
     
     public static func +(lhs: CGAffineTransform, rhs: CGAffineTransform) -> CGAffineTransform {
-        CGAffineTransform(a: (lhs.a + rhs.a) / 1, b: (lhs.b + rhs.b) / 1, c: (lhs.c + rhs.c) / 1, d: (lhs.d + rhs.d) / 1, tx: (lhs.tx + rhs.tx) / 1, ty: (lhs.ty + rhs.ty) / 1)//.scaledBy(x: 2, y: 2)
+        CGAffineTransform(a: (lhs.a + rhs.a) / 1, b: (lhs.b + rhs.b) / 1, c: (lhs.c + rhs.c) / 1, d: (lhs.d + rhs.d) / 1, tx: (lhs.tx + rhs.tx) / 1, ty: (lhs.ty + rhs.ty) / 1)
     }
     
     public static func +=(lhs: inout CGAffineTransform, rhs: CGAffineTransform) {
@@ -344,6 +344,17 @@ extension Optional: ScalableConvertable where Wrapped: ScalableConvertable {
     
     public init(scaleData: Wrapped.ScaledData) {
         self = .some(Wrapped.init(scaleData: scaleData))
+    }
+    
+}
+
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
+extension Optional: Animatable where Wrapped: Animatable {
+    public typealias AnimatableData = Wrapped.AnimatableData
+    
+    public var animatableData: Wrapped.AnimatableData {
+        get { self?.animatableData ?? .zero }
+        set { self?.animatableData = newValue }
     }
     
 }

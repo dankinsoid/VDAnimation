@@ -83,25 +83,16 @@ public struct Sequential: AnimationProviderProtocol {
         case .progress(let k):
             guard !animations.isEmpty else { return }
             let array = getProgresses(animations.map({ $0.modificators }), duration: fullDuration?.absolute ?? 0, options: .empty)
-            var n: Int?
-            for i in 0..<array.count {
-                if array[i].upperBound <= k || array[i].upperBound == array[i].lowerBound {
-                    animations[i].set(state: .end)
-                } else if array[i].lowerBound >= k {
-                    animations[i].set(state: .start)
-                } else {
-                    n = i
-                }
-            }
-            if let i = n {
-                animations[i].set(state: .progress((k - array[i].lowerBound) / (array[i].upperBound - array[i].lowerBound)))
-            }
+            let i = array.firstIndex(where: { k >= $0.lowerBound && k <= $0.upperBound }) ?? 0
+            let toFinish = i > 0 ? animations.prefix(i) : []
+            let toStart = i < animations.count - 1 ? animations.suffix(animations.count - i - 1) : []
+            toFinish.forEach { $0.set(state: .end) }
+            toStart.reversed().forEach { $0.set(state: .start) }
+            animations[i].set(state: .progress((k - array[i].lowerBound) / (array[i].upperBound - array[i].lowerBound)))
         }
     }
     
     private func getOptions(for options: AnimationOptions) -> [AnimationOptions] {
-//        var options = options
-//        options.repeatCount = 1
         if let dur = options.duration?.absolute {
             return setDuration(duration: dur, options: options)
         } else {
@@ -114,13 +105,16 @@ public struct Sequential: AnimationProviderProtocol {
         guard array.contains(where: { $0.modificators.duration?.absolute != 0 }) else { return nil }
         let dur = array.reduce(0, { $0 + ($1.modificators.duration?.absolute ?? 0) })
         var rel = min(1, array.reduce(0, { $0 + ($1.modificators.duration?.relative ?? 0) }))
+        if rel == 0 {
+            rel = Double(array.filter({ $0.modificators.duration == nil }).count) / Double(array.count)
+        }
         rel = rel == 1 ? 0 : rel
         let full = dur / (1 - rel)
         return .absolute(full)
     }
     
     private func setDuration(duration full: TimeInterval, options: AnimationOptions) -> [AnimationOptions] {
-        guard full > 0 else { return [AnimationOptions](repeating: options, count: animations.count) }
+        guard full > 0 else { return [AnimationOptions](repeating: options.chain.duration[.absolute(0)], count: animations.count) }
         var ks: [Double?] = []
         var childrenRelativeTime = 0.0
         for anim in animations {
@@ -165,18 +159,25 @@ public struct Sequential: AnimationProviderProtocol {
     private func getProgresses(_ array: [AnimationOptions], duration: Double, options: AnimationOptions) -> [ClosedRange<Double>] {
         guard !array.isEmpty else { return [] }
         guard duration > 0 else {
-            return Array(repeating: 0...0, count: array.count)
+            let dif = 1 / Double(array.count)
+            var progresses = (0..<array.count).map { (Double($0) * dif)...(Double($0 + 1) * dif) }
+            progresses[progresses.count - 1] = progresses[progresses.count - 1].lowerBound...1
+            return progresses
         }
         var progresses: [ClosedRange<Double>] = []
         var dur = 0.0
         var start = 0.0
+        array.filter({ $0.duration == nil }).count
+        
         for anim in array {
             if let rel = anim.duration?.relative {
-                dur += min(1, max(0, rel)) * duration
+                dur += min(1, max(0, rel))
+            } else if let abs = anim.duration?.absolute {
+                dur += abs / duration
             } else {
-                dur += anim.duration?.absolute ?? 0
+                
             }
-            let end = min(1, dur / duration)
+            let end = min(1, dur)
             progresses.append(start...end)
             start = end
         }
