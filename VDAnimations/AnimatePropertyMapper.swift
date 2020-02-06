@@ -39,7 +39,6 @@ private struct AnimatedPropertySetter<R, T, A: AnimationClosureProviderProtocol>
         self.scale = scale
     }
     
-    
     func set(_ value: T) -> AnimationProviderProtocol {
         return _set(from: nil, value)
     }
@@ -151,6 +150,7 @@ extension AnimatePropertyMapper where R: UIKitPropertySettable, T: ScalableConve
     public func set(_ values: [T]) -> AnimationProviderProtocol { setter.set(values) }
     public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> AnimationProviderProtocol { setter.set(from: initial, a, b, values) }
     public func set(from initial: T, _ values: [T]) -> AnimationProviderProtocol { setter.set(from: initial, values) }
+    
 }
 
 extension AnimatePropertyMapper where R: UIKitPropertySettable, T: ScalableConvertable, T: Comparable {

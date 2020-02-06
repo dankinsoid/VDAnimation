@@ -11,10 +11,15 @@ import UIKit
 class VDViewAnimator: UIViewPropertyAnimator {
     
     deinit {
-        if state != .stopped, !isRunning {
+        finishAnimation(at: .end)
+    }
+    
+    override func finishAnimation(at finalPosition: UIViewAnimatingPosition) {
+        guard state != .inactive else { return }
+        if state == .active {
             stopAnimation(false)
-            finishAnimation(at: .end)
         }
+        super.finishAnimation(at: finalPosition)
     }
     
 }
