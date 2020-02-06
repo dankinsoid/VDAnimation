@@ -114,19 +114,6 @@ public struct AnimatedPropertyMaker<R> {
         self.object = object
     }
     
-}
-
-extension AnimatedPropertyMaker where R: UIKitPropertySettable {
-    
-    public subscript<D>(dynamicMember keyPath: ReferenceWritableKeyPath<R, D>) -> AnimatePropertyMapper<R, D> {
-        AnimatePropertyMapper(object: object, keyPath: keyPath)
-    }
-    
-}
-
-@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension AnimatedPropertyMaker where R: View {
-    
     public subscript<D>(dynamicMember keyPath: ReferenceWritableKeyPath<R, D>) -> AnimatePropertyMapper<R, D> {
         AnimatePropertyMapper(object: object, keyPath: keyPath)
     }

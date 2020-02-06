@@ -34,7 +34,10 @@ public struct Animate: AnimationClosureProviderProtocol {
     }
     
     public func canSet(state: AnimationState) -> Bool {
-        true
+        switch state {
+        case .start:            return false
+        case .progress, .end:   return true
+        }
     }
     
     public func set(state: AnimationState) {
