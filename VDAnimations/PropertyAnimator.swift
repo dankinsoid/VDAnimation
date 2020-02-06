@@ -24,15 +24,13 @@ final class PropertyAnimator<T, A: AnimationClosureProviderProtocol>: AnimationP
     }
     
     func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
-        setter(initial)
-        initial = initial ?? getter()
+        if initial == nil { initial = getter() } else { setter(initial) }
         A.init({ self.setter(self.value) }).start(with: options, completion)
     }
     
     func canSet(state: AnimationState) -> Bool { true }
     
     func set(state: AnimationState) {
-        if initial == nil { initial = getter() }
         switch state {
         case .start:
             setter(initial)

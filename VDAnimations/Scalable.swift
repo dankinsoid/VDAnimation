@@ -101,7 +101,7 @@ extension ScalableConvertable where Self == UIColor {
 fileprivate extension CGFloat {
     
     func mod(_ divider: CGFloat) -> CGFloat {
-        self == divider ? divider : truncatingRemainder(dividingBy: divider)
+        Swift.max(0, Swift.min(divider, self))
     }
     
 }
