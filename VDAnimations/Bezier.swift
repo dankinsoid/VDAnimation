@@ -199,8 +199,8 @@ extension CGPoint: AdditiveArithmetic {
     
     public subscript(_ axe: NSLayoutConstraint.Axis) -> CGFloat {
         switch axe {
-        case .horizontal: return x
-        case .vertical: return y
+        case .horizontal:   return x
+        default:            return y
         }
     }
     

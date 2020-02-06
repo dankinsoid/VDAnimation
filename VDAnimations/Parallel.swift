@@ -15,7 +15,7 @@ public struct Parallel: AnimationProviderProtocol {
     }
     private let maxDuration: AnimationDuration?
     
-    private init(_ animations: [AnimationProviderProtocol]) {
+    public init(_ animations: [AnimationProviderProtocol]) {
         self.animations = animations
         self.maxDuration = Parallel.maxDuration(for: animations)
     }

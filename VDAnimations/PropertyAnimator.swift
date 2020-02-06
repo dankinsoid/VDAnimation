@@ -49,56 +49,6 @@ public struct PropertyAnimator<T, A: AnimationClosureProviderProtocol>: Animatio
     
 }
 
-@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension PropertyAnimator where T: Animatable {
-    
-    init(from initial: T?, getter: @escaping () -> T?, setter: @escaping (T?) -> (), value: T, animatorType: A.Type) {
-        self = PropertyAnimator(
-            from: { initial ?? getter() }, getter: getter, setter: setter,
-            scale: {
-                var result = $0
-                var lenght = $2.animatableData - $0.animatableData
-                lenght.scale(by: $1)
-                result.animatableData += lenght
-                return result
-            },
-            value: value, animatorType: animatorType
-        )
-    }
-    
-}
-
-@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension PropertyAnimator where T: VectorArithmetic {
-    
-    init(from initial: T?, getter: @escaping () -> T?, setter: @escaping (T?) -> (), value: T, animatorType: A.Type) {
-        self = PropertyAnimator(
-            from: { initial ?? getter() }, getter: getter, setter: setter,
-            scale: {
-                var lenght = $2 - $0
-                lenght.scale(by: $1)
-                return $0 + lenght
-            },
-            value: value, animatorType: animatorType
-        )
-    }
-    
-}
-
-extension PropertyAnimator where T: ScalableConvertable {
-    
-    init(from initial: T?, getter: @escaping () -> T?, setter: @escaping (T?) -> (), value: T, animatorType: A.Type) {
-        self = PropertyAnimator(
-            from: { initial ?? getter() }, getter: getter, setter: setter,
-            scale: {
-                T.init(scaleData: $0.scaleData + ($2.scaleData - $0.scaleData).scaled(by: $1))
-            },
-            value: value, animatorType: animatorType
-        )
-    }
-    
-}
-
 extension CGFloat: Scalable {
     public func scaled(by rhs: Double) -> CGFloat { self * CGFloat(rhs) }
 }
