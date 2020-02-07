@@ -41,8 +41,8 @@ struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderProtocol 
             completion(true)
             return
         }
-        if i > 0, animation.canSet(state: .start) {
-            animation.set(state: .start)
+        if i > 0, animation.canSet(state: .start, for: options) {
+            animation.set(state: .start, for: options)
         }
         animation.start(with: options) {
             if $0 {
@@ -53,19 +53,20 @@ struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderProtocol 
         }
     }
     
-    func canSet(state: AnimationState) -> Bool {
+    func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
         switch state {
-        case .start, .end: return animation.canSet(state: state)
+        case .start, .end: return animation.canSet(state: state, for: options)
         case .progress(let k):
             if count != nil {
-                return animation.canSet(state: .progress(getProgress(for: k)))
+                return animation.canSet(state: .progress(getProgress(for: k)), for: options)
             } else {
-                return animation.canSet(state: state)
+                return animation.canSet(state: state, for: options)
             }
         }
     }
     
-    func set(state: AnimationState) {
+    func set(state: AnimationState, for options: AnimationOptions) {
+        let state = options.isReversed == true ? state.reversed : state
         switch state {
         case .start, .end:
             animation.set(state: state)

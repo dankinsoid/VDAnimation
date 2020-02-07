@@ -28,14 +28,15 @@ final class PropertyAnimator<T, A: AnimationClosureProviderProtocol>: AnimationP
         A.init({ self.setter(self.value) }).start(with: options, completion)
     }
     
-    func canSet(state: AnimationState) -> Bool {
+    func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
         switch state {
         case .start:            return initial != nil
         case .progress, .end:   return true
         }
     }
     
-    func set(state: AnimationState) {
+    func set(state: AnimationState, for options: AnimationOptions) {
+        let state = options.isReversed == true ? state.reversed : state
         switch state {
         case .start:
             setter(initial)

@@ -20,11 +20,11 @@ public struct Transition: AnimationProviderProtocol {
         )
     }
     
-    public func canSet(state: AnimationState) -> Bool {
+    public func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
         <#code#>
     }
     
-    public func set(state: AnimationState) {
+    public func set(state: AnimationState, for options: AnimationOptions) {
         <#code#>
     }
     

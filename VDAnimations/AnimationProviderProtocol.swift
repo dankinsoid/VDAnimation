@@ -11,8 +11,8 @@ import Foundation
 public protocol AnimationProviderProtocol {
     func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ())
     var asModifier: AnimationModifier { get }
-    func canSet(state: AnimationState) -> Bool
-    func set(state: AnimationState)
+    func canSet(state: AnimationState, for options: AnimationOptions) -> Bool
+    func set(state: AnimationState, for options: AnimationOptions)
 }
 
 public protocol AnimationClosureProviderProtocol: AnimationProviderProtocol {
@@ -23,4 +23,9 @@ extension AnimationProviderProtocol {
     public var modificators: AnimationOptions { asModifier.modificators }
     public var asModifier: AnimationModifier { AnimationModifier(modificators: .empty, animation: self) }
     var chain: Chainer<Self> { Chainer(root: self) }
+    
+    public func set(state: AnimationState) {
+        set(state: state, for: .empty)
+    }
+    
 }

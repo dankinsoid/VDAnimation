@@ -23,11 +23,11 @@ public struct AnimationModifier: AnimationProviderProtocol {
         start(with: .empty, { completion?($0) })
     }
     
-    public func canSet(state: AnimationState) -> Bool {
-        animation.canSet(state: state)
+    public func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
+        animation.canSet(state: state, for: options.or(modificators))
     }
     
-    public func set(state: AnimationState) {
-        animation.set(state: state)
+    public func set(state: AnimationState, for options: AnimationOptions) {
+        animation.set(state: state, for: options.or(modificators))
     }
 }

@@ -33,8 +33,8 @@ public struct Interval: AnimationProviderProtocol {
         }
     }
     
-    public func canSet(state: AnimationState) -> Bool { true }
-    public func set(state: AnimationState) {}
+    public func canSet(state: AnimationState, for options: AnimationOptions) -> Bool { true }
+    public func set(state: AnimationState, for options: AnimationOptions) {}
     
 }
 
@@ -51,14 +51,7 @@ enum DispatchTimer {
     }
     
     static func execute(seconds: TimeInterval, on queue: DispatchQueue = .main, _ handler: @escaping () -> ()) {
-        var timer: DispatchSourceTimer? = DispatchSource.makeTimerSource(flags: [], queue: queue)
-        let time = DispatchTimeInterval.nanoseconds(Int(seconds * 1_000_000_000))
-        timer?.schedule(deadline: .now() + time, repeating: .never)
-        timer?.setEventHandler {
-            handler()
-            timer = nil
-        }
-        timer?.activate()
+        execute(after: .nanoseconds(Int(seconds * 1_000_000_000)), on: queue, handler)
     }
     
 }

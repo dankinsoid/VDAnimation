@@ -12,13 +12,15 @@ public struct AnimationOptions {
     static let empty = AnimationOptions()
     public var duration: AnimationDuration?
     public var curve: BezierCurve?
+    public var isReversed: Bool?
 //    var priority: OptionsPriority = .usual
     var chain: Chainer<AnimationOptions> { Chainer(root: self) }
     
     public func or(_ other: AnimationOptions) -> AnimationOptions {
         AnimationOptions(
             duration: duration ?? other.duration,
-            curve: curve ?? other.curve
+            curve: curve ?? other.curve,
+            isReversed: isReversed ?? other.isReversed
         )
     }
 }
@@ -33,6 +35,15 @@ public enum AnimationState {
         case .end:              return 1
         }
     }
+    
+    public var reversed: AnimationState {
+        switch self {
+        case .start:            return .end
+        case .progress(let k):  return .progress(1 - k)
+        case .end:              return .start
+        }
+    }
+    
 }
 
 enum OptionsPriority: Double, Comparable {
