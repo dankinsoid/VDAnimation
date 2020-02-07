@@ -10,24 +10,25 @@ import UIKit
 
 ///UIKit animation
 public struct Animate: AnimationClosureProviderProtocol {
-    private let animator: Animator
+    private let interactor: Animator
     private var springTiming: UISpringTimingParameters?
     
     public init(_ block: @escaping () -> ()) {
-        animator = Animator(block)
+        interactor = Animator(block)
     }
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
-        animator.reset(at: .start)
+        interactor.reset(at: .start)
         guard options.duration?.absolute ?? 0 > 0 else {
-            animator.animation()
+            interactor.animation()
             completion(true)
             return
         }
         let provider = VDTimingProvider(bezier: options.curve, spring: springTiming)
         let animator = VDViewAnimator(duration: options.duration?.absolute ?? 0, timingParameters: provider)
-        animator.addAnimations(self.animator.animation)
-        animator.addCompletion { position in
+        animator.addAnimations(interactor.animation)
+        animator.addCompletion {[interactor] position in
+            interactor.position = position
             completion(position == .end)
         }
         animator.startAnimation()
@@ -41,7 +42,7 @@ public struct Animate: AnimationClosureProviderProtocol {
     }
     
     public func set(state: AnimationState) {
-        animator.set(state: state)
+        interactor.set(state: state)
     }
     
     public func spring(_ dampingRatio: CGFloat = 0.3) -> Animate {
@@ -113,6 +114,7 @@ fileprivate class VDTimingProvider: NSObject, UITimingCurveProvider {
 fileprivate final class Animator {
     private var interactor: VDViewAnimator?
     let animation: () -> ()
+    var position = UIViewAnimatingPosition.start
     
     init(_ block: @escaping () -> ()) {
         animation = block
@@ -125,15 +127,18 @@ fileprivate final class Animator {
     func reset(at finalPosition: UIViewAnimatingPosition) {
         interactor?.finishAnimation(at: finalPosition)
         interactor = nil
+        position = finalPosition
     }
     
     func set(state: AnimationState) {
         switch state {
         case .start:
+            guard position != .start else { return }
             reset(at: .start)
         case .progress(let k):
             create().fractionComplete = CGFloat(k)
         case .end:
+            guard position != .end else { return }
             _ = create()
             reset(at: .end)
         }

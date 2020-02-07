@@ -14,10 +14,12 @@ public struct Sequential: AnimationProviderProtocol {
         AnimationModifier(modificators: AnimationOptions.empty.chain.duration[fullDuration], animation: self)
     }
     private let fullDuration: AnimationDuration?
+    private let interator: Interactor
     
     public init(_ animations: [AnimationProviderProtocol]) {
         self.animations = animations
         self.fullDuration = Sequential.fullDuration(for: animations)
+        self.interator = Interactor()
     }
     
     public init(_ animations: AnimationProviderProtocol...) {
@@ -42,6 +44,7 @@ public struct Sequential: AnimationProviderProtocol {
     }
     
     private func start(index: Int, options: [AnimationOptions], _ completion: @escaping (Bool) -> ()) {
+        interator.prevIndex = nil
         guard index < animations.count else {
             completion(true)
             return
@@ -77,18 +80,25 @@ public struct Sequential: AnimationProviderProtocol {
     }
     
     public func set(state: AnimationState) {
+        guard !animations.isEmpty else { return }
         switch state {
-        case .start, .end:
+        case .start:
+            animations.reversed().forEach { $0.set(state: state) }
+            interator.prevIndex = 0
+        case .end:
             animations.forEach { $0.set(state: state) }
+            interator.prevIndex = animations.count - 1
         case .progress(let k):
-            guard !animations.isEmpty else { return }
             let array = getProgresses(animations.map({ $0.modificators }), duration: fullDuration?.absolute ?? 0, options: .empty)
             let i = array.firstIndex(where: { k >= $0.lowerBound && k <= $0.upperBound }) ?? 0
-            let toFinish = i > 0 ? animations.prefix(i) : []
-            let toStart = i < animations.count - 1 ? animations.suffix(animations.count - i - 1) : []
+            let finished = interator.prevIndex ?? 0
+            let toFinish = i > finished ? animations.dropFirst(finished).prefix(i - finished) : []
+            let started = animations.count - finished - 1
+            let toStart = i < finished ? animations.dropLast(started).suffix(finished - i) : []
             toFinish.forEach { $0.set(state: .end) }
             toStart.reversed().forEach { $0.set(state: .start) }
             animations[i].set(state: .progress((k - array[i].lowerBound) / (array[i].upperBound - array[i].lowerBound)))
+            interator.prevIndex = i
         }
     }
     
@@ -200,4 +210,8 @@ public struct Sequential: AnimationProviderProtocol {
         return progresses
     }
     
+}
+
+fileprivate final class Interactor {
+    var prevIndex: Int?
 }

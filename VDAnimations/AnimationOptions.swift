@@ -25,6 +25,14 @@ public struct AnimationOptions {
 
 public enum AnimationState {
     case start, progress(Double), end
+    
+    public var complete: Double {
+        switch self {
+        case .start:            return 0
+        case .progress(let k):  return k
+        case .end:              return 1
+        }
+    }
 }
 
 enum OptionsPriority: Double, Comparable {
