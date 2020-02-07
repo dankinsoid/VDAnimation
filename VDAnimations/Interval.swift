@@ -6,7 +6,7 @@
 //  Copyright © 2020 Voidilov. All rights reserved.
 //
 
-import Foundation
+import UIKit
 
 public struct Interval: AnimationProviderProtocol {
     
@@ -28,12 +28,37 @@ public struct Interval: AnimationProviderProtocol {
     }
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
-        Timer.scheduledTimer(withTimeInterval: options.duration?.absolute ?? duration?.absolute ?? 0, repeats: false) { _ in
+        DispatchTimer.execute(seconds: options.duration?.absolute ?? duration?.absolute ?? 0) {
             completion(true)
         }
     }
     
     public func canSet(state: AnimationState) -> Bool { true }
     public func set(state: AnimationState) {}
+    
+}
+
+enum DispatchTimer {
+    
+    static func execute(after time: DispatchTimeInterval, on queue: DispatchQueue = .main, _ handler: @escaping () -> ()) {
+        var timer: DispatchSourceTimer? = DispatchSource.makeTimerSource(flags: [], queue: queue)
+        timer?.schedule(deadline: .now() + time, repeating: .never)
+        timer?.setEventHandler {
+            handler()
+            timer = nil
+        }
+        timer?.activate()
+    }
+    
+    static func execute(seconds: TimeInterval, on queue: DispatchQueue = .main, _ handler: @escaping () -> ()) {
+        var timer: DispatchSourceTimer? = DispatchSource.makeTimerSource(flags: [], queue: queue)
+        let time = DispatchTimeInterval.nanoseconds(Int(seconds * 1_000_000_000))
+        timer?.schedule(deadline: .now() + time, repeating: .never)
+        timer?.setEventHandler {
+            handler()
+            timer = nil
+        }
+        timer?.activate()
+    }
     
 }

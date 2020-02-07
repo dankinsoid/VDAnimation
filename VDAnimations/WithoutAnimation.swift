@@ -26,7 +26,7 @@ public struct WithoutAnimation: AnimationClosureProviderProtocol {
             execute(completion)
         } else {
             execute { result in
-                Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { _ in
+                DispatchTimer.execute(seconds: duration) {
                     completion(result)
                 }
             }

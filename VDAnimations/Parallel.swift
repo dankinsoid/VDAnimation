@@ -14,10 +14,12 @@ public struct Parallel: AnimationProviderProtocol {
         AnimationModifier(modificators: AnimationOptions.empty.chain.duration[maxDuration], animation: self)
     }
     private let maxDuration: AnimationDuration?
+    private let interactor: Interactor
     
     public init(_ animations: [AnimationProviderProtocol]) {
         self.animations = animations
         self.maxDuration = Parallel.maxDuration(for: animations)
+        self.interactor = Interactor()
     }
     
     public init(_ animations: AnimationProviderProtocol...) {
@@ -29,6 +31,7 @@ public struct Parallel: AnimationProviderProtocol {
     }
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+        interactor.prevProgress = 0
         guard !animations.isEmpty else {
             completion(true)
             return
@@ -41,7 +44,10 @@ public struct Parallel: AnimationProviderProtocol {
         let parallelCompletion = ParallelCompletion(animations.enumerated().map { arg in
             { arg.element.start(with: array[arg.offset], $0) }
         })
-        parallelCompletion.start(completion: completion)
+        parallelCompletion.start {[interactor] in
+            interactor.prevProgress = 1
+            completion($0)
+        }
     }
     
     public func canSet(state: AnimationState) -> Bool {
@@ -67,20 +73,27 @@ public struct Parallel: AnimationProviderProtocol {
     
     public func set(state: AnimationState) {
         switch state {
-        case .start, .end:
+        case .start:
             animations.forEach { $0.set(state: state) }
+            interactor.prevProgress = 0
+        case .end:
+            animations.forEach { $0.set(state: state) }
+            interactor.prevProgress = 1
         case .progress(let k):
             guard !animations.isEmpty else { return }
             let array = getProgresses(animations.map({ $0.modificators }), duration: maxDuration?.absolute ?? 1, options: .empty)
             for i in 0..<array.count {
                 if array[i].upperBound <= k || array[i].upperBound == 0 {
+                    guard array[i].upperBound > interactor.prevProgress else { continue }
                     animations[i].set(state: .end)
                 } else if array[i].lowerBound >= k {
+                    guard array[i].lowerBound < interactor.prevProgress else { continue }
                     animations[i].set(state: .start)
                 } else {
                     animations[i].set(state: .progress(k / array[i].upperBound))
                 }
             }
+            interactor.prevProgress = k
         }
     }
     
@@ -181,4 +194,8 @@ fileprivate final class ParallelCompletion {
         }
     }
     
+}
+
+fileprivate final class Interactor {
+    var prevProgress: Double = 0
 }
