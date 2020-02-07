@@ -49,7 +49,7 @@ public struct Parallel: AnimationProviderProtocol {
         case .start, .end:
             return animations.reduce(while: { $0 }, true, { $0 && $1.canSet(state: state) })
         case .progress(let k):
-            let array = getProgresses(animations.map({ $0.modificators }), duration: maxDuration?.absolute ?? 0, options: .empty)
+            let array = getProgresses(animations.map({ $0.modificators }), duration: maxDuration?.absolute ?? 1, options: .empty)
             var result = true
             for i in 0..<array.count {
                 if array[i].upperBound <= k || array[i].upperBound == 0 {
@@ -71,7 +71,7 @@ public struct Parallel: AnimationProviderProtocol {
             animations.forEach { $0.set(state: state) }
         case .progress(let k):
             guard !animations.isEmpty else { return }
-            let array = getProgresses(animations.map({ $0.modificators }), duration: maxDuration?.absolute ?? 0, options: .empty)
+            let array = getProgresses(animations.map({ $0.modificators }), duration: maxDuration?.absolute ?? 1, options: .empty)
             for i in 0..<array.count {
                 if array[i].upperBound <= k || array[i].upperBound == 0 {
                     animations[i].set(state: .end)
@@ -113,7 +113,7 @@ public struct Parallel: AnimationProviderProtocol {
     }
     
     private static func maxDuration(for array: [AnimationProviderProtocol]) -> AnimationDuration? {
-        guard array.contains(where: { $0.modificators.duration?.absolute != 0 }) else { return nil }
+        guard array.contains(where: { $0.modificators.duration?.absolute != nil }) else { return nil }
         let maxDuration = array.reduce(0, { max($0, $1.modificators.duration?.absolute ?? 0) })
         return .absolute(maxDuration)
     }
@@ -144,7 +144,7 @@ public struct Parallel: AnimationProviderProtocol {
             if let relative = anim.duration?.relative {
                 end = min(1, max(0, relative))
             } else {
-                end = (anim.duration?.absolute ?? 0) / duration
+                end = (anim.duration?.absolute ?? duration) / duration
             }
             progresses.append(0...end)
         }
