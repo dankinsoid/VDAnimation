@@ -15,8 +15,8 @@ class VDViewAnimator: UIViewPropertyAnimator {
     private var prevRunning = false
     
     deinit {
-        finishAnimation(at: .end)
         observing?.invalidate()
+        finishAnimation(at: .end)
     }
     
     override func finishAnimation(at finalPosition: UIViewAnimatingPosition) {
@@ -24,7 +24,9 @@ class VDViewAnimator: UIViewPropertyAnimator {
         if state != .stopped {
             stopAnimation(false)
         }
-        super.finishAnimation(at: finalPosition)
+        if state == .stopped {
+            super.finishAnimation(at: finalPosition)
+        }
     }
     
     override func startAnimation() {
@@ -42,6 +44,8 @@ class VDViewAnimator: UIViewPropertyAnimator {
         observing = observe(\.isRunning) {[weak self] (_, change) in
             defer { self?.prevRunning = self?.isRunning ?? false }
             guard let it = self, it.pausesOnCompletion, it.isRunning == false, it.prevRunning == true else { return }
+            it.observing?.invalidate()
+            it.observing = nil
             it.completions.forEach {
                 switch it.fractionComplete {
                 case 1:  $0(it.isReversed ? .start : .end)

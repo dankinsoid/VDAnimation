@@ -24,8 +24,14 @@ final class PropertyAnimator<T, A: AnimationClosureProviderProtocol>: AnimationP
     }
     
     func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
-        if initial == nil { initial = getter() } else { setter(initial) }
-        A.init({ self.setter(self.value) }).start(with: options, completion)
+        if initial == nil { initial = getter() }
+        if options.isReversed, let start = initial {
+            setter(value)
+            A.init({ self.setter(start) }).start(with: options.chain.autoreverseStep[nil], completion)
+        } else {
+            setter(initial)
+            A.init({ self.setter(self.value) }).start(with: options, completion)
+        }
     }
     
     func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {

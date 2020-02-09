@@ -21,6 +21,7 @@ public struct Animate: AnimationClosureProviderProtocol {
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
         switch options.autoreverseStep {
         case .none:
+            animator.animator = nil
             startAnimation(with: options, complete: true, reverse: false, completion)
         case .forward:
             startAnimation(with: options, complete: false, reverse: false, completion)
@@ -47,7 +48,7 @@ public struct Animate: AnimationClosureProviderProtocol {
             interactor.position = position
             completion(position == endState)
         }
-        animator.pausesOnCompletion = complete
+        animator.pausesOnCompletion = !complete
         if reverse {
             animator.fractionComplete = 1
             animator.isReversed = true

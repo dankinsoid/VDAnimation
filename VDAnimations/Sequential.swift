@@ -40,21 +40,21 @@ public struct Sequential: AnimationProviderProtocol {
             return
         }
         let array = getOptions(for: options)
-        start(index: 0, options: array, completion)
+        start(index: 0, options: array, reversed: options.autoreverseStep == .back, completion)
     }
     
-    private func start(index: Int, options: [AnimationOptions], _ completion: @escaping (Bool) -> ()) {
+    private func start(index: Int, options: [AnimationOptions], reversed: Bool, _ completion: @escaping (Bool) -> ()) {
         interator.prevIndex = nil
         guard index < animations.count else {
             completion(true)
             return
         }
-        let i = index//reversed ? animations.count - index - 1 : index
+        let i = reversed ? animations.count - index - 1 : index
         animations[i].start(with: options[i]) {
             guard $0 else {
                 return completion(false)
             }
-            self.start(index: index + 1, options: options, completion)
+            self.start(index: index + 1, options: options, reversed: reversed, completion)
         }
     }
     
