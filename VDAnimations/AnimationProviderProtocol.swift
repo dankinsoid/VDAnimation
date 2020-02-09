@@ -28,4 +28,8 @@ extension AnimationProviderProtocol {
         set(state: state, for: .empty)
     }
     
+    public func start(_ completion: ((Bool) -> ())? = nil) {
+        start(with: .empty, { completion?($0) })
+    }
+    
 }

@@ -10,14 +10,28 @@ import UIKit
 
 ///UIKit animation
 public struct Animate: AnimationClosureProviderProtocol {
-    private let interactor: Animator
+    private let interactor: Interactor
+    private let animator = Animator()
     private var springTiming: UISpringTimingParameters?
     
     public init(_ block: @escaping () -> ()) {
-        interactor = Animator(block)
+        interactor = Interactor(block)
     }
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+        switch options.autoreverseStep {
+        case .none:
+            startAnimation(with: options, complete: true, reverse: false, completion)
+        case .forward:
+            startAnimation(with: options, complete: false, reverse: false, completion)
+        case .back:
+            animator.animator?.finishAnimation(at: .start)
+            animator.animator = nil
+            startAnimation(with: options, complete: true, reverse: true, completion)
+        }
+    }
+    
+    private func startAnimation(with options: AnimationOptions, complete: Bool, reverse: Bool, _ completion: @escaping (Bool) -> ()) {
         interactor.reset(at: .start)
         guard options.duration?.absolute ?? 0 > 0 else {
             interactor.animation()
@@ -27,13 +41,19 @@ public struct Animate: AnimationClosureProviderProtocol {
         let provider = VDTimingProvider(bezier: options.curve, spring: springTiming)
         let animator = VDViewAnimator(duration: options.duration?.absolute ?? 0, timingParameters: provider)
         animator.addAnimations(interactor.animation)
+        
+        let endState: UIViewAnimatingPosition = reverse ? .start : .end
         animator.addCompletion {[interactor] position in
             interactor.position = position
-            completion(position == .end)
+            completion(position == endState)
         }
-        if options.isReversed == true {
+        animator.pausesOnCompletion = complete
+        if reverse {
             animator.fractionComplete = 1
             animator.isReversed = true
+        }
+        if !complete {
+            self.animator.animator = animator
         }
         animator.startAnimation()
     }
@@ -46,7 +66,7 @@ public struct Animate: AnimationClosureProviderProtocol {
     }
     
     public func set(state: AnimationState, for options: AnimationOptions) {
-        let state = options.isReversed == true ? state.reversed : state
+        let state = options.isReversed ? state.reversed : state
         interactor.set(state: state)
     }
     
@@ -117,7 +137,11 @@ fileprivate class VDTimingProvider: NSObject, UITimingCurveProvider {
 }
 
 fileprivate final class Animator {
-    private var interactor: VDViewAnimator?
+    var animator: VDViewAnimator?
+}
+
+fileprivate final class Interactor {
+    private var animator: VDViewAnimator?
     let animation: () -> ()
     var position = UIViewAnimatingPosition.start
     
@@ -130,8 +154,8 @@ fileprivate final class Animator {
     }
     
     func reset(at finalPosition: UIViewAnimatingPosition) {
-        interactor?.finishAnimation(at: finalPosition)
-        interactor = nil
+        animator?.finishAnimation(at: finalPosition)
+        animator = nil
         position = finalPosition
     }
     
@@ -150,12 +174,12 @@ fileprivate final class Animator {
     }
     
     func create() -> VDViewAnimator {
-        if let result = interactor {
+        if let result = animator {
             return result
         }
         let result = VDViewAnimator()
         result.addAnimations(animation)
-        interactor = result
+        animator = result
         return result
     }
     

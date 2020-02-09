@@ -30,4 +30,8 @@ extension AnimationProviderProtocol {
         RepeatAnimation(nil, for: self).asModifier
     }
     
+    public func autoreverse() -> Autoreverse<Self> {
+        Autoreverse(self)
+    }
+    
 }

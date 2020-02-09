@@ -10,16 +10,50 @@ import UIKit
 
 class VDViewAnimator: UIViewPropertyAnimator {
     
+    private var completions: [(UIViewAnimatingPosition) -> Void] = []
+    private var observing: NSKeyValueObservation?
+    private var prevRunning = false
+    
     deinit {
         finishAnimation(at: .end)
+        observing?.invalidate()
     }
     
     override func finishAnimation(at finalPosition: UIViewAnimatingPosition) {
         guard state != .inactive else { return }
-        if state == .active {
+        if state != .stopped {
             stopAnimation(false)
         }
         super.finishAnimation(at: finalPosition)
+    }
+    
+    override func startAnimation() {
+        observeRunning()
+        super.startAnimation()
+    }
+    
+    override func startAnimation(afterDelay delay: TimeInterval) {
+        observeRunning()
+        super.startAnimation(afterDelay: delay)
+    }
+    
+    private func observeRunning() {
+        guard pausesOnCompletion, observing == nil else { return }
+        observing = observe(\.isRunning) {[weak self] (_, change) in
+            defer { self?.prevRunning = self?.isRunning ?? false }
+            guard let it = self, it.pausesOnCompletion, it.isRunning == false, it.prevRunning == true else { return }
+            it.completions.forEach {
+                switch it.fractionComplete {
+                case 1:  $0(it.isReversed ? .start : .end)
+                default: $0(.current)
+                }
+            }
+        }
+    }
+    
+    override func addCompletion(_ completion: @escaping (UIViewAnimatingPosition) -> Void) {
+        completions.append(completion)
+        super.addCompletion(completion)
     }
     
 }

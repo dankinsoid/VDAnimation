@@ -12,17 +12,21 @@ public struct AnimationOptions {
     static let empty = AnimationOptions()
     public var duration: AnimationDuration?
     public var curve: BezierCurve?
-    public var isReversed: Bool?
-//    var priority: OptionsPriority = .usual
+    public var autoreverseStep: AutoreverseStep?
+    
     var chain: Chainer<AnimationOptions> { Chainer(root: self) }
     
     public func or(_ other: AnimationOptions) -> AnimationOptions {
         AnimationOptions(
             duration: duration ?? other.duration,
             curve: curve ?? other.curve,
-            isReversed: isReversed ?? other.isReversed
+            autoreverseStep: autoreverseStep ?? other.autoreverseStep
         )
     }
+}
+
+extension AnimationOptions {
+    var isReversed: Bool { autoreverseStep == .back }
 }
 
 public enum AnimationState {
@@ -53,4 +57,8 @@ enum OptionsPriority: Double, Comparable {
         lhs.rawValue < rhs.rawValue
     }
     
+}
+
+public enum AutoreverseStep {
+    case forward, back
 }
