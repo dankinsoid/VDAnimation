@@ -29,3 +29,9 @@ public struct Gradient<Bound> {
 public func ...<Bound>(_ lhs: Bound, _ rhs: Bound) -> Gradient<Bound> {
     Gradient(from: lhs, to: rhs)
 }
+
+extension Gradient where Bound: ScalableConvertable {
+    public func at(_ percent: Double) -> Bound {
+        Bound(scaleData: from.scaleData + (to.scaleData - from.scaleData).scaled(by: percent))
+    }
+}

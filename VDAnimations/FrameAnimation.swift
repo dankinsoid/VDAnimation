@@ -93,6 +93,11 @@ fileprivate final class CATimer: NSObject {
     
 }
 
+public struct FrameInfo {
+    public let progress: Double
+    public let remains: CFTimeInterval
+}
+
 fileprivate final class Owner<T> {
     var object: T
     
