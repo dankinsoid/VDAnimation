@@ -158,10 +158,6 @@ public struct BezierCurve: Equatable {
         return BezierCurve(CGPoint.between(c1.point1, c2.point1, k: k), CGPoint.between(c1.point2, c2.point2, k: k))
     }
     
-    public func apply(to other: BezierCurve) -> BezierCurve {
-        
-    }
-    
 }
 
 extension CGPoint: AdditiveArithmetic {

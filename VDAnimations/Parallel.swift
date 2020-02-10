@@ -41,8 +41,18 @@ public struct Parallel: AnimationProviderProtocol {
             return
         }
         let array = getOptions(for: options)
+        let full = options.duration?.absolute ?? maxDuration?.absolute ?? 0
         let parallelCompletion = ParallelCompletion(animations.enumerated().map { arg in
-            { arg.element.start(with: array[arg.offset], $0) }
+            { compl in
+                if options.isReversed {
+                    let delay = full - (array[arg.offset].duration?.absolute ?? 0)
+                    DispatchTimer.execute(seconds: delay) {
+                        arg.element.start(with: array[arg.offset], compl)
+                    }
+                } else {
+                    arg.element.start(with: array[arg.offset], compl)
+                }
+            }
         })
         parallelCompletion.start {[interactor] in
             interactor.prevProgress = 1
@@ -101,12 +111,8 @@ public struct Parallel: AnimationProviderProtocol {
     
     private func getOptions(for options: AnimationOptions) -> [AnimationOptions] {
         guard !animations.isEmpty else { return [] }
-        if let dur = options.duration?.absolute {
-            return setDuration(duration: dur, options: options)
-        } else {
-            let dur = animations.reduce(0, { max($0, $1.modificators.duration?.absolute ?? 0) })
-            return setDuration(duration: dur, options: options)
-        }
+        let dur = options.duration?.absolute ?? maxDuration?.absolute ?? 0
+        return setDuration(duration: dur, options: options)
     }
     
     private func setDuration(duration full: TimeInterval, options: AnimationOptions) -> [AnimationOptions] {

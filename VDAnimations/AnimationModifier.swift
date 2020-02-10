@@ -26,4 +26,5 @@ public struct AnimationModifier: AnimationProviderProtocol {
     public func set(state: AnimationState, for options: AnimationOptions) {
         animation.set(state: state, for: options.or(modificators))
     }
+    
 }

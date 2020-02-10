@@ -19,8 +19,9 @@ extension AnimationProviderProtocol {
     }
     
     public func curve(_ value: BezierCurve) -> AnimationModifier {
-        let result = asModifier
-        return result.chain.modificators.curve[CA.curve(value, result.modificators.curve)]
+        asModifier.chain.modificators.curve[value]
+//        let result = asModifier
+//        return result.chain.modificators.curve[CA.curve(value, result.modificators.curve)]
     }
     
     public func `repeat`(_ count: Int) -> AnimationModifier {
