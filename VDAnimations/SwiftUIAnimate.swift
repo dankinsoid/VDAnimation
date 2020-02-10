@@ -36,14 +36,6 @@ public struct SwiftUIAnimate: AnimationClosureProviderProtocol {
         }
     }
     
-    public func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
-        switch state {
-        case .start:    return false
-        case .progress: return false
-        case .end:      return true
-        }
-    }
-    
     public func set(state: AnimationState, for options: AnimationOptions) {
         switch state {
         case .start:    return

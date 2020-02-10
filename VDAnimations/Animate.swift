@@ -59,13 +59,6 @@ public struct Animate: AnimationClosureProviderProtocol {
         animator.startAnimation()
     }
     
-    public func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
-        switch state {
-        case .start:            return false
-        case .progress, .end:   return true
-        }
-    }
-    
     public func set(state: AnimationState, for options: AnimationOptions) {
         let state = options.isReversed ? state.reversed : state
         interactor.set(state: state)

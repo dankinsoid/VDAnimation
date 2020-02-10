@@ -38,17 +38,6 @@ struct Autoreverse<Animation: AnimationProviderProtocol>: AnimationProviderProto
         }
     }
     
-    func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
-        let option = options.chain.autoreverseStep[nil]
-        switch state {
-        case .start, .end:
-            return animation.canSet(state: .start, for: option)
-        case .progress(let k):
-            let progress = abs(k - 0.5) * 2
-            return animation.canSet(state: .progress(progress), for: option)
-        }
-    }
-    
     private func options(from options: AnimationOptions, step: AutoreverseStep) -> AnimationOptions {
         var result = options
         setCurve(for: &result, step: step)

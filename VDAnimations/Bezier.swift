@@ -31,17 +31,14 @@ public struct BezierCurve: Equatable {
         }
     }
     
-    var export: String {
-        return point1.export + "," + point2.export
-    }
-    
-    func exportWith(name: String) -> String {
-        return "\"\(name)\":\"\(export)\""
-    }
-    
     public init(_ p1: CGPoint, _ p2: CGPoint) {
         point1 = p1
         point2 = p2
+    }
+    
+    public init<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F)) {
+        point1 = CGPoint(x: CGFloat(p1.x), y: CGFloat(p1.y))
+        point2 = CGPoint(x: CGFloat(p2.x), y: CGFloat(p2.y))
     }
 //    x(t) = (1-t)^3 * x0 + 3t(1-t)^2 * x1 + 3t^2 * (1-t) * x2 + t^3 * x3
 //    y(t) = (1-t)^3 * y0 + 3t(1-t)^2 * y1 + 3t^2 * (1-t) * y2 + t^3 * y3
@@ -162,10 +159,6 @@ public struct BezierCurve: Equatable {
 
 extension CGPoint: AdditiveArithmetic {
     
-    var export: String {
-        return x.export + "," + y.export
-    }
-    
     public static let one = CGPoint(x: 1, y: 1)
     
     public static func between(_ p1: CGPoint, _ p2: CGPoint, k: CGFloat) -> CGPoint {
@@ -216,14 +209,6 @@ extension NSLayoutConstraint.Axis {
         case .horizontal:   return .vertical
         default:            return .horizontal
         }
-    }
-    
-}
-
-extension CGFloat {
-    
-    var export: String {
-        return "\(self)".replacingOccurrences(of: "0.", with: ".")
     }
     
 }

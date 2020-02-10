@@ -11,7 +11,6 @@ import Foundation
 public protocol AnimationProviderProtocol {
     func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ())
     var asModifier: AnimationModifier { get }
-    func canSet(state: AnimationState, for options: AnimationOptions) -> Bool
     func set(state: AnimationState, for options: AnimationOptions)
 }
 

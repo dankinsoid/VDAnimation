@@ -36,32 +36,25 @@ struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderProtocol 
     }
     
     private func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> (), i: Int, condition: @escaping (Int) -> Bool) {
-        let i = options.isReversed ? (count ?? (i + 1)) - i - 1 : i
+        let index = options.isReversed ? (count ?? (i + 1)) - i - 1 : i
         guard condition(i) else {
             completion(true)
             return
         }
-        let option = getOptions(options: options, i: i)
-        if i > 0, animation.canSet(state: .start, for: option) {
-            animation.set(state: .start, for: option)
-        }
-        animation.start(with: option) {
-            if $0 {
-                self.start(with: options, completion, i: max(0, i &+ 1), condition: condition)
-            } else {
-                completion($0)
+        let option = getOptions(options: options, i: index)
+        if i > 0 {
+            let reverse = option.autoreverseStep?.inverted ?? .back
+            animation.start(with: option.chain.autoreverseStep[reverse].chain.duration[.absolute(0)]) {
+                guard $0 else { return completion(false) }
+                self.animation.start(with: option) {
+                    guard $0 else { return completion(false) }
+                    self.start(with: options, completion, i: max(0, i &+ 1), condition: condition)
+                }
             }
-        }
-    }
-    
-    func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
-        switch state {
-        case .start, .end: return animation.canSet(state: state, for: options)
-        case .progress(let k):
-            if count != nil {
-                return animation.canSet(state: .progress(getProgress(for: k)), for: options)
-            } else {
-                return animation.canSet(state: state, for: options)
+        } else {
+            animation.start(with: option) {
+                guard $0 else { return completion(false) }
+                self.start(with: options, completion, i: max(0, i &+ 1), condition: condition)
             }
         }
     }
@@ -81,8 +74,9 @@ struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderProtocol 
     }
     
     private func getProgress(for progress: Double) -> Double {
-        guard let cnt = count, cnt > 0 else { return progress }
-        return (progress * Double(cnt)).truncatingRemainder(dividingBy: 1)
+        guard let cnt = count, cnt > 0, progress != 1 else { return progress }
+        let k = (progress * Double(cnt))
+        return k.truncatingRemainder(dividingBy: 1)
     }
     
     private static func duration(for count: Int?, from dur: AnimationDuration?) -> AnimationDuration? {
@@ -96,6 +90,7 @@ struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderProtocol 
     private func getOptions(options: AnimationOptions, i: Int) -> AnimationOptions {
         let full = options.duration?.absolute ?? duration?.absolute ?? animation.modificators.duration?.absolute ?? 0
         var result = options
+        result.autoreverseStep = result.autoreverseStep ?? .forward
         guard let fullCurve = options.curve, fullCurve != .linear else {
             result.duration = .absolute(full / Double(count ?? 1))
             return result

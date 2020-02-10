@@ -33,11 +33,6 @@ public struct WithoutAnimation: AnimationClosureProviderProtocol {
         }
     }
     
-    public func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
-        if case .end = state { return true }
-        return false
-    }
-    
     public func set(state: AnimationState, for options: AnimationOptions) {
         let state = options.isReversed == true ? state.reversed : state
         if case .end = state {

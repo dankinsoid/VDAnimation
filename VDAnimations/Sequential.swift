@@ -58,28 +58,6 @@ public struct Sequential: AnimationProviderProtocol {
         }
     }
     
-    public func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
-        let state = options.isReversed == true ? state.reversed : state
-        switch state {
-        case .start, .end:
-            return animations.reduce(while: { $0 }, true, { $0 && $1.canSet(state: state, for: .empty) })
-        case .progress(let k):
-            let array = getProgresses(animations.map({ $0.modificators }), duration: fullDuration?.absolute ?? 0, options: .empty)
-            var result = true
-            for i in 0..<array.count {
-                if array[i].upperBound <= k || array[i].upperBound == 0 {
-                    result = result && animations[i].canSet(state: .end, for: .empty)
-                } else if array[i].lowerBound >= k {
-                    result = result && animations[i].canSet(state: .start, for: .empty)
-                } else {
-                    result = result && animations[i].canSet(state: .progress((k - array[i].lowerBound) / (array[i].upperBound - array[i].lowerBound)), for: .empty)
-                }
-                if !result { return false }
-            }
-            return true
-        }
-    }
-    
     public func set(state: AnimationState, for options: AnimationOptions) {
         guard !animations.isEmpty else { return }
         let state = options.isReversed == true ? state.reversed : state

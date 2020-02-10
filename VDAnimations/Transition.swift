@@ -9,27 +9,25 @@
 import UIKit
 
 public struct Transition: AnimationProviderProtocol {
+    private let from: UIView
+    private let to: UIView
+    
+    public init(from: UIView, to: UIView) {
+        self.from = from
+        self.to = to
+    }
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+        let (v1, v2) = options.isReversed ? (to, from) : (from, to)
         UIView.transition(
-            with: <#T##UIView#>,
-            duration: <#T##TimeInterval#>,
-            options: UIView.AnimationOptions,
-            animations: <#T##(() -> Void)?##(() -> Void)?##() -> Void#>,
-            completion: <#T##((Bool) -> Void)?##((Bool) -> Void)?##(Bool) -> Void#>
+            from: v1,
+            to: v2,
+            duration: options.duration?.absolute ?? 0,
+            options: [.transitionCurlDown, .showHideTransitionViews],
+            completion: completion
         )
     }
     
-    public func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
-        <#code#>
-    }
-    
-    public func set(state: AnimationState, for options: AnimationOptions) {
-        UIPercentDrivenInteractiveTransition()
-    }
-    
-}
+    public func set(state: AnimationState, for options: AnimationOptions) {}
 
-class Tr: UIPercentDrivenInteractiveTransition {
-    
 }

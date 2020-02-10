@@ -62,4 +62,11 @@ enum OptionsPriority: Double, Comparable {
 
 public enum AutoreverseStep {
     case forward, back
+    
+    public var inverted: AutoreverseStep {
+        switch self {
+        case .forward:  return .back
+        case .back:     return .forward
+        }
+    }
 }

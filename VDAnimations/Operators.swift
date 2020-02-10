@@ -10,18 +10,22 @@ import Foundation
 
 extension AnimationProviderProtocol {
     
-    public func duration(_ value: TimeInterval) -> AnimationModifier {
+    public func duration(_ value: TimeInterval) -> AnimationProviderProtocol {
         asModifier.chain.modificators.duration[.absolute(value)]
     }
     
-    public func duration(relative value: Double) -> AnimationModifier {
+    public func duration(relative value: Double) -> AnimationProviderProtocol {
         asModifier.chain.modificators.duration[.relative(value)]
     }
     
-    public func curve(_ value: BezierCurve) -> AnimationModifier {
+    public func curve(_ value: BezierCurve) -> AnimationProviderProtocol {
         asModifier.chain.modificators.curve[value]
 //        let result = asModifier
 //        return result.chain.modificators.curve[CA.curve(value, result.modificators.curve)]
+    }
+    
+    public func curve<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F)) -> AnimationProviderProtocol {
+        asModifier.chain.modificators.curve[.init(p1, p2)]
     }
     
     public func `repeat`(_ count: Int) -> AnimationProviderProtocol {

@@ -40,13 +40,6 @@ final class PropertyAnimator<T, A: AnimationClosureProviderProtocol>: AnimationP
         }
     }
     
-    func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
-        switch state {
-        case .start:            return initial != nil
-        case .progress, .end:   return true
-        }
-    }
-    
     func set(state: AnimationState, for options: AnimationOptions) {
         let state = options.isReversed == true ? state.reversed : state
         switch state {

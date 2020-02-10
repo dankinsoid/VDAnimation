@@ -33,7 +33,6 @@ public struct Interval: AnimationProviderProtocol {
         }
     }
     
-    public func canSet(state: AnimationState, for options: AnimationOptions) -> Bool { true }
     public func set(state: AnimationState, for options: AnimationOptions) {}
     
 }
