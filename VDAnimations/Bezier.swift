@@ -118,6 +118,17 @@ public struct BezierCurve: Equatable {
         return max(0, t - 0.01)
     }
     
+    func progress(at time: CGFloat) -> CGFloat {
+        guard time > 0, time < 1 else { return time }
+        var t: CGFloat = 0.0
+        var x1: CGFloat = 0.0
+        while t < 1, x1 < time {
+            t += 0.02
+            x1 = value(t: t, axe: .horizontal)
+        }
+        return value(t: t, axe: .vertical)
+    }
+    
     private func value(t: CGFloat, axe: NSLayoutConstraint.Axis) -> CGFloat {
         let a = 3 * t * (1 - t) * (1 - t)
         let b = 3 * t * t * (1 - t)

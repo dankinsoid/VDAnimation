@@ -36,6 +36,7 @@ public struct FrameAnimation: AnimationProviderProtocol {
             return
         }
         let owner = Owner<CATimer?>(nil)
+        let block = transform(options: options)
         let timer = CATimer(preferredFPS: preferredFramesPerSecond) {
             let percent = $0 / duration
             guard percent < 1 else {
@@ -46,7 +47,7 @@ public struct FrameAnimation: AnimationProviderProtocol {
                 return
             }
             let k = isReversed ? 1 - percent : percent
-            self.update(self.curve?(k) ?? k)
+            self.update(block?(k) ?? k)
         }
         owner.object = timer
         timer.start()
@@ -54,6 +55,13 @@ public struct FrameAnimation: AnimationProviderProtocol {
 
     public func set(state: AnimationState, for options: AnimationOptions) {
         update(state.complete)
+    }
+    
+    private func transform(options: AnimationOptions) -> ((Double) -> Double)? {
+        guard let bezier = options.curve, bezier != .linear else { return curve }
+        return {[curve] in
+            Double(bezier.progress(at: CGFloat(curve?($0) ?? $0)))
+        }
     }
     
 }
