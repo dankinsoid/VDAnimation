@@ -23,7 +23,7 @@ public struct Transition: AnimationProviderProtocol {
             from: v1,
             to: v2,
             duration: options.duration?.absolute ?? 0,
-            options: [.transitionCurlDown, .showHideTransitionViews],
+            options: [.showHideTransitionViews],
             completion: completion
         )
     }
