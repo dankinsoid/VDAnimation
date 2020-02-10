@@ -11,20 +11,27 @@ import UIKit
 public struct FrameAnimation: AnimationProviderProtocol {
     private let preferredFramesPerSecond: Int
     private let update: (Double) -> ()
+    private let curve: ((Double) -> Double)?
     
-    public init(fps: Int, _ update: @escaping (Double) -> ()) {
+    init(fps: Int, curve: ((Double) -> Double)?, _ update: @escaping (Double) -> ()) {
         self.preferredFramesPerSecond = fps
         self.update = update
+        self.curve = curve
+    }
+    
+    public init(fps: Int, _ update: @escaping (Double) -> ()) {
+        self = FrameAnimation(fps: fps, curve: nil, update)
     }
     
     public init(_ update: @escaping (Double) -> ()) {
-        self = FrameAnimation(fps: 0, update)
+        self = FrameAnimation(fps: 0, curve: nil, update)
     }
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
         let duration = options.duration?.absolute ?? 0
+        let isReversed = options.isReversed
         guard duration > 0 else {
-            update(1)
+            update(isReversed ? 0 : 1)
             completion(true)
             return
         }
@@ -32,13 +39,14 @@ public struct FrameAnimation: AnimationProviderProtocol {
         let timer = CATimer(preferredFPS: preferredFramesPerSecond) {
             let percent = $0 / duration
             guard percent < 1 else {
-                self.update(1)
+                self.update(isReversed ? 0 : 1)
                 owner.object?.stop()
                 owner.object = nil
                 completion(true)
                 return
             }
-            self.update(percent)
+            let k = isReversed ? 1 - percent : percent
+            self.update(self.curve?(k) ?? k)
         }
         owner.object = timer
         timer.start()
@@ -85,6 +93,7 @@ fileprivate final class CATimer: NSObject {
     }
     
     @objc private func handler(displayLink: CADisplayLink) {
+//        print(displayLink.targetTimestamp - CACurrentMediaTime())
         update(displayLink.timestamp - (startedAt ?? CACurrentMediaTime()))
     }
     
