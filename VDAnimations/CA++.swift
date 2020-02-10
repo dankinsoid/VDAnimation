@@ -6,77 +6,77 @@
 //  Copyright © 2020 Voidilov. All rights reserved.
 //
 
-import Foundation
-
-extension CALayer {
-    
-    func allSublayers() -> [CALayer] {
-        (sublayers ?? []) + (sublayers?.reduce([], { $0 + $1.allSublayers() }) ?? [])
-    }
-    
-    func allProperties() -> [String: Any] {
-        Dictionary(uniqueKeysWithValues: CALayer.allKeys.map { ($0, value(forKey: $0)) })
-    }
-    
-    static var allKeys: [String] = {
-        var count: UInt32 = 0
-        guard let properties = class_copyPropertyList(CALayer.self, &count) else { return [] }
-        var rv: [String] = []
-        for i in 0..<Int(count) {
-            let property = properties[i]
-            let name = String(utf8String: property_getName(property)) ?? ""
-            rv.append(name)
-        }
-        free(properties)
-        return rv
-    }()
-    
-    func allPropertyNames() -> [String] {
-        var count: UInt32 = 0
-        guard let properties = class_copyPropertyList(type(of: self), &count) else { return [] }
-        var rv: [String] = []
-        for i in 0..<Int(count) {
-            let property = properties[i]
-            let name = String(utf8String: property_getName(property)) ?? ""
-            rv.append(name)
-        }
-        free(properties)
-        return rv
-    }
-    
-    static func ff(_ action: () -> ()) {
-        guard let window = UIApplication.shared.keyWindow else { return }
-        let all = [window.layer] + window.layer.allSublayers()
-        print(all.count)
-        let before = Dictionary(uniqueKeysWithValues: all.map { ($0, $0.allProperties()) })
-        action()
-        let after = Dictionary(uniqueKeysWithValues: all.map { ($0, $0.allProperties()) })
-        before.forEach {
-            let (layer, dict) = $0
-            guard let new = after[layer] else { return }
-            dict.forEach {
-                print($0.key)
-                print($0.value as? CGRect)
-                print($0.value as? CGFloat)
-                print($0.value as? CGSize)
-                let cg = $0.value as! CGColor
-                if cg.components?.isEmpty == false {
-                    print(cg.components!)
-                    print(UIColor(cgColor: cg))
-                }
-                print()
-            }
-        }
-    }
-}
-
-class MyAnimation: CAAction {
-    
-    func run(forKey event: String, object anObject: Any, arguments dict: [AnyHashable : Any]?) {
-        
-    }
-    
-}
+//import Foundation
+//
+//extension CALayer {
+//
+//    func allSublayers() -> [CALayer] {
+//        (sublayers ?? []) + (sublayers?.reduce([], { $0 + $1.allSublayers() }) ?? [])
+//    }
+//
+//    func allProperties() -> [String: Any] {
+//        Dictionary(uniqueKeysWithValues: CALayer.allKeys.map { ($0, value(forKey: $0)) })
+//    }
+//
+//    static var allKeys: [String] = {
+//        var count: UInt32 = 0
+//        guard let properties = class_copyPropertyList(CALayer.self, &count) else { return [] }
+//        var rv: [String] = []
+//        for i in 0..<Int(count) {
+//            let property = properties[i]
+//            let name = String(utf8String: property_getName(property)) ?? ""
+//            rv.append(name)
+//        }
+//        free(properties)
+//        return rv
+//    }()
+//
+//    func allPropertyNames() -> [String] {
+//        var count: UInt32 = 0
+//        guard let properties = class_copyPropertyList(type(of: self), &count) else { return [] }
+//        var rv: [String] = []
+//        for i in 0..<Int(count) {
+//            let property = properties[i]
+//            let name = String(utf8String: property_getName(property)) ?? ""
+//            rv.append(name)
+//        }
+//        free(properties)
+//        return rv
+//    }
+//
+//    static func ff(_ action: () -> ()) {
+//        guard let window = UIApplication.shared.keyWindow else { return }
+//        let all = [window.layer] + window.layer.allSublayers()
+//        print(all.count)
+//        let before = Dictionary(uniqueKeysWithValues: all.map { ($0, $0.allProperties()) })
+//        action()
+//        let after = Dictionary(uniqueKeysWithValues: all.map { ($0, $0.allProperties()) })
+//        before.forEach {
+//            let (layer, dict) = $0
+//            guard let new = after[layer] else { return }
+//            dict.forEach {
+//                print($0.key)
+//                print($0.value as? CGRect)
+//                print($0.value as? CGFloat)
+//                print($0.value as? CGSize)
+//                let cg = $0.value as! CGColor
+//                if cg.components?.isEmpty == false {
+//                    print(cg.components!)
+//                    print(UIColor(cgColor: cg))
+//                }
+//                print()
+//            }
+//        }
+//    }
+//}
+//
+//class MyAnimation: CAAction {
+//
+//    func run(forKey event: String, object anObject: Any, arguments dict: [AnyHashable : Any]?) {
+//
+//    }
+//
+//}
 
 
 //public static var layoutSubviews: UIView.AnimationOptions { get }
