@@ -29,8 +29,7 @@ struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderProtocol 
                 completion(true)
                 return
             }
-            let option = getOptions(options: options, i: i)
-            start(with: option, completion, i: 0, condition: { $0 < cnt })
+            start(with: options, completion, i: 0, condition: { $0 < cnt })
         } else {
             start(with: options, completion, i: 0, condition: { _ in true })
         }
@@ -41,10 +40,11 @@ struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderProtocol 
             completion(true)
             return
         }
-        if i > 0, animation.canSet(state: .start, for: options) {
-            animation.set(state: .start, for: options)
+        let option = getOptions(options: options, i: i)
+        if i > 0, animation.canSet(state: .start, for: option) {
+            animation.set(state: .start, for: option)
         }
-        animation.start(with: options) {
+        animation.start(with: option) {
             if $0 {
                 self.start(with: options, completion, i: max(0, i &+ 1), condition: condition)
             } else {
@@ -107,7 +107,7 @@ struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderProtocol 
     }
     
     private func getProgress(i: Int) -> ClosedRange<Double> {
-        guard let cnt = count, cnt > 0 else { return 0...1 }
+        guard let cnt = count, cnt > 1 else { return 0...1 }
         let lenght = 1 / Double(cnt)
         var progress = (lenght * Double(i)...(lenght * Double(i) + lenght))
         if i == cnt - 1 {

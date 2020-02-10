@@ -100,8 +100,8 @@ private struct AnimatedPropertySetter<R, T, A: AnimationClosureProviderProtocol>
 
 extension AnimatedPropertySetter where T: Comparable {
     
-    fileprivate func set(_ range: ClosedRange<T>) -> AnimationProviderProtocol {
-        set(from: range.lowerBound, range.upperBound)
+    fileprivate func set(_ range: Gradient<T>) -> AnimationProviderProtocol {
+        set(from: range.from, range.to)
     }
     
 }
@@ -141,7 +141,7 @@ extension AnimatePropertyMapper where R: UIKitPropertySettable, T: ScalableConve
 }
 
 extension AnimatePropertyMapper where R: UIKitPropertySettable, T: ScalableConvertable, T: Comparable {
-    public func set(_ range: ClosedRange<T>) -> AnimationProviderProtocol { setter.set(range) }
+    public func set(_ range: Gradient<T>) -> AnimationProviderProtocol { setter.set(range) }
 }
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
@@ -172,7 +172,7 @@ extension AnimatePropertyMapper where R: View, T: Animatable {
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 extension AnimatePropertyMapper where R: View, T: Animatable, T: Comparable {
-    public func set(_ range: ClosedRange<T>) -> AnimationProviderProtocol { setter.set(range) }
+    public func set(_ range: Gradient<T>) -> AnimationProviderProtocol { setter.set(range) }
 }
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
@@ -201,7 +201,7 @@ extension AnimatePropertyMapper where R: View, T: VectorArithmetic {
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 extension AnimatePropertyMapper where R: View, T: VectorArithmetic, T: Comparable {
-    public func set(_ range: ClosedRange<T>) -> AnimationProviderProtocol { setter.set(range) }
+    public func set(_ range: Gradient<T>) -> AnimationProviderProtocol { setter.set(range) }
 }
 
 public protocol UIKitPropertySettable: class {}

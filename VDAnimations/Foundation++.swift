@@ -20,3 +20,12 @@ extension Sequence {
     }
     
 }
+
+public struct Gradient<Bound> {
+    public var from: Bound
+    public var to: Bound
+}
+
+public func ...<Bound>(_ lhs: Bound, _ rhs: Bound) -> Gradient<Bound> {
+    Gradient(from: lhs, to: rhs)
+}

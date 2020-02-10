@@ -10,9 +10,14 @@ import Foundation
 
 public struct Autoreverse<Animation: AnimationProviderProtocol>: AnimationProviderProtocol {
     private let animation: Animation
+    public var asModifier: AnimationModifier {
+        AnimationModifier(modificators: AnimationOptions.empty.chain.duration[duration], animation: self)
+    }
+    private let duration: AnimationDuration?
     
     init(_ animation: Animation) {
         self.animation = animation
+        self.duration = Autoreverse.duration(from: animation.modificators.duration)
     }
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
@@ -28,7 +33,7 @@ public struct Autoreverse<Animation: AnimationProviderProtocol>: AnimationProvid
         case .start, .end:
             animation.set(state: .start, for: option)
         case .progress(let k):
-            let progress = abs(k - 0.5) * 2
+            let progress = 1 - abs(k - 0.5) * 2
             animation.set(state: .progress(progress), for: option)
         }
     }
@@ -66,4 +71,11 @@ public struct Autoreverse<Animation: AnimationProviderProtocol>: AnimationProvid
         options.curve = curve1
     }
     
+    private static func duration(from dur: AnimationDuration?) -> AnimationDuration? {
+        guard let duration = dur else { return nil }
+        switch duration {
+        case .absolute(let time):   return .absolute(time * 2)
+        case .relative(let time):   return .relative(time)
+        }
+    }
 }

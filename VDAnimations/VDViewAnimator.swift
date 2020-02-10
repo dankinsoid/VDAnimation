@@ -13,6 +13,7 @@ class VDViewAnimator: UIViewPropertyAnimator {
     private var completions: [(UIViewAnimatingPosition) -> Void] = []
     private var observing: NSKeyValueObservation?
     private var prevRunning = false
+    private var hasCalledCompletions = false
     
     deinit {
         observing?.invalidate()
@@ -30,11 +31,13 @@ class VDViewAnimator: UIViewPropertyAnimator {
     }
     
     override func startAnimation() {
+        hasCalledCompletions = false
         observeRunning()
         super.startAnimation()
     }
     
     override func startAnimation(afterDelay delay: TimeInterval) {
+        hasCalledCompletions = false
         observeRunning()
         super.startAnimation(afterDelay: delay)
     }
@@ -46,6 +49,7 @@ class VDViewAnimator: UIViewPropertyAnimator {
             guard let it = self, it.pausesOnCompletion, it.isRunning == false, it.prevRunning == true else { return }
             it.observing?.invalidate()
             it.observing = nil
+            it.hasCalledCompletions = true
             it.completions.forEach {
                 switch it.fractionComplete {
                 case 1:  $0(it.isReversed ? .start : .end)
@@ -57,7 +61,10 @@ class VDViewAnimator: UIViewPropertyAnimator {
     
     override func addCompletion(_ completion: @escaping (UIViewAnimatingPosition) -> Void) {
         completions.append(completion)
-        super.addCompletion(completion)
+        super.addCompletion {[weak self] in
+            guard self?.hasCalledCompletions == false else { return }
+            completion($0)
+        }
     }
     
 }
