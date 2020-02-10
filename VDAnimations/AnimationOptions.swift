@@ -23,6 +23,7 @@ public struct AnimationOptions {
             autoreverseStep: autoreverseStep ?? other.autoreverseStep
         )
     }
+    
 }
 
 extension AnimationOptions {

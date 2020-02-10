@@ -50,6 +50,9 @@ public struct BezierCurve: Equatable {
 //    x(t) = 3t(1-t)^2 * x1 + 3t^2 * (1-t) * x2 + t^3
 //    y(t) = 3t(1-t)^2 * y1 + 3t^2 * (1-t) * y2 + t^3
     
+    //    x(t) = 3t(1-t)^2 * x1 + 3t^2 * x2 - 2t^3 * x2 + t^3
+    //    y(t) = 3t(1-t)^2 * y1 + 3t^2 * (1-t) * y2 + t^3
+    
 //         x = p123.x + (p234.x - p123.x) * k //= p123.x * (1 - k) + k * p234.x
 //    p123.x = p12.x + (p23.x - p12.x) * k
 //    p234.x = p23.x + (p34.x - p23.x) * k
@@ -125,13 +128,14 @@ public struct BezierCurve: Equatable {
         return m * start[axe] + a * point1[axe] + b * point2[axe] + t * t * t * end[axe]
     }
     
-    private func findX(_ y: CGFloat) -> CGFloat {
-        guard y != 0 else { return 0 }
-        guard y != 1 else { return 1 }
-        let a = 1 - 3 * point2.y + 3 * point1.y
-        let b = 3 * point2.y - 6 * point1.y
-        let c = 3 * point2.y
-        let d = -y
+    private func value(_ axe: NSLayoutConstraint.Axis, for other: CGFloat) -> CGFloat {
+        guard other != 0 else { return 0 }
+        guard other != 1 else { return 1 }
+        let axe0 = axe.inverted
+        let a = 1 - 3 * point2[axe0] + 3 * point1[axe0]
+        let b = 3 * point2[axe0] - 6 * point1[axe0]
+        let c = 3 * point2[axe0]
+        let d = -other
         let _y: (CGFloat) -> CGFloat = { $0 - b / (3 * a) }
         let b2 = b * b
         let b3 = b2 * b
@@ -150,9 +154,12 @@ public struct BezierCurve: Equatable {
         return 0
     }
     
-    
     public static func between(_ c1: BezierCurve, _ c2: BezierCurve, k: CGFloat = 0.5) -> BezierCurve {
         return BezierCurve(CGPoint.between(c1.point1, c2.point1, k: k), CGPoint.between(c1.point2, c2.point2, k: k))
+    }
+    
+    public func apply(to other: BezierCurve) -> BezierCurve {
+        
     }
     
 }
@@ -201,6 +208,17 @@ extension CGPoint: AdditiveArithmetic {
         switch axe {
         case .horizontal:   return x
         default:            return y
+        }
+    }
+    
+}
+
+extension NSLayoutConstraint.Axis {
+    
+    public var inverted: NSLayoutConstraint.Axis {
+        switch self {
+        case .horizontal:   return .vertical
+        default:            return .horizontal
         }
     }
     

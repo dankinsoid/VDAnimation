@@ -94,9 +94,10 @@ public struct Sequential: AnimationProviderProtocol {
             let array = getProgresses(animations.map({ $0.modificators }), duration: fullDuration?.absolute ?? 0, options: .empty)
             let i = array.firstIndex(where: { k >= $0.lowerBound && k <= $0.upperBound }) ?? 0
             let finished = interator.prevIndex ?? 0
-            let toFinish = i > finished ? animations.dropFirst(finished).prefix(i - finished) : []
-            let started = animations.count - finished - 1
-            let toStart = i < finished ? animations.dropLast(started).suffix(finished - i) : []
+            let toFinish = i > finished || interator.prevIndex == nil ? animations.dropFirst(finished).prefix(i - finished) : []
+            let p = interator.prevIndex ?? animations.count - 1
+            let started = animations.count - p - 1
+            let toStart = i < finished || interator.prevIndex == nil ? animations.dropLast(started).suffix((interator.prevIndex ?? p) - i) : []
             toFinish.forEach { $0.set(state: .end) }
             toStart.reversed().forEach { $0.set(state: .start) }
             animations[i].set(state: .progress((k - array[i].lowerBound) / (array[i].upperBound - array[i].lowerBound)))

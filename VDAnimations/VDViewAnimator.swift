@@ -17,7 +17,7 @@ class VDViewAnimator: UIViewPropertyAnimator {
     
     deinit {
         observing?.invalidate()
-        finishAnimation(at: .end)
+        finishAnimation(at: .current)
     }
     
     override func finishAnimation(at finalPosition: UIViewAnimatingPosition) {
@@ -27,6 +27,8 @@ class VDViewAnimator: UIViewPropertyAnimator {
         }
         if state == .stopped {
             super.finishAnimation(at: finalPosition)
+        } else {
+            fractionComplete = 1
         }
     }
     
@@ -61,9 +63,9 @@ class VDViewAnimator: UIViewPropertyAnimator {
     
     override func addCompletion(_ completion: @escaping (UIViewAnimatingPosition) -> Void) {
         completions.append(completion)
-        super.addCompletion {[weak self] in
+        super.addCompletion {[weak self] b in
             guard self?.hasCalledCompletions == false else { return }
-            completion($0)
+            completion(b)
         }
     }
     

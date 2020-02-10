@@ -36,6 +36,7 @@ struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderProtocol 
     }
     
     private func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> (), i: Int, condition: @escaping (Int) -> Bool) {
+        let i = options.isReversed ? (count ?? (i + 1)) - i - 1 : i
         guard condition(i) else {
             completion(true)
             return

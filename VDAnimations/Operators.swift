@@ -19,7 +19,8 @@ extension AnimationProviderProtocol {
     }
     
     public func curve(_ value: BezierCurve) -> AnimationModifier {
-        asModifier.chain.modificators.curve[value]
+        let result = asModifier
+        return result.chain.modificators.curve[CA.curve(value, result.modificators.curve)]
     }
     
     public func `repeat`(_ count: Int) -> AnimationModifier {
@@ -34,4 +35,12 @@ extension AnimationProviderProtocol {
         Autoreverse(self)
     }
     
+}
+
+private func curve(_ lhs: BezierCurve?, _ rhs: BezierCurve?) -> BezierCurve? {
+    guard let l = lhs, let r = rhs else {
+        return lhs ?? rhs
+    }
+    print(l, r, BezierCurve.between(l, r))
+    return BezierCurve.between(l, r)
 }
