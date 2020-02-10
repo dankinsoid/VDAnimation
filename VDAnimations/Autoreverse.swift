@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct Autoreverse<Animation: AnimationProviderProtocol>: AnimationProviderProtocol {
+struct Autoreverse<Animation: AnimationProviderProtocol>: AnimationProviderProtocol {
     private let animation: Animation
     public var asModifier: AnimationModifier {
         AnimationModifier(modificators: AnimationOptions.empty.chain.duration[duration], animation: self)
@@ -20,14 +20,14 @@ public struct Autoreverse<Animation: AnimationProviderProtocol>: AnimationProvid
         self.duration = Autoreverse.duration(from: animation.modificators.duration)
     }
     
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
         animation.start(with: self.options(from: options, step: .forward)) {
             guard $0 else { return completion(false) }
             self.animation.start(with: self.options(from: options, step: .back), completion)
         }
     }
     
-    public func set(state: AnimationState, for options: AnimationOptions) {
+    func set(state: AnimationState, for options: AnimationOptions) {
         let option = options.chain.autoreverseStep[nil]
         switch state {
         case .start, .end:
@@ -38,7 +38,7 @@ public struct Autoreverse<Animation: AnimationProviderProtocol>: AnimationProvid
         }
     }
     
-    public func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
+    func canSet(state: AnimationState, for options: AnimationOptions) -> Bool {
         let option = options.chain.autoreverseStep[nil]
         switch state {
         case .start, .end:

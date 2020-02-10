@@ -24,16 +24,30 @@ extension AnimationProviderProtocol {
 //        return result.chain.modificators.curve[CA.curve(value, result.modificators.curve)]
     }
     
-    public func `repeat`(_ count: Int) -> AnimationModifier {
-        RepeatAnimation(count, for: self).asModifier
+    public func `repeat`(_ count: Int) -> AnimationProviderProtocol {
+        RepeatAnimation(count, for: self)
     }
     
-    public func `repeat`() -> AnimationModifier {
-        RepeatAnimation(nil, for: self).asModifier
+    public func `repeat`() -> AnimationProviderProtocol {
+        RepeatAnimation(nil, for: self)
     }
     
-    public func autoreverse() -> Autoreverse<Self> {
+    public func autoreverse() -> AnimationProviderProtocol {
         Autoreverse(self)
+    }
+    
+    public func delay(_ value: TimeInterval) -> AnimationProviderProtocol {
+        Sequential {
+            Interval(value)
+            self
+        }
+    }
+    
+    public func delay(relative value: TimeInterval) -> AnimationProviderProtocol {
+        Sequential {
+            Interval(relative: value)
+            self
+        }
     }
     
 }
