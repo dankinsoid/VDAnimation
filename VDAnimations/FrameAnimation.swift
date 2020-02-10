@@ -62,7 +62,6 @@ fileprivate final class CATimer: NSObject {
     
     let preferredFramesPerSecond: Int
     let update: (TimeInterval) -> ()
-    var onDeinit: () -> () = {}
     private var startedAt: CFTimeInterval?
     
     private var displayLink: CADisplayLink?
@@ -70,11 +69,6 @@ fileprivate final class CATimer: NSObject {
     init(preferredFPS: Int, _ update: @escaping (TimeInterval) -> ()) {
         self.preferredFramesPerSecond = preferredFPS
         self.update = update
-    }
-    
-    deinit {
-        stop()
-        onDeinit()
     }
     
     func start() {
