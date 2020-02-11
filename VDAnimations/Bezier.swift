@@ -9,11 +9,27 @@
 
 import UIKit
 
+public enum Curve {
+//    case bezier(BezierCurve),  //spring
+}
+
+//easeIn = x^1.75
+//easeOut = x^1.1(2-x)
+//easeInOut = 2x^2, x<=0.5; -1+(2-2x)x, x > 0.5
+
+//f(x)
+//y0+f(x0+x(x1-x0))*(y1-y0)
+
+//d = (x0, y0)
+//k = (x1-x0, y1-y0)
+//p'= p*k + d
+//p = (p'- d)/k
+
 public struct BezierCurve: Equatable {
     public static let linear = BezierCurve(.zero, .one)
     public static let ease = BezierCurve(CGPoint(x: 0.25, y: 0.1), CGPoint(x: 0.25, y: 1))
-    public static let easeIn = BezierCurve(CGPoint(x: 0.42, y: 0), .one)
-    public static let easeOut = BezierCurve(.zero, CGPoint(x: 0.58, y: 1))
+    public static let easeIn = BezierCurve(CGPoint(x: 0.45, y: 0), .one) //0.42
+    public static let easeOut = BezierCurve(.zero, CGPoint(x: 0.55, y: 1)) //0.58
     public static let easeInOut = BezierCurve(easeIn.point1, easeOut.point2)
     
     private var start: CGPoint = .zero
