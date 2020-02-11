@@ -8,7 +8,7 @@
 
 import Foundation
 
-final class PropertyAnimator<T, A: AnimationClosureProviderProtocol>: AnimationProviderProtocol {
+public final class PropertyAnimator<T, A: AnimationClosureProviderProtocol>: AnimationProviderProtocol {
     private var initial: T?
     private let value: T
     private let scale: (T, Double, T) -> T
@@ -23,13 +23,11 @@ final class PropertyAnimator<T, A: AnimationClosureProviderProtocol>: AnimationP
         self.value = value
     }
     
-    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
         if initial == nil { initial = getter() }
-        let option: AnimationOptions
+        var option = options
         if initial != nil {
-            option = options.chain.autoreverseStep[nil]
-        } else {
-            option = options
+            option.autoreverseStep = nil
         }
         if options.isReversed {
             setter(value)
@@ -40,7 +38,7 @@ final class PropertyAnimator<T, A: AnimationClosureProviderProtocol>: AnimationP
         }
     }
     
-    func set(state: AnimationState, for options: AnimationOptions) {
+    public func set(state: AnimationState, for options: AnimationOptions) {
         let state = options.isReversed == true ? state.reversed : state
         switch state {
         case .start:
@@ -54,3 +52,4 @@ final class PropertyAnimator<T, A: AnimationClosureProviderProtocol>: AnimationP
     }
     
 }
+
