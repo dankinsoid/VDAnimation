@@ -8,7 +8,7 @@
 
 import UIKit
 
-public struct FrameAnimation: AnimationProviderProtocol {
+public struct ForEachFrame: AnimationProviderProtocol {
     private let preferredFramesPerSecond: Int
     private let update: (Double) -> ()
     private let curve: ((Double) -> Double)?
@@ -20,11 +20,11 @@ public struct FrameAnimation: AnimationProviderProtocol {
     }
     
     public init(fps: Int, _ update: @escaping (Double) -> ()) {
-        self = FrameAnimation(fps: fps, curve: nil, update)
+        self = ForEachFrame(fps: fps, curve: nil, update)
     }
     
     public init(_ update: @escaping (Double) -> ()) {
-        self = FrameAnimation(fps: 0, curve: nil, update)
+        self = ForEachFrame(fps: 0, curve: nil, update)
     }
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
