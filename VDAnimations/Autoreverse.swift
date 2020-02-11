@@ -10,7 +10,7 @@ import Foundation
 
 struct Autoreverse<Animation: AnimationProviderProtocol>: AnimationProviderProtocol {
     private let animation: Animation
-    public var asModifier: AnimationModifier {
+    var asModifier: AnimationModifier {
         AnimationModifier(modificators: AnimationOptions.empty.chain.duration[duration], animation: self)
     }
     private let duration: AnimationDuration?
