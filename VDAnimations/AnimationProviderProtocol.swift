@@ -21,7 +21,7 @@ public protocol AnimationClosureProviderProtocol: AnimationProviderProtocol {
 extension AnimationProviderProtocol {
     public var modificators: AnimationOptions { asModifier.modificators }
     public var asModifier: AnimationModifier { AnimationModifier(modificators: .empty, animation: self) }
-    var chain: Chainer<Self> { Chainer(root: self) }
+    var chain: ValueChaining<Self> { ValueChaining(self) }
     
     public func set(state: AnimationState) {
         set(state: state, for: .empty)

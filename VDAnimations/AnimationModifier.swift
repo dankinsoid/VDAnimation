@@ -13,7 +13,7 @@ public struct AnimationModifier: AnimationProviderProtocol {
     public var asModifier: AnimationModifier { self }
     var modificators: AnimationOptions
     var animation: AnimationProviderProtocol
-    var chain: Chainer<AnimationModifier> { Chainer(root: self) }
+    var chain: ValueChaining<AnimationModifier> { ValueChaining(self) }
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
         animation.start(with: options.or(modificators), completion)

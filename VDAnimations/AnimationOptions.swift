@@ -14,7 +14,7 @@ public struct AnimationOptions {
     public var curve: BezierCurve?
     public var autoreverseStep: AutoreverseStep?
     
-    var chain: Chainer<AnimationOptions> { Chainer(root: self) }
+    var chain: ValueChaining<AnimationOptions> { ValueChaining(self) }
     
     public func or(_ other: AnimationOptions) -> AnimationOptions {
         AnimationOptions(

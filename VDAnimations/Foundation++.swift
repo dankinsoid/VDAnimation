@@ -25,10 +25,15 @@ extension Sequence {
 public struct Gradient<Bound> {
     public var from: Bound
     public var to: Bound
+    
+    public init(_ from: Bound, _ to: Bound) {
+        self.from = from
+        self.to = to
+    }
 }
 
 public func ...<Bound>(_ lhs: Bound, _ rhs: Bound) -> Gradient<Bound> {
-    Gradient(from: lhs, to: rhs)
+    Gradient(lhs, rhs)
 }
 
 extension Gradient where Bound: ScalableConvertable {
@@ -36,22 +41,22 @@ extension Gradient where Bound: ScalableConvertable {
         Bound(scaleData: from.scaleData + (to.scaleData - from.scaleData).scaled(by: percent))
     }
 }
-
-@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension Gradient where Bound: Animatable {
-    public func at(_ percent: Double) -> Bound {
-        var result = from
-        result.animatableData = (from.animatableData...to.animatableData).at(percent)
-        return result
-    }
-}
-
-@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension Gradient where Bound: VectorArithmetic {
-    public func at(_ percent: Double) -> Bound {
-        var result = to - from
-        result.scale(by: percent)
-        result += from
-        return result
-    }
-}
+//
+//@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
+//extension Gradient where Bound: Animatable {
+//    public func at(_ percent: Double) -> Bound {
+//        var result = from
+//        result.animatableData = (from.animatableData...to.animatableData).at(percent)
+//        return result
+//    }
+//}
+//
+//@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
+//extension Gradient where Bound: VectorArithmetic {
+//    public func at(_ percent: Double) -> Bound {
+//        var result = to - from
+//        result.scale(by: percent)
+//        result += from
+//        return result
+//    }
+//}

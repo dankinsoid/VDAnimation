@@ -44,7 +44,7 @@ struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderProtocol 
         let option = getOptions(options: options, i: index)
         if i > 0 {
             let reverse = option.autoreverseStep?.inverted ?? .back
-            animation.start(with: option.chain.autoreverseStep[reverse].chain.duration[.absolute(0)]) {
+            animation.start(with: option.chain.autoreverseStep[reverse].duration[.absolute(0)]) {
                 guard $0 else { return completion(false) }
                 self.animation.start(with: option) {
                     guard $0 else { return completion(false) }
