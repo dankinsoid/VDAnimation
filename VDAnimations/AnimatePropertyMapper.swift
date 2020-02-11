@@ -11,50 +11,54 @@ import SwiftUI
 
 @dynamicMemberLookup
 public struct AnimatePropertyMapper<R, T> {
-    fileprivate let object: R
+    fileprivate let object: () -> R?
     private let keyPath: ReferenceWritableKeyPath<R, T>
+    private let animatable: PropertyAnimatable
     
-    fileprivate init(object: R, keyPath: ReferenceWritableKeyPath<R, T>) {
+    init(object: @escaping () -> R?, animatable: PropertyAnimatable, keyPath: ReferenceWritableKeyPath<R, T>) {
         self.keyPath = keyPath
         self.object = object
+        self.animatable = animatable
     }
     
     public subscript<D>(dynamicMember keyPath: WritableKeyPath<T, D>) -> AnimatePropertyMapper<R, D> {
         let kp = self.keyPath.appending(path: keyPath)
-        return AnimatePropertyMapper<R, D>(object: object, keyPath: kp)
+        return AnimatePropertyMapper<R, D>(object: object, animatable: animatable, keyPath: kp)
     }
     
 }
 
 private struct AnimatedPropertySetter<R, T, A: AnimationClosureProviderProtocol> {
-    fileprivate let object: R
+    fileprivate let object: () -> R?
     private let scale: (T, Double, T) -> T
-    private let getter: () -> T?
-    private let setter: (T?) -> ()
+    private let keyPath: ReferenceWritableKeyPath<R, T>
+    private let animatable: PropertyAnimatable
     
-    fileprivate init(object: R, getter: @escaping () -> T?, setter: @escaping (T?) -> (), scale: @escaping (T, Double, T) -> T) {
-        self.getter = getter
-        self.setter = setter
+    fileprivate init(object: @escaping () -> R?, keyPath: ReferenceWritableKeyPath<R, T>,  animatable: PropertyAnimatable, scale: @escaping (T, Double, T) -> T) {
+        self.keyPath = keyPath
         self.object = object
         self.scale = scale
+        self.animatable = animatable
     }
     
-    func set(_ value: T) -> AnimationProviderProtocol {
+    func set(_ value: T) -> PropertyAnimator<R, A> {
         return _set(from: nil, value)
     }
     
-    func set(from initial: T, _ value: T) -> AnimationProviderProtocol {
+    func set(from initial: T, _ value: T) -> PropertyAnimator<R, A> {
         return _set(from: initial, value)
     }
     
-     func _set(from initial: T?, _ value: T) -> AnimationProviderProtocol {
-        return PropertyAnimator(
-            from: initial,
-            getter: getter,
-            setter: setter,
-            scale: scale,
-            value: value,
-            animatorType: A.self
+     func _set(from initial: T?, _ value: T) -> PropertyAnimator<R, A> {
+        PropertyAnimator(
+            PropertyOwner(
+                from: initial,
+                getter: { self.object()?[keyPath: self.keyPath] },
+                setter: { guard let v = $0 else { return }; self.object()?[keyPath: self.keyPath] = v },
+                scale: scale,
+                value: value
+            ).asAnimatable.union(animatable),
+            get: object
         )
     }
     
@@ -67,7 +71,7 @@ private struct AnimatedPropertySetter<R, T, A: AnimationClosureProviderProtocol>
             return Sequential(values.map { set($0) })
         }
         var array = values
-        var animations = [set(values[0])]
+        var animations = [set(values[0]) as AnimationProviderProtocol]
         array.removeFirst()
         animations += sequential(from: values[0], array)
         return Sequential(animations)
@@ -96,11 +100,7 @@ private struct AnimatedPropertySetter<R, T, A: AnimationClosureProviderProtocol>
         return animations
     }
     
-}
-
-extension AnimatedPropertySetter where T: Comparable {
-    
-    fileprivate func set(_ range: Gradient<T>) -> AnimationProviderProtocol {
+    fileprivate func set(_ range: Gradient<T>) -> PropertyAnimator<R, A> {
         set(from: range.from, range.to)
     }
     
@@ -108,14 +108,14 @@ extension AnimatedPropertySetter where T: Comparable {
 
 @dynamicMemberLookup
 public struct AnimatedPropertyMaker<R> {
-    private var object: R
+    private var object: () -> R?
     
-    fileprivate init(object: R) {
+    fileprivate init(object: @escaping () -> R?) {
         self.object = object
     }
     
     public subscript<D>(dynamicMember keyPath: ReferenceWritableKeyPath<R, D>) -> AnimatePropertyMapper<R, D> {
-        AnimatePropertyMapper(object: object, keyPath: keyPath)
+        AnimatePropertyMapper(object: object, animatable: .empty, keyPath: keyPath)
     }
     
 }
@@ -125,23 +125,19 @@ extension AnimatePropertyMapper where R: UIKitPropertySettable, T: ScalableConve
     private var setter: AnimatedPropertySetter<R, T, Animate> {
         AnimatedPropertySetter(
             object: object,
-            getter: {[weak object, keyPath] in object?[keyPath: keyPath] },
-            setter: {[weak object, keyPath] in if let v = $0 { object?[keyPath: keyPath] = v } },
+            keyPath: keyPath,
+            animatable: animatable,
             scale: { T.init(scaleData: $0.scaleData + ($2.scaleData - $0.scaleData).scaled(by: $1)) }
         )
     }
     
-    public func set(_ value: T) -> AnimationProviderProtocol { setter.set(value) }
-    public func set(from initial: T, _ value: T) -> AnimationProviderProtocol { setter.set(from: initial, value) }
+    public func set(_ value: T) -> PropertyAnimator<R, Animate> { setter.set(value) }
+    public func set(from initial: T, _ value: T) -> PropertyAnimator<R, Animate> { setter.set(from: initial, value) }
     public func set(_ a: T, _ b: T, _ values: T...) -> AnimationProviderProtocol { setter.set(a, b, values) }
     public func set(_ values: [T]) -> AnimationProviderProtocol { setter.set(values) }
     public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> AnimationProviderProtocol { setter.set(from: initial, a, b, values) }
     public func set(from initial: T, _ values: [T]) -> AnimationProviderProtocol { setter.set(from: initial, values) }
-    
-}
-
-extension AnimatePropertyMapper where R: UIKitPropertySettable, T: ScalableConvertable, T: Comparable {
-    public subscript(_ range: Gradient<T>) -> AnimationProviderProtocol { setter.set(range) }
+    public subscript(_ range: Gradient<T>) -> PropertyAnimator<R, Animate> { setter.set(range) }
 }
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
@@ -150,8 +146,8 @@ extension AnimatePropertyMapper where R: View, T: Animatable {
     private var setter: AnimatedPropertySetter<R, T, SwiftUIAnimate> {
         AnimatedPropertySetter(
             object: object,
-            getter: {[object, keyPath] in object[keyPath: keyPath] },
-            setter: {[object, keyPath] in if let v = $0 { object[keyPath: keyPath] = v } },
+            keyPath: keyPath,
+            animatable: animatable,
             scale: {
                 var result = $0
                 var lenght = $2.animatableData - $0.animatableData
@@ -162,17 +158,13 @@ extension AnimatePropertyMapper where R: View, T: Animatable {
         )
     }
     
-    public func set(_ value: T) -> AnimationProviderProtocol { setter.set(value) }
-    public func set(from initial: T, _ value: T) -> AnimationProviderProtocol { setter.set(from: initial, value) }
+    public func set(_ value: T) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(value) }
+    public func set(from initial: T, _ value: T) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(from: initial, value) }
     public func set(_ a: T, _ b: T, _ values: T...) -> AnimationProviderProtocol { setter.set(a, b, values) }
     public func set(_ values: [T]) -> AnimationProviderProtocol { setter.set(values) }
     public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> AnimationProviderProtocol { setter.set(from: initial, a, b, values) }
     public func set(from initial: T, _ values: [T]) -> AnimationProviderProtocol { setter.set(from: initial, values) }
-}
-
-@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension AnimatePropertyMapper where R: View, T: Animatable, T: Comparable {
-    public subscript(_ range: Gradient<T>) -> AnimationProviderProtocol { setter.set(range) }
+    public subscript(_ range: Gradient<T>) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(range) }
 }
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
@@ -181,8 +173,8 @@ extension AnimatePropertyMapper where R: View, T: VectorArithmetic {
     private var setter: AnimatedPropertySetter<R, T, SwiftUIAnimate> {
         AnimatedPropertySetter(
             object: object,
-            getter: {[object, keyPath] in object[keyPath: keyPath] },
-            setter: {[object, keyPath] in if let v = $0 { object[keyPath: keyPath] = v } },
+            keyPath: keyPath,
+            animatable: animatable,
             scale: {
                 var lenght = $2 - $0
                 lenght.scale(by: $1)
@@ -191,24 +183,20 @@ extension AnimatePropertyMapper where R: View, T: VectorArithmetic {
         )
     }
     
-    public func set(_ value: T) -> AnimationProviderProtocol { setter.set(value) }
-    public func set(from initial: T, _ value: T) -> AnimationProviderProtocol { setter.set(from: initial, value) }
+    public func set(_ value: T) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(value) }
+    public func set(from initial: T, _ value: T) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(from: initial, value) }
     public func set(_ a: T, _ b: T, _ values: T...) -> AnimationProviderProtocol { setter.set(a, b, values) }
     public func set(_ values: [T]) -> AnimationProviderProtocol { setter.set(values) }
     public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> AnimationProviderProtocol { setter.set(from: initial, a, b, values) }
     public func set(from initial: T, _ values: [T]) -> AnimationProviderProtocol { setter.set(from: initial, values) }
-}
-
-@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension AnimatePropertyMapper where R: View, T: VectorArithmetic, T: Comparable {
-    public subscript(_ range: Gradient<T>) -> AnimationProviderProtocol { setter.set(range) }
+    public subscript(_ range: Gradient<T>) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(range) }
 }
 
 public protocol UIKitPropertySettable: class {}
 
 extension UIKitPropertySettable {
     public var ca: AnimatedPropertyMaker<Self> {
-        return AnimatedPropertyMaker(object: self)
+        return AnimatedPropertyMaker(object: {[weak self] in self })
     }
 }
 
@@ -218,7 +206,7 @@ extension CALayer: UIKitPropertySettable {}
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 extension View {
     public var ca: AnimatedPropertyMaker<Self> {
-        return AnimatedPropertyMaker(object: self)
+        return AnimatedPropertyMaker(object: { self })
     }
 }
 
