@@ -18,26 +18,31 @@ public struct Animate: AnimationClosureProviderProtocol {
         interactor = Interactor(block)
     }
     
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+    @discardableResult
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDriver {
         switch options.autoreverseStep {
         case .none:
             animator.animator = nil
-            startAnimation(with: options, complete: true, reverse: false, completion)
+            return startAnimation(with: options, complete: true, reverse: false, completion)
         case .forward:
-            startAnimation(with: options, complete: false, reverse: false, completion)
+            return startAnimation(with: options, complete: false, reverse: false, completion)
         case .back:
             animator.animator?.finishAnimation(at: .start)
             animator.animator = nil
-            startAnimation(with: options, complete: true, reverse: true, completion)
+            return startAnimation(with: options, complete: true, reverse: true, completion)
         }
     }
     
-    private func startAnimation(with options: AnimationOptions, complete: Bool, reverse: Bool, _ completion: @escaping (Bool) -> ()) {
+    private func startAnimation(with options: AnimationOptions, complete: Bool, reverse: Bool, _ completion: @escaping (Bool) -> ()) -> AnimationDriver {
         interactor.reset(at: .start)
-        guard options.duration?.absolute ?? 0 > 0 else {
-            interactor.animation()
+        guard options.duration?.absolute ?? 0 > 0 || !complete else {
+            var end = AnimationState.start
+            if !reverse {
+                interactor.animation()
+                end = .end
+            }
             completion(true)
-            return
+            return AnimationDriver(stop: { _ in end })
         }
         let provider = VDTimingProvider(bezier: options.curve, spring: springTiming)
         let animator = VDViewAnimator(duration: options.duration?.absolute ?? 0, timingParameters: provider)
@@ -57,6 +62,19 @@ public struct Animate: AnimationClosureProviderProtocol {
             self.animator.animator = animator
         }
         animator.startAnimation()
+        return AnimationDriver {
+            switch $0 {
+            case .start:
+                animator.finishAnimation(at: .start)
+            case .progress(let k):
+                animator.pauseAnimation()
+                animator.fractionComplete = CGFloat(k)
+                animator.finishAnimation(at: .current)
+            case .end:
+                animator.finishAnimation(at: .end)
+            }
+            return $0
+        }
     }
     
     public func set(state: AnimationState, for options: AnimationOptions) {

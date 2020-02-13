@@ -9,7 +9,7 @@
 import Foundation
 
 public protocol AnimationProviderProtocol {
-    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ())
+    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDriver
     var asModifier: AnimationModifier { get }
     func set(state: AnimationState, for options: AnimationOptions)
 }
@@ -27,8 +27,13 @@ extension AnimationProviderProtocol {
         set(state: state, for: .empty)
     }
     
-    public func start(_ completion: ((Bool) -> ())? = nil) {
+    @discardableResult
+    public func start(_ completion: ((Bool) -> ())? = nil) -> AnimationDriver {
         start(with: .empty, { completion?($0) })
     }
     
+}
+
+public struct AnimationDriver {
+    public let stop: (AnimationState) -> AnimationState
 }

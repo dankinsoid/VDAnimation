@@ -15,7 +15,8 @@ public struct AnimationModifier: AnimationProviderProtocol {
     var animation: AnimationProviderProtocol
     var chain: ValueChaining<AnimationModifier> { ValueChaining(self) }
     
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+    @discardableResult
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDriver {
         animation.start(with: options.or(modificators), completion)
     }
     
