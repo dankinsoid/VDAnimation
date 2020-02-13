@@ -32,3 +32,15 @@ extension AnimationProviderProtocol {
     }
     
 }
+
+extension Optional: AnimationProviderProtocol where Wrapped: AnimationProviderProtocol {
+    
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+        self?.start(with: options, completion)
+    }
+    
+    public func set(state: AnimationState, for options: AnimationOptions) {
+        self?.set(state: state, for: options)
+    }
+    
+}
