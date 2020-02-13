@@ -36,4 +36,21 @@ extension AnimationProviderProtocol {
 
 public struct AnimationDriver {
     public let stop: (AnimationState) -> AnimationState
+    
+    public func stop() {
+        stop(.end)
+    }
+    
+}
+
+extension Optional: AnimationProviderProtocol where Wrapped: AnimationProviderProtocol {
+    
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDriver {
+        self?.start(with: options, completion) ?? AnimationDriver({_ in })
+    }
+    
+    public func set(state: AnimationState, for options: AnimationOptions) {
+        self?.set(state: state, for: options)
+    }
+    
 }

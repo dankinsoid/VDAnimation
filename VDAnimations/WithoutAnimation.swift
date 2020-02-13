@@ -34,10 +34,7 @@ public struct WithoutAnimation: AnimationClosureProviderProtocol {
     }
     
     public func set(state: AnimationState, for options: AnimationOptions) {
-        let state = options.isReversed == true ? state.reversed : state
-        if case .end = state {
-            execute({_ in })
-        }
+        execute({_ in })
     }
     
     private func execute(_ completion: @escaping (Bool) -> ()) {

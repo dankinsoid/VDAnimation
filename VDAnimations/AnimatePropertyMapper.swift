@@ -54,7 +54,11 @@ private struct AnimatedPropertySetter<R, T, A: AnimationClosureProviderProtocol>
             PropertyOwner(
                 from: initial,
                 getter: { self.object()?[keyPath: self.keyPath] },
-                setter: { guard let v = $0 else { return }; self.object()?[keyPath: self.keyPath] = v },
+                setter: {
+                    guard let v = $0, let object = self.object() else { return }
+                    object[keyPath: self.keyPath] = v
+                    (object as? NSLayoutConstraint)?.didUpdate()
+                },
                 scale: scale,
                 value: value
             ).asAnimatable.union(animatable),
@@ -203,6 +207,12 @@ extension UIKitPropertySettable {
 extension UIView: UIKitPropertySettable {}
 extension CALayer: UIKitPropertySettable {}
 
+extension NSLayoutConstraint: UIKitPropertySettable {
+    public var ca: AnimatedPropertyMaker<NSLayoutConstraint> {
+        return AnimatedPropertyMaker(object: { self })
+    }
+}
+
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 extension View {
     public var ca: AnimatedPropertyMaker<Self> {
@@ -210,10 +220,33 @@ extension View {
     }
 }
 
-//extension NSLayoutConstraint {
-//
-//    public var ca: AnimatePropertyMapper<NSLayoutConstraint, CGFloat> {
-//        AnimatePropertyMapper(object: self, keyPath: \.constant)
-//    }
-//
-//}
+extension NSLayoutConstraint {
+
+    fileprivate func didUpdate() {
+        let view1 = firstItem as? UIView ?? (firstItem as? UILayoutGuide)?.owningView
+        let view2 = secondItem as? UIView ?? (secondItem as? UILayoutGuide)?.owningView
+        if let parent = view1?.commonSuper(with: view2) {
+            parent.layoutIfNeeded()
+        } else {
+            (view1?.superview ?? view1)?.layoutIfNeeded()
+            guard view1 !== view2 else { return }
+            (view2?.superview ?? view2)?.layoutIfNeeded()
+        }
+    }
+
+}
+
+extension UIView {
+    
+    fileprivate func commonSuper(with: UIView?) -> UIView? {
+        guard let view = with else { return nil }
+        if isDescendant(of: view) { return view.superview ?? view }
+        return commonParent(with: view)
+    }
+    
+    private func commonParent(with view: UIView) -> UIView? {
+        if view.isDescendant(of: self) { return superview ?? self }
+        return superview?.commonParent(with: view)
+    }
+    
+}
