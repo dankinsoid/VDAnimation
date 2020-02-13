@@ -28,7 +28,7 @@ public struct Interval: VDAnimationProtocol {
     }
     
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationPosition {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         DispatchTimer.execute(seconds: options.duration?.absolute ?? duration?.absolute ?? 0) {
             completion(true)
         }

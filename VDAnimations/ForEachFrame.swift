@@ -10,25 +10,21 @@ import UIKit
 
 public struct ForEachFrame: VDAnimationProtocol {
     private let preferredFramesPerSecond: Int
-    private let update: (Double) -> ()
-    private let curve: ((Double) -> Double)?
+    private let update: (CGFloat) -> ()
+    private let curve: ((CGFloat) -> CGFloat)?
     
-    init(fps: Int, curve: ((Double) -> Double)?, _ update: @escaping (Double) -> ()) {
+    init(fps: Int, curve: ((CGFloat) -> CGFloat)?, _ update: @escaping (CGFloat) -> ()) {
         self.preferredFramesPerSecond = fps
         self.update = update
         self.curve = curve
     }
     
-    public init(fps: Int, _ update: @escaping (Double) -> ()) {
+    public init(fps: Int = 0, _ update: @escaping (CGFloat) -> ()) {
         self = ForEachFrame(fps: fps, curve: nil, update)
-    }
-    
-    public init(_ update: @escaping (Double) -> ()) {
-        self = ForEachFrame(fps: 0, curve: nil, update)
     }
         
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationPosition {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         let duration = options.duration?.absolute ?? 0
         let isReversed = options.isReversed
         guard duration > 0 else {
@@ -39,7 +35,7 @@ public struct ForEachFrame: VDAnimationProtocol {
         let owner = Owner<CATimer?>(nil)
         let block = transform(options: options)
         let timer = CATimer(preferredFPS: preferredFramesPerSecond) {
-            let percent = $0 / duration
+            let percent = CGFloat($0 / duration)
             guard percent < 1 else {
                 self.update(isReversed ? 0 : 1)
                 owner.object?.stop()
@@ -55,13 +51,13 @@ public struct ForEachFrame: VDAnimationProtocol {
     }
 
     public func set(position: AnimationPosition, for options: AnimationOptions) {
-        update(position.complete)
+        update(CGFloat(position.complete))
     }
     
-    private func transform(options: AnimationOptions) -> ((Double) -> Double)? {
+    private func transform(options: AnimationOptions) -> ((CGFloat) -> CGFloat)? {
         guard let bezier = options.curve, bezier != .linear else { return curve }
         return {[curve] in
-            Double(bezier.progress(at: CGFloat(curve?($0) ?? $0)))
+            bezier.progress(at: curve?($0) ?? $0)
         }
     }
     

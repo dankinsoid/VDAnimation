@@ -21,7 +21,7 @@ public struct WithoutAnimation: ClosureAnimation {
     }
     
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationPosition {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         let duration = options.duration?.absolute ?? 0
         if duration == 0 {
             execute(completion)

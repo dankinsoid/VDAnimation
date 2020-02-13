@@ -31,7 +31,7 @@ public struct Parallel: VDAnimationProtocol {
     }
     
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationPosition {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         interactor.prevProgress = 0
         guard !animations.isEmpty else {
             completion(true)
