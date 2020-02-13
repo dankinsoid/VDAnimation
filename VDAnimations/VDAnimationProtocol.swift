@@ -41,7 +41,7 @@ extension VDAnimationProtocol {
 extension Optional: VDAnimationProtocol where Wrapped: VDAnimationProtocol {
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
-        self?.start(with: options, completion) ?? AnimationDelegate({_ in })
+        self?.start(with: options, completion) ?? .end
     }
     
     public func set(position: AnimationPosition, for options: AnimationOptions) {

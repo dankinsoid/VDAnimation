@@ -42,7 +42,7 @@ public struct Animate: ClosureAnimation {
                 end = .end
             }
             completion(true)
-            return AnimationDelegate(stop: { _ in end })
+            return AnimationDelegate { _ in end }
         }
         let provider = VDTimingProvider(bezier: options.curve, spring: springTiming)
         let animator = VDViewAnimator(duration: options.duration?.absolute ?? 0, timingParameters: provider)
@@ -62,7 +62,11 @@ public struct Animate: ClosureAnimation {
             self.animator.animator = animator
         }
         animator.startAnimation()
-        return AnimationDelegate {
+        return delegate(for: animator)
+    }
+    
+    private func delegate(for animator: VDViewAnimator) -> AnimationDelegate {
+        AnimationDelegate {
             switch $0 {
             case .start:
                 animator.finishAnimation(at: .start)
@@ -79,7 +83,7 @@ public struct Animate: ClosureAnimation {
     
     public func set(position: AnimationPosition, for options: AnimationOptions) {
         let position = options.isReversed ? position.reversed : position
-        interactor.set(position: position)
+        interactor.set(state: position)
     }
     
     public func spring(_ dampingRatio: CGFloat = 0.3) -> Animate {
@@ -171,8 +175,8 @@ fileprivate final class Interactor {
         position = finalPosition
     }
     
-    func set(position: AnimationPosition) {
-        switch position {
+    func set(state: AnimationPosition) {
+        switch state {
         case .start:
             guard position != .start else { return }
             reset(at: .start)

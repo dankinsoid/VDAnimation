@@ -21,11 +21,11 @@ class VDViewAnimator: UIViewPropertyAnimator {
     }
     
     override func finishAnimation(at finalPosition: UIViewAnimatingPosition) {
-        guard position != .inactive else { return }
-        if position != .stopped {
+        guard state != .inactive else { return }
+        if state != .stopped {
             stopAnimation(false)
         }
-        if position == .stopped {
+        if state == .stopped {
             super.finishAnimation(at: finalPosition)
         } else {
             fractionComplete = 1

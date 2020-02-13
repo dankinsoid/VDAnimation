@@ -10,6 +10,9 @@ import Foundation
 
 
 public struct AnimationDelegate {
+    public static let empty = AnimationDelegate { $0 }
+    public static let end = AnimationDelegate {_ in .end }
+    
     private let stopAction: (AnimationPosition) -> AnimationPosition
     
     public init(_ action: @escaping (AnimationPosition) -> AnimationPosition) {

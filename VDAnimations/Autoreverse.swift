@@ -20,7 +20,8 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
         self.duration = Autoreverse.duration(from: animation.options.duration)
     }
     
-    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+    @discardableResult
+    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         animation.start(with: self.options(from: options, step: .forward)) {
             guard $0 else { return completion(false) }
             self.animation.start(with: self.options(from: options, step: .back), completion)

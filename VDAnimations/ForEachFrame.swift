@@ -30,7 +30,7 @@ public struct ForEachFrame: VDAnimationProtocol {
         guard duration > 0 else {
             update(isReversed ? 0 : 1)
             completion(true)
-            return
+            return .end
         }
         let owner = Owner<CATimer?>(nil)
         let block = transform(options: options)
@@ -48,6 +48,15 @@ public struct ForEachFrame: VDAnimationProtocol {
         }
         owner.object = timer
         timer.start()
+        return delegate(for: timer)
+    }
+    
+    private func delegate(for timer: CATimer) -> AnimationDelegate {
+        AnimationDelegate {[update] in
+            timer.stop()
+            update(CGFloat($0.complete))
+            return $0
+        }
     }
 
     public func set(position: AnimationPosition, for options: AnimationOptions) {

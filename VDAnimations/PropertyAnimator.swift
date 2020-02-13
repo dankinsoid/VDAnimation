@@ -19,7 +19,7 @@ public struct PropertyAnimator<Base, A: ClosureAnimation>: VDAnimationProtocol {
     }
         
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationPosition {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         animatable.updateInitial()
         var option = options
         option.autoreverseStep = nil

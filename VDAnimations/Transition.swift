@@ -18,7 +18,7 @@ public struct Transition: VDAnimationProtocol {
     }
     
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationPosition {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         let (v1, v2) = options.isReversed ? (to, from) : (from, to)
         UIView.transition(
             from: v1,

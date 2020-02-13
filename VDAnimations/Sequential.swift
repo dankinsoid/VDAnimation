@@ -34,11 +34,10 @@ public struct Sequential: VDAnimationProtocol {
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         guard !animations.isEmpty else {
             completion(true)
-            return
+            return .end
         }
         guard animations.count > 1 else {
-            animations[0].start(with: options, completion)
-            return
+            return animations[0].start(with: options, completion)
         }
         let array = getOptions(for: options)
         start(index: 0, options: array, reversed: options.autoreverseStep == .back, completion)

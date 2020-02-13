@@ -35,11 +35,10 @@ public struct Parallel: VDAnimationProtocol {
         interactor.prevProgress = 0
         guard !animations.isEmpty else {
             completion(true)
-            return
+            return .end
         }
         guard animations.count > 1 else {
-            animations[0].start(with: options, completion)
-            return
+            return animations[0].start(with: options, completion)
         }
         let array = getOptions(for: options)
         let full = options.duration?.absolute ?? maxDuration?.absolute ?? 0

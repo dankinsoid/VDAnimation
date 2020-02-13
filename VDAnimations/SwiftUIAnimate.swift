@@ -18,10 +18,10 @@ public struct SwiftUIAnimate: ClosureAnimation {
     }
     
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationPosition {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         guard let dur = options.duration?.absolute, dur > 0 else {
             completion(true)
-            return
+            return .end
         }
         let animation: Animation
         if let curve = options.curve {
@@ -35,6 +35,7 @@ public struct SwiftUIAnimate: ClosureAnimation {
         Timer.scheduledTimer(withTimeInterval: options.duration?.absolute ?? 0, repeats: false) { _ in
             completion(true)
         }
+        return .empty
     }
     
     public func set(position: AnimationPosition, for options: AnimationOptions) {

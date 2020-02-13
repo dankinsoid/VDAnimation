@@ -22,12 +22,13 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
         duration = RepeatAnimation.duration(for: cnt, from: anim.options.duration)
     }
     
-    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+    @discardableResult
+    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         if let i = count {
             let cnt = max(0, i)
             guard cnt > 0 else {
                 completion(true)
-                return
+                return .end
             }
             start(with: options, completion, i: 0, condition: { $0 < cnt })
         } else {
