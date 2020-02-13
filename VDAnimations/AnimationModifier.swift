@@ -8,11 +8,11 @@
 
 import Foundation
 
-public struct AnimationModifier: AnimationProviderProtocol {
+public struct AnimationModifier: VDAnimationProtocol {
     
     public var asModifier: AnimationModifier { self }
     var modificators: AnimationOptions
-    var animation: AnimationProviderProtocol
+    var animation: VDAnimationProtocol
     var chain: ValueChaining<AnimationModifier> { ValueChaining(self) }
     
     @discardableResult

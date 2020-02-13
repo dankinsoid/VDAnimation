@@ -8,25 +8,25 @@
 
 import Foundation
 
-public struct Parallel: AnimationProviderProtocol {
-    private let animations: [AnimationProviderProtocol]
+public struct Parallel: VDAnimationProtocol {
+    private let animations: [VDAnimationProtocol]
     public var asModifier: AnimationModifier {
         AnimationModifier(modificators: AnimationOptions.empty.chain.duration[maxDuration], animation: self)
     }
     private let maxDuration: AnimationDuration?
     private let interactor: Interactor
     
-    public init(_ animations: [AnimationProviderProtocol]) {
+    public init(_ animations: [VDAnimationProtocol]) {
         self.animations = animations
         self.maxDuration = Parallel.maxDuration(for: animations)
         self.interactor = Interactor()
     }
     
-    public init(_ animations: AnimationProviderProtocol...) {
+    public init(_ animations: VDAnimationProtocol...) {
         self = .init(animations)
     }
     
-    public init(@AnimatorBuilder _ animations: () -> [AnimationProviderProtocol]) {
+    public init(@AnimatorBuilder _ animations: () -> [VDAnimationProtocol]) {
         self = .init(animations())
     }
     
@@ -111,7 +111,7 @@ public struct Parallel: AnimationProviderProtocol {
         return result
     }
     
-    private static func maxDuration(for array: [AnimationProviderProtocol]) -> AnimationDuration? {
+    private static func maxDuration(for array: [VDAnimationProtocol]) -> AnimationDuration? {
         guard array.contains(where: { $0.modificators.duration?.absolute != nil }) else { return nil }
         let maxDuration = array.reduce(0, { max($0, $1.modificators.duration?.absolute ?? 0) })
         return .absolute(maxDuration)

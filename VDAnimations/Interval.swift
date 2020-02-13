@@ -8,7 +8,7 @@
 
 import UIKit
 
-public struct Interval: AnimationProviderProtocol {
+public struct Interval: VDAnimationProtocol {
     
     public var asModifier: AnimationModifier {
         AnimationModifier(modificators: AnimationOptions.empty.chain.duration[duration], animation: self)

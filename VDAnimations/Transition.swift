@@ -8,7 +8,7 @@
 
 import UIKit
 
-public struct Transition: AnimationProviderProtocol {
+public struct Transition: VDAnimationProtocol {
     private let from: UIView
     private let to: UIView
     

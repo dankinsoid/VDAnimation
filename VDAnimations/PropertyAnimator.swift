@@ -9,7 +9,7 @@
 import Foundation
 
 @dynamicMemberLookup
-public struct PropertyAnimator<Base, A: AnimationClosureProviderProtocol>: AnimationProviderProtocol {
+public struct PropertyAnimator<Base, A: AnimationClosureProviderProtocol>: VDAnimationProtocol {
     let animatable: PropertyAnimatable
     private let get: () -> Base?
         

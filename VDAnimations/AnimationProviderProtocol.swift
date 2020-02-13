@@ -8,17 +8,17 @@
 
 import Foundation
 
-public protocol AnimationProviderProtocol {
+public protocol VDAnimationProtocol {
     func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDriver
     var asModifier: AnimationModifier { get }
     func set(state: AnimationState, for options: AnimationOptions)
 }
 
-public protocol AnimationClosureProviderProtocol: AnimationProviderProtocol {
+public protocol AnimationClosureProviderProtocol: VDAnimationProtocol {
     init(_ closure: @escaping () -> ())
 }
 
-extension AnimationProviderProtocol {
+extension VDAnimationProtocol {
     public var modificators: AnimationOptions { asModifier.modificators }
     public var asModifier: AnimationModifier { AnimationModifier(modificators: .empty, animation: self) }
     var chain: ValueChaining<Self> { ValueChaining(self) }
@@ -34,16 +34,7 @@ extension AnimationProviderProtocol {
     
 }
 
-public struct AnimationDriver {
-    public let stop: (AnimationState) -> AnimationState
-    
-    public func stop() {
-        stop(.end)
-    }
-    
-}
-
-extension Optional: AnimationProviderProtocol where Wrapped: AnimationProviderProtocol {
+extension Optional: VDAnimationProtocol where Wrapped: VDAnimationProtocol {
     
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDriver {
         self?.start(with: options, completion) ?? AnimationDriver({_ in })

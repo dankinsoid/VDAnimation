@@ -8,7 +8,7 @@
 
 import UIKit
 
-public struct ForEachFrame: AnimationProviderProtocol {
+public struct ForEachFrame: VDAnimationProtocol {
     private let preferredFramesPerSecond: Int
     private let update: (Double) -> ()
     private let curve: ((Double) -> Double)?

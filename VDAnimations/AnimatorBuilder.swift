@@ -13,15 +13,15 @@ public struct AnimatorBuilder {
     
 //    public static func buildBlock() {}
     
-    public static func buildBlock(_ animations: AnimationProviderProtocol...) -> [AnimationProviderProtocol] {
+    public static func buildBlock(_ animations: VDAnimationProtocol...) -> [VDAnimationProtocol] {
         return animations
     }
     
-//    public static func buildBlock(_ animation: AnimationProviderProtocol) -> AnimationProviderProtocol {
+//    public static func buildBlock(_ animation: VDAnimationProtocol) -> VDAnimationProtocol {
 //        return animation
 //    }
 //
-//    public static func buildBlock() -> [AnimationProviderProtocol] {
+//    public static func buildBlock() -> [VDAnimationProtocol] {
 //        return []
 //    }
     

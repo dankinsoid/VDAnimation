@@ -66,36 +66,36 @@ private struct AnimatedPropertySetter<R, T, A: AnimationClosureProviderProtocol>
         )
     }
     
-    func set(_ a: T, _ b: T, _ values: [T]) -> AnimationProviderProtocol {
+    func set(_ a: T, _ b: T, _ values: [T]) -> VDAnimationProtocol {
         set([a, b] + values)
     }
     
-    func set(_ values: [T]) -> AnimationProviderProtocol {
+    func set(_ values: [T]) -> VDAnimationProtocol {
         guard values.count > 1 else {
             return Sequential(values.map { set($0) })
         }
         var array = values
-        var animations = [set(values[0]) as AnimationProviderProtocol]
+        var animations = [set(values[0]) as VDAnimationProtocol]
         array.removeFirst()
         animations += sequential(from: values[0], array)
         return Sequential(animations)
     }
     
-    func set(from initial: T, _ a: T, _ b: T, _ values: [T]) -> AnimationProviderProtocol {
+    func set(from initial: T, _ a: T, _ b: T, _ values: [T]) -> VDAnimationProtocol {
         set(from: initial, [a, b] + values)
     }
     
-    func set(from initial: T, _ values: [T]) -> AnimationProviderProtocol {
+    func set(from initial: T, _ values: [T]) -> VDAnimationProtocol {
         Sequential(sequential(from: initial, values))
     }
     
-    private func sequential(from initial: T, _ values: [T]) -> [AnimationProviderProtocol] {
+    private func sequential(from initial: T, _ values: [T]) -> [VDAnimationProtocol] {
         guard values.count > 0 else {
             return [set(from: initial, initial)]
         }
         var array = values
         var from = initial
-        var animations: [AnimationProviderProtocol] = []
+        var animations: [VDAnimationProtocol] = []
         while !array.isEmpty {
             let second = array.removeFirst()
             animations.append(set(from: from, second))
@@ -137,10 +137,10 @@ extension AnimatePropertyMapper where R: UIKitPropertySettable, T: ScalableConve
     
     public func set(_ value: T) -> PropertyAnimator<R, Animate> { setter.set(value) }
     public func set(from initial: T, _ value: T) -> PropertyAnimator<R, Animate> { setter.set(from: initial, value) }
-    public func set(_ a: T, _ b: T, _ values: T...) -> AnimationProviderProtocol { setter.set(a, b, values) }
-    public func set(_ values: [T]) -> AnimationProviderProtocol { setter.set(values) }
-    public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> AnimationProviderProtocol { setter.set(from: initial, a, b, values) }
-    public func set(from initial: T, _ values: [T]) -> AnimationProviderProtocol { setter.set(from: initial, values) }
+    public func set(_ a: T, _ b: T, _ values: T...) -> VDAnimationProtocol { setter.set(a, b, values) }
+    public func set(_ values: [T]) -> VDAnimationProtocol { setter.set(values) }
+    public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> VDAnimationProtocol { setter.set(from: initial, a, b, values) }
+    public func set(from initial: T, _ values: [T]) -> VDAnimationProtocol { setter.set(from: initial, values) }
     public subscript(_ range: Gradient<T>) -> PropertyAnimator<R, Animate> { setter.set(range) }
 }
 
@@ -164,10 +164,10 @@ extension AnimatePropertyMapper where R: View, T: Animatable {
     
     public func set(_ value: T) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(value) }
     public func set(from initial: T, _ value: T) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(from: initial, value) }
-    public func set(_ a: T, _ b: T, _ values: T...) -> AnimationProviderProtocol { setter.set(a, b, values) }
-    public func set(_ values: [T]) -> AnimationProviderProtocol { setter.set(values) }
-    public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> AnimationProviderProtocol { setter.set(from: initial, a, b, values) }
-    public func set(from initial: T, _ values: [T]) -> AnimationProviderProtocol { setter.set(from: initial, values) }
+    public func set(_ a: T, _ b: T, _ values: T...) -> VDAnimationProtocol { setter.set(a, b, values) }
+    public func set(_ values: [T]) -> VDAnimationProtocol { setter.set(values) }
+    public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> VDAnimationProtocol { setter.set(from: initial, a, b, values) }
+    public func set(from initial: T, _ values: [T]) -> VDAnimationProtocol { setter.set(from: initial, values) }
     public subscript(_ range: Gradient<T>) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(range) }
 }
 
@@ -189,10 +189,10 @@ extension AnimatePropertyMapper where R: View, T: VectorArithmetic {
     
     public func set(_ value: T) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(value) }
     public func set(from initial: T, _ value: T) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(from: initial, value) }
-    public func set(_ a: T, _ b: T, _ values: T...) -> AnimationProviderProtocol { setter.set(a, b, values) }
-    public func set(_ values: [T]) -> AnimationProviderProtocol { setter.set(values) }
-    public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> AnimationProviderProtocol { setter.set(from: initial, a, b, values) }
-    public func set(from initial: T, _ values: [T]) -> AnimationProviderProtocol { setter.set(from: initial, values) }
+    public func set(_ a: T, _ b: T, _ values: T...) -> VDAnimationProtocol { setter.set(a, b, values) }
+    public func set(_ values: [T]) -> VDAnimationProtocol { setter.set(values) }
+    public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> VDAnimationProtocol { setter.set(from: initial, a, b, values) }
+    public func set(from initial: T, _ values: [T]) -> VDAnimationProtocol { setter.set(from: initial, values) }
     public subscript(_ range: Gradient<T>) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(range) }
 }
 

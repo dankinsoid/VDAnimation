@@ -8,25 +8,25 @@
 
 import Foundation
 
-public struct Sequential: AnimationProviderProtocol {
-    private let animations: [AnimationProviderProtocol]
+public struct Sequential: VDAnimationProtocol {
+    private let animations: [VDAnimationProtocol]
     public var asModifier: AnimationModifier {
         AnimationModifier(modificators: AnimationOptions.empty.chain.duration[fullDuration], animation: self)
     }
     private let fullDuration: AnimationDuration?
     private let interator: Interactor
     
-    public init(_ animations: [AnimationProviderProtocol]) {
+    public init(_ animations: [VDAnimationProtocol]) {
         self.animations = animations
         self.fullDuration = Sequential.fullDuration(for: animations)
         self.interator = Interactor()
     }
     
-    public init(_ animations: AnimationProviderProtocol...) {
+    public init(_ animations: VDAnimationProtocol...) {
         self = .init(animations)
     }
     
-    public init(@AnimatorBuilder _ animations: () -> [AnimationProviderProtocol]) {
+    public init(@AnimatorBuilder _ animations: () -> [VDAnimationProtocol]) {
         self = .init(animations())
     }
     
@@ -92,7 +92,7 @@ public struct Sequential: AnimationProviderProtocol {
         }
     }
     
-    private static func fullDuration(for array: [AnimationProviderProtocol]) -> AnimationDuration? {
+    private static func fullDuration(for array: [VDAnimationProtocol]) -> AnimationDuration? {
         guard array.contains(where: { $0.modificators.duration?.absolute != 0 }) else { return nil }
         let dur = array.reduce(0, { $0 + ($1.modificators.duration?.absolute ?? 0) })
         var rel = min(1, array.reduce(0, { $0 + ($1.modificators.duration?.relative ?? 0) }))

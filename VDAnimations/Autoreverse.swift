@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct Autoreverse<Animation: AnimationProviderProtocol>: AnimationProviderProtocol {
+struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
     private let animation: Animation
     var asModifier: AnimationModifier {
         AnimationModifier(modificators: AnimationOptions.empty.chain.duration[duration], animation: self)

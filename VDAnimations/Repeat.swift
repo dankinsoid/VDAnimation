@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct RepeatAnimation<A: AnimationProviderProtocol>: AnimationProviderProtocol {
+struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
     private let count: Int?
     private let animation: A
     var asModifier: AnimationModifier {
