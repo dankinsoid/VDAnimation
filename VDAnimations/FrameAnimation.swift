@@ -26,8 +26,9 @@ public struct ForEachFrame: VDAnimationProtocol {
     public init(_ update: @escaping (Double) -> ()) {
         self = ForEachFrame(fps: 0, curve: nil, update)
     }
-    
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+        
+    @discardableResult
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationPosition {
         let duration = options.duration?.absolute ?? 0
         let isReversed = options.isReversed
         guard duration > 0 else {

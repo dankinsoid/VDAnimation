@@ -30,7 +30,8 @@ public struct Sequential: VDAnimationProtocol {
         self = .init(animations())
     }
     
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+    @discardableResult
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationPosition {
         guard !animations.isEmpty else {
             completion(true)
             return

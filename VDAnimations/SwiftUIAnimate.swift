@@ -17,7 +17,8 @@ public struct SwiftUIAnimate: ClosureAnimation {
         self.block = block
     }
     
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+    @discardableResult
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationPosition {
         guard let dur = options.duration?.absolute, dur > 0 else {
             completion(true)
             return

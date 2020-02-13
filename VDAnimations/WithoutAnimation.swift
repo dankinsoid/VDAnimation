@@ -20,7 +20,8 @@ public struct WithoutAnimation: ClosureAnimation {
         block = closure
     }
     
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
+    @discardableResult
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationPosition {
         let duration = options.duration?.absolute ?? 0
         if duration == 0 {
             execute(completion)
