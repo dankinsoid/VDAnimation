@@ -12,7 +12,7 @@ public struct ModifiedAnimation: VDAnimationProtocol {
     
     public var modified: ModifiedAnimation { self }
     var options: AnimationOptions
-    var animation: VDAnimationProtocol
+    let animation: VDAnimationProtocol
     var chain: ValueChaining<ModifiedAnimation> { ValueChaining(self) }
     
     @discardableResult

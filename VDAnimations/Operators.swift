@@ -60,6 +60,5 @@ private func curve(_ lhs: BezierCurve?, _ rhs: BezierCurve?) -> BezierCurve? {
     guard let l = lhs, let r = rhs else {
         return lhs ?? rhs
     }
-    print(l, r, BezierCurve.between(l, r))
     return BezierCurve.between(l, r)
 }
