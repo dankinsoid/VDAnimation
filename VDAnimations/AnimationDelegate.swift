@@ -13,7 +13,7 @@ public struct AnimationDelegate {
     public static let empty = AnimationDelegate { $0 }
     public static let end = AnimationDelegate {_ in .end }
     
-    private let stopAction: (AnimationPosition) -> AnimationPosition
+    private var stopAction: (AnimationPosition) -> AnimationPosition
     
     public init(_ action: @escaping (AnimationPosition) -> AnimationPosition) {
         stopAction = action
@@ -23,5 +23,34 @@ public struct AnimationDelegate {
     public func stop(_ position: AnimationPosition = .end) -> AnimationPosition {
         stopAction(position)
     }
+
+}
+
+final class RemoteDelegate {
+    var position: AnimationPosition?
+    var completion: ((Bool) -> ())?
+    var isStopped: Bool { position != nil }
     
+    init(_ completion: ((Bool) -> ())? = nil) {
+        self.completion = completion
+    }
+    
+    var delegate: AnimationDelegate {
+        AnimationDelegate {
+            self.position = $0
+            self.completion?($0.complete == 1)
+            return $0
+        }
+    }
+    
+}
+
+final class MutableDelegate {
+    var delegate = AnimationDelegate.empty
+    
+    var asDelegate: AnimationDelegate {
+        AnimationDelegate {
+            self.delegate.stop($0)
+        }
+    }
 }

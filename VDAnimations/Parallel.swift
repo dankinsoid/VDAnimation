@@ -42,21 +42,35 @@ public struct Parallel: VDAnimationProtocol {
         }
         let array = getOptions(for: options)
         let full = options.duration?.absolute ?? maxDuration?.absolute ?? 0
+        let delegates = Delegates()
+        delegates.list.reserveCapacity(animations.count)
         let parallelCompletion = ParallelCompletion(animations.enumerated().map { arg in
             { compl in
                 if options.isReversed {
                     let delay = full - (array[arg.offset].duration?.absolute ?? 0)
+                    let remote = RemoteDelegate()
+                    delegates.list.append(remote.delegate)
                     DispatchTimer.execute(seconds: delay) {
-                        arg.element.start(with: array[arg.offset], compl)
+                        guard !remote.isStopped else { return compl(false) }
+                        delegates.list.append(arg.element.start(with: array[arg.offset], compl))
                     }
                 } else {
-                    arg.element.start(with: array[arg.offset], compl)
+                    delegates.list.append(arg.element.start(with: array[arg.offset], compl))
                 }
             }
         })
         parallelCompletion.start {[interactor] in
             interactor.prevProgress = 1
             completion($0)
+        }
+        return delegate(for: delegates)
+    }
+    
+    private func delegate(for array: Delegates) -> AnimationDelegate {
+        AnimationDelegate {
+            array.list.forEach { $0.stop(.start) }
+            self.set(position: $0, for: .empty)
+            return $0
         }
     }
     
@@ -184,4 +198,8 @@ fileprivate final class ParallelCompletion {
 
 fileprivate final class Interactor {
     var prevProgress: Double = 0
+}
+
+fileprivate final class Delegates {
+    var list: [AnimationDelegate] = []
 }

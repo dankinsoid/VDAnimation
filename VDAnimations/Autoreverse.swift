@@ -22,20 +22,30 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
     
     @discardableResult
     func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
-        animation.start(with: self.options(from: options, step: .forward)) {
+        let result = MutableDelegate()
+        result.delegate = animation.start(with: self.options(from: options, step: .forward)) {
             guard $0 else { return completion(false) }
-            self.animation.start(with: self.options(from: options, step: .back), completion)
+            result.delegate = self.animation.start(with: self.options(from: options, step: .back), completion)
+        }
+        return delegate(for: result)
+    }
+    
+    private func delegate(for mutable: MutableDelegate) -> AnimationDelegate {
+        AnimationDelegate {
+            mutable.delegate.stop(self.targetPosition(for: $0))
+            return $0
         }
     }
     
     func set(position: AnimationPosition, for options: AnimationOptions) {
         let option = options.chain.autoreverseStep[nil]
+        animation.set(position: targetPosition(for: position), for: option)
+    }
+    
+    private func targetPosition(for position: AnimationPosition) -> AnimationPosition {
         switch position {
-        case .start, .end:
-            animation.set(position: .start, for: option)
-        case .progress(let k):
-            let progress = 1 - abs(k - 0.5) * 2
-            animation.set(position: .progress(progress), for: option)
+        case .start, .end:      return .start
+        case .progress(let k):  return .progress(1 - abs(k - 0.5) * 2)
         }
     }
     

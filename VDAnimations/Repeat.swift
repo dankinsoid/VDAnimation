@@ -30,32 +30,44 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
                 completion(true)
                 return .end
             }
-            start(with: options, completion, i: 0, condition: { $0 < cnt })
+            let result = MutableDelegate()
+            start(with: options, result: result, completion, i: 0, condition: { $0 < cnt })
+            return delegate(for: result)
         } else {
-            start(with: options, completion, i: 0, condition: { _ in true })
+            let result = MutableDelegate()
+            start(with: options, result: result, completion, i: 0, condition: { _ in true })
+            return delegate(for: result)
         }
     }
     
-    private func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> (), i: Int, condition: @escaping (Int) -> Bool) {
+    private func delegate(for mutable: MutableDelegate) -> AnimationDelegate {
+        AnimationDelegate {
+            mutable.delegate.stop(.progress(self.getProgress(for: $0.complete)))
+        }
+    }
+    
+    private func start(with options: AnimationOptions, result: MutableDelegate, _ completion: @escaping (Bool) -> (), i: Int, condition: @escaping (Int) -> Bool) {
         let index = options.isReversed ? (count ?? (i + 1)) - i - 1 : i
         guard condition(i) else {
             completion(true)
+            result.delegate = .end
             return
         }
         let option = getOptions(options: options, i: index)
         if i > 0 {
             let reverse = option.autoreverseStep?.inverted ?? .back
-            animation.start(with: option.chain.autoreverseStep[reverse].duration[.absolute(0)]) {
+            let newOptions = option.chain.autoreverseStep[reverse].duration[.absolute(0)]
+            result.delegate = animation.start(with: newOptions) {
                 guard $0 else { return completion(false) }
-                self.animation.start(with: option) {
+                result.delegate = self.animation.start(with: option) {
                     guard $0 else { return completion(false) }
-                    self.start(with: options, completion, i: max(0, i &+ 1), condition: condition)
+                    self.start(with: options, result: result, completion, i: max(0, i &+ 1), condition: condition)
                 }
             }
         } else {
-            animation.start(with: option) {
+            result.delegate = animation.start(with: option) {
                 guard $0 else { return completion(false) }
-                self.start(with: options, completion, i: max(0, i &+ 1), condition: condition)
+                self.start(with: options, result: result, completion, i: max(0, i &+ 1), condition: condition)
             }
         }
     }

@@ -25,12 +25,16 @@ public struct WithoutAnimation: ClosureAnimation {
         let duration = options.duration?.absolute ?? 0
         if duration == 0 {
             execute(completion)
+            return .end
         } else {
+            let remote = RemoteDelegate(completion)
             execute { result in
                 DispatchTimer.execute(seconds: duration) {
+                    guard !remote.isStopped else { return }
                     completion(result)
                 }
             }
+            return remote.delegate
         }
     }
     

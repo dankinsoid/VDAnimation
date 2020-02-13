@@ -9,6 +9,7 @@
 import Foundation
 
 public protocol VDAnimationProtocol {
+    @discardableResult
     func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate
     var modified: ModifiedAnimation { get }
     func set(position: AnimationPosition, for options: AnimationOptions)

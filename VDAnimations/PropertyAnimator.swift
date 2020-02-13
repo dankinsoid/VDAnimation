@@ -25,10 +25,10 @@ public struct PropertyAnimator<Base, A: ClosureAnimation>: VDAnimationProtocol {
         option.autoreverseStep = nil
         if options.isReversed {
             animatable.setState(.end)
-            A.init({ self.animatable.setState(.start) }).start(with: option, completion)
+            return A.init({ self.animatable.setState(.start) }).start(with: option, completion)
         } else {
             animatable.setState(.start)
-            A.init({ self.animatable.setState(.end) }).start(with: option, completion)
+            return A.init({ self.animatable.setState(.end) }).start(with: option, completion)
         }
     }
     

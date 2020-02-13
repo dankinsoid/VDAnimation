@@ -40,21 +40,32 @@ public struct Sequential: VDAnimationProtocol {
             return animations[0].start(with: options, completion)
         }
         let array = getOptions(for: options)
-        start(index: 0, options: array, reversed: options.autoreverseStep == .back, completion)
+        let result = MutableDelegate()
+        start(index: 0, delegate: result, options: array, reversed: options.autoreverseStep == .back, completion)
+        return delegate(for: result)
     }
     
-    private func start(index: Int, options: [AnimationOptions], reversed: Bool, _ completion: @escaping (Bool) -> ()) {
+    private func delegate(for mutable: MutableDelegate) -> AnimationDelegate {
+        AnimationDelegate {
+            mutable.delegate.stop(.start)
+            self.set(position: $0, for: .empty)
+            return $0
+        }
+    }
+    
+    private func start(index: Int, delegate: MutableDelegate, options: [AnimationOptions], reversed: Bool, _ completion: @escaping (Bool) -> ()) {
         interator.prevIndex = nil
         guard index < animations.count else {
             completion(true)
+            delegate.delegate = .end
             return
         }
         let i = reversed ? animations.count - index - 1 : index
-        animations[i].start(with: options[i]) {
+        delegate.delegate = animations[i].start(with: options[i]) {
             guard $0 else {
                 return completion(false)
             }
-            self.start(index: index + 1, options: options, reversed: reversed, completion)
+            self.start(index: index + 1, delegate: delegate, options: options, reversed: reversed, completion)
         }
     }
     

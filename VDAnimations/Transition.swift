@@ -27,6 +27,7 @@ public struct Transition: VDAnimationProtocol {
             options: [.showHideTransitionViews],
             completion: completion
         )
+        return .end
     }
     
     public func set(position: AnimationPosition, for options: AnimationOptions) {}

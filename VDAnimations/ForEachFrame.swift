@@ -48,13 +48,15 @@ public struct ForEachFrame: VDAnimationProtocol {
         }
         owner.object = timer
         timer.start()
-        return delegate(for: timer)
+        return delegate(for: timer, completion)
     }
     
-    private func delegate(for timer: CATimer) -> AnimationDelegate {
+    private func delegate(for timer: CATimer, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         AnimationDelegate {[update] in
             timer.stop()
-            update(CGFloat($0.complete))
+            let progress = CGFloat($0.complete)
+            update(progress)
+            completion(progress == 1)
             return $0
         }
     }
