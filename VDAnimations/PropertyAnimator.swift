@@ -31,8 +31,8 @@ public struct PropertyAnimator<Base, A: ClosureAnimation>: VDAnimationProtocol {
         }
     }
     
-    public func set(state: AnimationState, for options: AnimationOptions) {
-        animatable.setState(options.isReversed == true ? state.reversed : state)
+    public func set(position: AnimationPosition, for options: AnimationOptions) {
+        animatable.setState(options.isReversed == true ? position.reversed : position)
     }
     
     public subscript<A>(dynamicMember keyPath: ReferenceWritableKeyPath<Base, A>) -> AnimatePropertyMapper<Base, A> {
@@ -43,11 +43,11 @@ public struct PropertyAnimator<Base, A: ClosureAnimation>: VDAnimationProtocol {
 
 final class PropertyAnimatable {
     var updateInitial: () -> ()
-    var setState: (AnimationState) -> ()
+    var setState: (AnimationPosition) -> ()
     
     static let empty = PropertyAnimatable(update: {}, set: {_ in})
     
-    init(update: @escaping () -> (), set: @escaping (AnimationState) -> ()) {
+    init(update: @escaping () -> (), set: @escaping (AnimationPosition) -> ()) {
         updateInitial = update
         setState = set
     }
@@ -91,8 +91,8 @@ final class PropertyOwner<T> {
         if initial == nil { initial = getter() }
     }
     
-    func set(state: AnimationState) {
-        switch state {
+    func set(position: AnimationPosition) {
+        switch position {
         case .start:
             setter(initial)
         case .progress(let k):

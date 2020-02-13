@@ -95,7 +95,7 @@
 //
 //public static var allowAnimatedContent: UIView.AnimationOptions { get } // animate contents (applies to transitions only)
 //
-//public static var showHideTransitionViews: UIView.AnimationOptions { get } // flip to/from hidden state instead of adding/removing
+//public static var showHideTransitionViews: UIView.AnimationOptions { get } // flip to/from hidden position instead of adding/removing
 //
 //public static var overrideInheritedOptions: UIView.AnimationOptions { get } // do not inherit any options or animation type
 //

@@ -30,7 +30,7 @@ extension AnimationOptions {
     var isReversed: Bool { autoreverseStep == .back }
 }
 
-public enum AnimationState {
+public enum AnimationPosition {
     case start, progress(Double), end
     
     public var complete: Double {
@@ -41,7 +41,7 @@ public enum AnimationState {
         }
     }
     
-    public var reversed: AnimationState {
+    public var reversed: AnimationPosition {
         switch self {
         case .start:            return .end
         case .progress(let k):  return .progress(1 - k)

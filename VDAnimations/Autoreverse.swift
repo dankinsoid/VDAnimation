@@ -27,14 +27,14 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
         }
     }
     
-    func set(state: AnimationState, for options: AnimationOptions) {
+    func set(position: AnimationPosition, for options: AnimationOptions) {
         let option = options.chain.autoreverseStep[nil]
-        switch state {
+        switch position {
         case .start, .end:
-            animation.set(state: .start, for: option)
+            animation.set(position: .start, for: option)
         case .progress(let k):
             let progress = 1 - abs(k - 0.5) * 2
-            animation.set(state: .progress(progress), for: option)
+            animation.set(position: .progress(progress), for: option)
         }
     }
     

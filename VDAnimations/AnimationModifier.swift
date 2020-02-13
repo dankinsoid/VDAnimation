@@ -20,8 +20,8 @@ public struct ModifiedAnimation: VDAnimationProtocol {
         animation.start(with: options.or(options), completion)
     }
     
-    public func set(state: AnimationState, for options: AnimationOptions) {
-        animation.set(state: state, for: options.or(options))
+    public func set(position: AnimationPosition, for options: AnimationOptions) {
+        animation.set(position: position, for: options.or(options))
     }
     
 }

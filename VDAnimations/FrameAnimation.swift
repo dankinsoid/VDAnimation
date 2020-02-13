@@ -53,8 +53,8 @@ public struct ForEachFrame: VDAnimationProtocol {
         timer.start()
     }
 
-    public func set(state: AnimationState, for options: AnimationOptions) {
-        update(state.complete)
+    public func set(position: AnimationPosition, for options: AnimationOptions) {
+        update(position.complete)
     }
     
     private func transform(options: AnimationOptions) -> ((Double) -> Double)? {

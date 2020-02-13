@@ -28,6 +28,6 @@ public struct Transition: VDAnimationProtocol {
         )
     }
     
-    public func set(state: AnimationState, for options: AnimationOptions) {}
+    public func set(position: AnimationPosition, for options: AnimationOptions) {}
 
 }

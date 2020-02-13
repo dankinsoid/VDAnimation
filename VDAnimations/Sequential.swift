@@ -58,15 +58,15 @@ public struct Sequential: VDAnimationProtocol {
         }
     }
     
-    public func set(state: AnimationState, for options: AnimationOptions) {
+    public func set(position: AnimationPosition, for options: AnimationOptions) {
         guard !animations.isEmpty else { return }
-        let state = options.isReversed == true ? state.reversed : state
-        switch state {
+        let position = options.isReversed == true ? position.reversed : position
+        switch position {
         case .start:
-            animations.reversed().forEach { $0.set(state: state) }
+            animations.reversed().forEach { $0.set(position: position) }
             interator.prevIndex = 0
         case .end:
-            animations.forEach { $0.set(state: state) }
+            animations.forEach { $0.set(position: position) }
             interator.prevIndex = animations.count - 1
         case .progress(let k):
             let array = getProgresses(animations.map({ $0.options }), duration: fullDuration?.absolute ?? 0, options: .empty)
@@ -76,9 +76,9 @@ public struct Sequential: VDAnimationProtocol {
             let p = interator.prevIndex ?? animations.count - 1
             let started = animations.count - p - 1
             let toStart = i < finished || interator.prevIndex == nil ? animations.dropLast(started).suffix((interator.prevIndex ?? p) - i) : []
-            toFinish.forEach { $0.set(state: .end) }
-            toStart.reversed().forEach { $0.set(state: .start) }
-            animations[i].set(state: .progress((k - array[i].lowerBound) / (array[i].upperBound - array[i].lowerBound)))
+            toFinish.forEach { $0.set(position: .end) }
+            toStart.reversed().forEach { $0.set(position: .start) }
+            animations[i].set(position: .progress((k - array[i].lowerBound) / (array[i].upperBound - array[i].lowerBound)))
             interator.prevIndex = i
         }
     }

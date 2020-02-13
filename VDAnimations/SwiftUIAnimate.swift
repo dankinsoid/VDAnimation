@@ -36,8 +36,8 @@ public struct SwiftUIAnimate: ClosureAnimation {
         }
     }
     
-    public func set(state: AnimationState, for options: AnimationOptions) {
-        switch state {
+    public func set(position: AnimationPosition, for options: AnimationOptions) {
+        switch position {
         case .start:    return
         case .progress: return
         case .end:      block()

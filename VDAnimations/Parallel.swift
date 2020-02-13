@@ -60,14 +60,14 @@ public struct Parallel: VDAnimationProtocol {
         }
     }
     
-    public func set(state: AnimationState, for options: AnimationOptions) {
-        let state = options.isReversed == true ? state.reversed : state
-        switch state {
+    public func set(position: AnimationPosition, for options: AnimationOptions) {
+        let position = options.isReversed == true ? position.reversed : position
+        switch position {
         case .start:
-            animations.forEach { $0.set(state: state) }
+            animations.forEach { $0.set(position: position) }
             interactor.prevProgress = 0
         case .end:
-            animations.forEach { $0.set(state: state) }
+            animations.forEach { $0.set(position: position) }
             interactor.prevProgress = 1
         case .progress(let k):
             guard !animations.isEmpty else { return }
@@ -75,12 +75,12 @@ public struct Parallel: VDAnimationProtocol {
             for i in 0..<array.count {
                 if array[i].upperBound <= k || array[i].upperBound == 0 {
                     guard array[i].upperBound > interactor.prevProgress else { continue }
-                    animations[i].set(state: .end)
+                    animations[i].set(position: .end)
                 } else if array[i].lowerBound >= k {
                     guard array[i].lowerBound < interactor.prevProgress else { continue }
-                    animations[i].set(state: .start)
+                    animations[i].set(position: .start)
                 } else {
-                    animations[i].set(state: .progress(k / array[i].upperBound))
+                    animations[i].set(position: .progress(k / array[i].upperBound))
                 }
             }
             interactor.prevProgress = k
@@ -166,13 +166,13 @@ fileprivate final class ParallelCompletion {
     
     func start(completion: @escaping T) {
         for function in functions {
-            function { state in
+            function { position in
                 guard !self.error else { return }
                 self.current += 1
                 if self.current >= self.common {
                     self.current = 0
-                    completion(state)
-                } else if !state {
+                    completion(position)
+                } else if !position {
                     self.error = true
                     completion(false)
                 }

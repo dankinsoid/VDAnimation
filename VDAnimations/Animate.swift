@@ -36,7 +36,7 @@ public struct Animate: ClosureAnimation {
     private func startAnimation(with options: AnimationOptions, complete: Bool, reverse: Bool, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         interactor.reset(at: .start)
         guard options.duration?.absolute ?? 0 > 0 || !complete else {
-            var end = AnimationState.start
+            var end = AnimationPosition.start
             if !reverse {
                 interactor.animation()
                 end = .end
@@ -77,9 +77,9 @@ public struct Animate: ClosureAnimation {
         }
     }
     
-    public func set(state: AnimationState, for options: AnimationOptions) {
-        let state = options.isReversed ? state.reversed : state
-        interactor.set(state: state)
+    public func set(position: AnimationPosition, for options: AnimationOptions) {
+        let position = options.isReversed ? position.reversed : position
+        interactor.set(position: position)
     }
     
     public func spring(_ dampingRatio: CGFloat = 0.3) -> Animate {
@@ -171,8 +171,8 @@ fileprivate final class Interactor {
         position = finalPosition
     }
     
-    func set(state: AnimationState) {
-        switch state {
+    func set(position: AnimationPosition) {
+        switch position {
         case .start:
             guard position != .start else { return }
             reset(at: .start)

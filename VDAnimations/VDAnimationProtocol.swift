@@ -11,7 +11,7 @@ import Foundation
 public protocol VDAnimationProtocol {
     func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate
     var modified: ModifiedAnimation { get }
-    func set(state: AnimationState, for options: AnimationOptions)
+    func set(position: AnimationPosition, for options: AnimationOptions)
 }
 
 public protocol ClosureAnimation: VDAnimationProtocol {
@@ -23,13 +23,17 @@ extension VDAnimationProtocol {
     public var modified: ModifiedAnimation { ModifiedAnimation(options: .empty, animation: self) }
     var chain: ValueChaining<Self> { ValueChaining(self) }
     
-    public func set(state: AnimationState) {
-        set(state: state, for: .empty)
+    public func set(position: AnimationPosition) {
+        set(position: position, for: .empty)
     }
     
     @discardableResult
     public func start(_ completion: ((Bool) -> ())? = nil) -> AnimationDelegate {
         start(with: .empty, { completion?($0) })
+    }
+    
+    public func set(_ progress: Double) {
+        set(position: .progress(progress), for: .empty)
     }
     
 }
@@ -40,8 +44,8 @@ extension Optional: VDAnimationProtocol where Wrapped: VDAnimationProtocol {
         self?.start(with: options, completion) ?? AnimationDelegate({_ in })
     }
     
-    public func set(state: AnimationState, for options: AnimationOptions) {
-        self?.set(state: state, for: options)
+    public func set(position: AnimationPosition, for options: AnimationOptions) {
+        self?.set(position: position, for: options)
     }
     
 }
