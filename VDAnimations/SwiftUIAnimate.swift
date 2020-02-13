@@ -10,7 +10,7 @@ import SwiftUI
 
 ///SwiftUI animation
 @available(iOS 13.0, macOS 10.15, *)
-public struct SwiftUIAnimate: AnimationClosureProviderProtocol {
+public struct SwiftUIAnimate: ClosureAnimation {
     private let block: () -> ()
     
     public init(_ block: @escaping () -> ()) {

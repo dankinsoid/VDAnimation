@@ -28,7 +28,7 @@ public struct AnimatePropertyMapper<R, T> {
     
 }
 
-private struct AnimatedPropertySetter<R, T, A: AnimationClosureProviderProtocol> {
+private struct AnimatedPropertySetter<R, T, A: ClosureAnimation> {
     fileprivate let object: () -> R?
     private let scale: (T, Double, T) -> T
     private let keyPath: ReferenceWritableKeyPath<R, T>

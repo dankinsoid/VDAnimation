@@ -14,7 +14,7 @@ public protocol VDAnimationProtocol {
     func set(state: AnimationState, for options: AnimationOptions)
 }
 
-public protocol AnimationClosureProviderProtocol: VDAnimationProtocol {
+public protocol ClosureAnimation: VDAnimationProtocol {
     init(_ closure: @escaping () -> ())
 }
 

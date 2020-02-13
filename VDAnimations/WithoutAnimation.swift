@@ -8,7 +8,7 @@
 
 import UIKit
 
-public struct WithoutAnimation: AnimationClosureProviderProtocol {
+public struct WithoutAnimation: ClosureAnimation {
     
     public var modified: ModifiedAnimation {
         ModifiedAnimation(options: AnimationOptions.empty.chain.duration[.absolute(0)], animation: self)

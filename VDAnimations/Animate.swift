@@ -9,7 +9,7 @@
 import UIKit
 
 ///UIKit animation
-public struct Animate: AnimationClosureProviderProtocol {
+public struct Animate: ClosureAnimation {
     private let interactor: Interactor
     private let animator = Animator()
     private var springTiming: UISpringTimingParameters?
