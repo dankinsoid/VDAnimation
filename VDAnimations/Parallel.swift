@@ -10,8 +10,8 @@ import Foundation
 
 public struct Parallel: VDAnimationProtocol {
     private let animations: [VDAnimationProtocol]
-    public var asModifier: AnimationModifier {
-        AnimationModifier(modificators: AnimationOptions.empty.chain.duration[maxDuration], animation: self)
+    public var modified: ModifiedAnimation {
+        ModifiedAnimation(options: AnimationOptions.empty.chain.duration[maxDuration], animation: self)
     }
     private let maxDuration: AnimationDuration?
     private let interactor: Interactor
@@ -71,7 +71,7 @@ public struct Parallel: VDAnimationProtocol {
             interactor.prevProgress = 1
         case .progress(let k):
             guard !animations.isEmpty else { return }
-            let array = getProgresses(animations.map({ $0.modificators }), duration: maxDuration?.absolute ?? 1, options: .empty)
+            let array = getProgresses(animations.map({ $0.options }), duration: maxDuration?.absolute ?? 1, options: .empty)
             for i in 0..<array.count {
                 if array[i].upperBound <= k || array[i].upperBound == 0 {
                     guard array[i].upperBound > interactor.prevProgress else { continue }
@@ -98,7 +98,7 @@ public struct Parallel: VDAnimationProtocol {
         let maxDuration = self.maxDuration?.absolute ?? 0
         let k = maxDuration == 0 ? 1 : full / maxDuration
         let childrenDurations: [Double] = animations.map {
-            guard let setted = $0.modificators.duration else {
+            guard let setted = $0.options.duration else {
                 return full
             }
             switch setted {
@@ -112,8 +112,8 @@ public struct Parallel: VDAnimationProtocol {
     }
     
     private static func maxDuration(for array: [VDAnimationProtocol]) -> AnimationDuration? {
-        guard array.contains(where: { $0.modificators.duration?.absolute != nil }) else { return nil }
-        let maxDuration = array.reduce(0, { max($0, $1.modificators.duration?.absolute ?? 0) })
+        guard array.contains(where: { $0.options.duration?.absolute != nil }) else { return nil }
+        let maxDuration = array.reduce(0, { max($0, $1.options.duration?.absolute ?? 0) })
         return .absolute(maxDuration)
     }
     
@@ -124,7 +124,7 @@ public struct Parallel: VDAnimationProtocol {
         let progresses = getProgresses(array, duration: duration, options: options)
         for i in 0..<animations.count {
             var (curve1, newDuration) = fullCurve.split(range: progresses[i])
-            if let curve2 = animations[i].modificators.curve {
+            if let curve2 = animations[i].options.curve {
                 curve1 = BezierCurve.between(curve1, curve2)
             }
             array[i].duration = .absolute(duration * newDuration)

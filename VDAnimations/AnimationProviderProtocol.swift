@@ -9,8 +9,8 @@
 import Foundation
 
 public protocol VDAnimationProtocol {
-    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDriver
-    var asModifier: AnimationModifier { get }
+    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate
+    var modified: ModifiedAnimation { get }
     func set(state: AnimationState, for options: AnimationOptions)
 }
 
@@ -19,8 +19,8 @@ public protocol AnimationClosureProviderProtocol: VDAnimationProtocol {
 }
 
 extension VDAnimationProtocol {
-    public var modificators: AnimationOptions { asModifier.modificators }
-    public var asModifier: AnimationModifier { AnimationModifier(modificators: .empty, animation: self) }
+    public var options: AnimationOptions { modified.options }
+    public var modified: ModifiedAnimation { ModifiedAnimation(options: .empty, animation: self) }
     var chain: ValueChaining<Self> { ValueChaining(self) }
     
     public func set(state: AnimationState) {
@@ -28,7 +28,7 @@ extension VDAnimationProtocol {
     }
     
     @discardableResult
-    public func start(_ completion: ((Bool) -> ())? = nil) -> AnimationDriver {
+    public func start(_ completion: ((Bool) -> ())? = nil) -> AnimationDelegate {
         start(with: .empty, { completion?($0) })
     }
     
@@ -36,8 +36,8 @@ extension VDAnimationProtocol {
 
 extension Optional: VDAnimationProtocol where Wrapped: VDAnimationProtocol {
     
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDriver {
-        self?.start(with: options, completion) ?? AnimationDriver({_ in })
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
+        self?.start(with: options, completion) ?? AnimationDelegate({_ in })
     }
     
     public func set(state: AnimationState, for options: AnimationOptions) {

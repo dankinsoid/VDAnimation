@@ -10,14 +10,14 @@ import Foundation
 
 struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
     private let animation: Animation
-    var asModifier: AnimationModifier {
-        AnimationModifier(modificators: AnimationOptions.empty.chain.duration[duration], animation: self)
+    var modified: ModifiedAnimation {
+        ModifiedAnimation(options: AnimationOptions.empty.chain.duration[duration], animation: self)
     }
     private let duration: AnimationDuration?
     
     init(_ animation: Animation) {
         self.animation = animation
-        self.duration = Autoreverse.duration(from: animation.modificators.duration)
+        self.duration = Autoreverse.duration(from: animation.options.duration)
     }
     
     func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
@@ -53,7 +53,7 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
         }
         let progress = step == .forward ? 0...0.5 : 0.5...1
         var (curve1, newDuration) = fullCurve.split(range: progress)
-        if let curve2 = animation.modificators.curve {
+        if let curve2 = animation.options.curve {
             curve1 = BezierCurve.between(curve1, curve2)
         }
         options.duration = duration * newDuration

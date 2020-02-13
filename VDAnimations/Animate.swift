@@ -19,7 +19,7 @@ public struct Animate: AnimationClosureProviderProtocol {
     }
     
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDriver {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         switch options.autoreverseStep {
         case .none:
             animator.animator = nil
@@ -33,7 +33,7 @@ public struct Animate: AnimationClosureProviderProtocol {
         }
     }
     
-    private func startAnimation(with options: AnimationOptions, complete: Bool, reverse: Bool, _ completion: @escaping (Bool) -> ()) -> AnimationDriver {
+    private func startAnimation(with options: AnimationOptions, complete: Bool, reverse: Bool, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         interactor.reset(at: .start)
         guard options.duration?.absolute ?? 0 > 0 || !complete else {
             var end = AnimationState.start
@@ -42,7 +42,7 @@ public struct Animate: AnimationClosureProviderProtocol {
                 end = .end
             }
             completion(true)
-            return AnimationDriver(stop: { _ in end })
+            return AnimationDelegate(stop: { _ in end })
         }
         let provider = VDTimingProvider(bezier: options.curve, spring: springTiming)
         let animator = VDViewAnimator(duration: options.duration?.absolute ?? 0, timingParameters: provider)
@@ -62,7 +62,7 @@ public struct Animate: AnimationClosureProviderProtocol {
             self.animator.animator = animator
         }
         animator.startAnimation()
-        return AnimationDriver {
+        return AnimationDelegate {
             switch $0 {
             case .start:
                 animator.finishAnimation(at: .start)

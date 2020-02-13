@@ -11,15 +11,15 @@ import Foundation
 struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
     private let count: Int?
     private let animation: A
-    var asModifier: AnimationModifier {
-        AnimationModifier(modificators: AnimationOptions.empty.chain.duration[duration], animation: self)
+    var modified: ModifiedAnimation {
+        ModifiedAnimation(options: AnimationOptions.empty.chain.duration[duration], animation: self)
     }
     private let duration: AnimationDuration?
     
     init(_ cnt: Int?, for anim: A) {
         count = cnt
         animation = anim
-        duration = RepeatAnimation.duration(for: cnt, from: anim.modificators.duration)
+        duration = RepeatAnimation.duration(for: cnt, from: anim.options.duration)
     }
     
     func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) {
@@ -88,7 +88,7 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
     }
     
     private func getOptions(options: AnimationOptions, i: Int) -> AnimationOptions {
-        let full = options.duration?.absolute ?? duration?.absolute ?? animation.modificators.duration?.absolute ?? 0
+        let full = options.duration?.absolute ?? duration?.absolute ?? animation.options.duration?.absolute ?? 0
         var result = options
         result.autoreverseStep = result.autoreverseStep ?? .forward
         guard let fullCurve = options.curve, fullCurve != .linear else {

@@ -10,8 +10,8 @@ import Foundation
 
 public struct Sequential: VDAnimationProtocol {
     private let animations: [VDAnimationProtocol]
-    public var asModifier: AnimationModifier {
-        AnimationModifier(modificators: AnimationOptions.empty.chain.duration[fullDuration], animation: self)
+    public var modified: ModifiedAnimation {
+        ModifiedAnimation(options: AnimationOptions.empty.chain.duration[fullDuration], animation: self)
     }
     private let fullDuration: AnimationDuration?
     private let interator: Interactor
@@ -69,7 +69,7 @@ public struct Sequential: VDAnimationProtocol {
             animations.forEach { $0.set(state: state) }
             interator.prevIndex = animations.count - 1
         case .progress(let k):
-            let array = getProgresses(animations.map({ $0.modificators }), duration: fullDuration?.absolute ?? 0, options: .empty)
+            let array = getProgresses(animations.map({ $0.options }), duration: fullDuration?.absolute ?? 0, options: .empty)
             let i = array.firstIndex(where: { k >= $0.lowerBound && k <= $0.upperBound }) ?? 0
             let finished = interator.prevIndex ?? 0
             let toFinish = i > finished || interator.prevIndex == nil ? animations.dropFirst(finished).prefix(i - finished) : []
@@ -93,11 +93,11 @@ public struct Sequential: VDAnimationProtocol {
     }
     
     private static func fullDuration(for array: [VDAnimationProtocol]) -> AnimationDuration? {
-        guard array.contains(where: { $0.modificators.duration?.absolute != 0 }) else { return nil }
-        let dur = array.reduce(0, { $0 + ($1.modificators.duration?.absolute ?? 0) })
-        var rel = min(1, array.reduce(0, { $0 + ($1.modificators.duration?.relative ?? 0) }))
+        guard array.contains(where: { $0.options.duration?.absolute != 0 }) else { return nil }
+        let dur = array.reduce(0, { $0 + ($1.options.duration?.absolute ?? 0) })
+        var rel = min(1, array.reduce(0, { $0 + ($1.options.duration?.relative ?? 0) }))
         if rel == 0 {
-            rel = Double(array.filter({ $0.modificators.duration == nil }).count) / Double(array.count)
+            rel = Double(array.filter({ $0.options.duration == nil }).count) / Double(array.count)
         }
         rel = rel == 1 ? 0 : rel
         let full = dur / (1 - rel)
@@ -110,9 +110,9 @@ public struct Sequential: VDAnimationProtocol {
         var childrenRelativeTime = 0.0
         for anim in animations {
             var k: Double?
-            if let absolute = anim.modificators.duration?.absolute {
+            if let absolute = anim.options.duration?.absolute {
                 k = absolute / full
-            } else if let relative = anim.modificators.duration?.relative {
+            } else if let relative = anim.options.duration?.relative {
                 k = relative
             }
             childrenRelativeTime += k ?? 0
@@ -139,7 +139,7 @@ public struct Sequential: VDAnimationProtocol {
         let progresses = getProgresses(array, duration: duration, options: options)
         for i in 0..<animations.count {
             var (curve1, newDuration) = fullCurve.split(range: progresses[i])
-            if let curve2 = animations[i].modificators.curve {
+            if let curve2 = animations[i].options.curve {
                 curve1 = BezierCurve.between(curve1, curve2)
             }
             array[i].duration = .absolute(duration * newDuration)

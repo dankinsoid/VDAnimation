@@ -1,5 +1,5 @@
 //
-//  AnimationDriver.swift
+//  AnimationDelegate.swift
 //  CA
 //
 //  Created by Daniil on 13.02.2020.
@@ -10,7 +10,7 @@ import Foundation
 
 public protocol AnimationStopable
 
-public struct AnimationDriver {
+public struct AnimationDelegate {
     public let stop: (AnimationState) -> AnimationState
     
     public func stop() {

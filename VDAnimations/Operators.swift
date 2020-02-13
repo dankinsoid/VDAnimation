@@ -11,21 +11,21 @@ import Foundation
 extension VDAnimationProtocol {
     
     public func duration(_ value: TimeInterval) -> VDAnimationProtocol {
-        asModifier.chain.modificators.duration[.absolute(value)]
+        modified.chain.options.duration[.absolute(value)]
     }
     
     public func duration(relative value: Double) -> VDAnimationProtocol {
-        asModifier.chain.modificators.duration[.relative(value)]
+        modified.chain.options.duration[.relative(value)]
     }
     
     public func curve(_ value: BezierCurve) -> VDAnimationProtocol {
-        asModifier.chain.modificators.curve[value]
-//        let result = asModifier
-//        return result.chain.modificators.curve[CA.curve(value, result.modificators.curve)]
+        modified.chain.options.curve[value]
+//        let result = modified
+//        return result.chain.options.curve[CA.curve(value, result.options.curve)]
     }
     
     public func curve<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F)) -> VDAnimationProtocol {
-        asModifier.chain.modificators.curve[.init(p1, p2)]
+        modified.chain.options.curve[.init(p1, p2)]
     }
     
     public func `repeat`(_ count: Int) -> VDAnimationProtocol {

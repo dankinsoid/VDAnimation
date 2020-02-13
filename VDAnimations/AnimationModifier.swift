@@ -1,5 +1,5 @@
 //
-//  AnimationModifier.swift
+//  ModifiedAnimation.swift
 //  CA
 //
 //  Created by crypto_user on 16.01.2020.
@@ -8,20 +8,20 @@
 
 import Foundation
 
-public struct AnimationModifier: VDAnimationProtocol {
+public struct ModifiedAnimation: VDAnimationProtocol {
     
-    public var asModifier: AnimationModifier { self }
-    var modificators: AnimationOptions
+    public var modified: ModifiedAnimation { self }
+    var options: AnimationOptions
     var animation: VDAnimationProtocol
-    var chain: ValueChaining<AnimationModifier> { ValueChaining(self) }
+    var chain: ValueChaining<ModifiedAnimation> { ValueChaining(self) }
     
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDriver {
-        animation.start(with: options.or(modificators), completion)
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
+        animation.start(with: options.or(options), completion)
     }
     
     public func set(state: AnimationState, for options: AnimationOptions) {
-        animation.set(state: state, for: options.or(modificators))
+        animation.set(state: state, for: options.or(options))
     }
     
 }

@@ -10,8 +10,8 @@ import UIKit
 
 public struct Interval: VDAnimationProtocol {
     
-    public var asModifier: AnimationModifier {
-        AnimationModifier(modificators: AnimationOptions.empty.chain.duration[duration], animation: self)
+    public var modified: ModifiedAnimation {
+        ModifiedAnimation(options: AnimationOptions.empty.chain.duration[duration], animation: self)
     }
     public let duration: AnimationDuration?
     
