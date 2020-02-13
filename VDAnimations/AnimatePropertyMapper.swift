@@ -222,7 +222,8 @@ extension View {
 
 extension NSLayoutConstraint {
 
-    fileprivate func didUpdate() {
+    func didUpdate() {
+        guard isActive else { return }
         let view1 = firstItem as? UIView ?? (firstItem as? UILayoutGuide)?.owningView
         let view2 = secondItem as? UIView ?? (secondItem as? UILayoutGuide)?.owningView
         if let parent = view1?.commonSuper(with: view2) {
