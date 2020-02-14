@@ -170,8 +170,9 @@ public struct Sequential: VDAnimationProtocol {
         var progresses: [ClosedRange<Double>] = []
         var dur = 0.0
         var start = 0.0
+        let cnt = Double(array.filter({ $0.duration == nil }).count)
         let full = array.map({ $0.duration?.relative ?? ($0.duration?.absolute ?? 0) / duration }).reduce(0, +)
-        let remains = max(0, 1 - full)
+        let remains = max(0, 1 - full) / max(1, cnt)
         for anim in array {
             if let rel = anim.duration?.relative {
                 dur += min(1, max(0, rel))
