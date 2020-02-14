@@ -49,3 +49,11 @@ extension CGAffineTransform {
     }
     
 }
+
+extension CATransform3D {
+    
+    public static func rotate<F: BinaryFloatingPoint>(_ angle: F, x: F = 0, y: F = 1, z: F = 0) -> CATransform3D {
+        CATransform3DRotate(CATransform3DIdentity, CGFloat(angle), CGFloat(x), CGFloat(y), CGFloat(z))
+    }
+    
+}

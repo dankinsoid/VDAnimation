@@ -15,6 +15,4 @@ public final class ConstraintsOwner {
         self.constraints = constraints
     }
     
-    
-    
 }
