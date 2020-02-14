@@ -80,7 +80,7 @@ public struct Sequential: VDAnimationProtocol {
             animations.forEach { $0.set(position: position) }
             interator.prevIndex = animations.count - 1
         case .progress(let k):
-            let array = getProgresses(animations.map({ $0.options }), duration: fullDuration?.absolute ?? 0, options: .empty)
+            let array = getProgresses(animations.map({ $0.options }), duration: (options.duration ?? fullDuration)?.absolute ?? 0, options: options)
             let i = array.firstIndex(where: { k >= $0.lowerBound && k <= $0.upperBound }) ?? 0
             let finished = interator.prevIndex ?? 0
             let toFinish = i > finished || interator.prevIndex == nil ? animations.dropFirst(finished).prefix(i - finished) : []
@@ -89,7 +89,11 @@ public struct Sequential: VDAnimationProtocol {
             let toStart = i < finished || interator.prevIndex == nil ? animations.dropLast(started).suffix((interator.prevIndex ?? p) - i) : []
             toFinish.forEach { $0.set(position: .end) }
             toStart.reversed().forEach { $0.set(position: .start) }
-            animations[i].set(position: .progress((k - array[i].lowerBound) / (array[i].upperBound - array[i].lowerBound)))
+            if array[i].upperBound == array[i].lowerBound {
+                animations[i].set(position: .progress(1))
+            } else {
+                animations[i].set(position: .progress((k - array[i].lowerBound) / (array[i].upperBound - array[i].lowerBound)))
+            }
             interator.prevIndex = i
         }
     }
@@ -166,12 +170,15 @@ public struct Sequential: VDAnimationProtocol {
         var progresses: [ClosedRange<Double>] = []
         var dur = 0.0
         var start = 0.0
-        
+        let full = array.map({ $0.duration?.relative ?? ($0.duration?.absolute ?? 0) / duration }).reduce(0, +)
+        let remains = max(0, 1 - full)
         for anim in array {
             if let rel = anim.duration?.relative {
                 dur += min(1, max(0, rel))
             } else if let abs = anim.duration?.absolute {
                 dur += abs / duration
+            } else {
+                dur += remains
             }
             let end = min(1, dur)
             progresses.append(start...end)
