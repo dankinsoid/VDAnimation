@@ -41,6 +41,55 @@ extension Gradient where Bound: ScalableConvertable {
         Bound(scaleData: from.scaleData + (to.scaleData - from.scaleData).scaled(by: percent))
     }
 }
+
+extension Gradient: Equatable where Bound: Equatable {}
+extension Gradient: Hashable where Bound: Hashable {}
+
+extension Gradient: AdditiveArithmetic where Bound: AdditiveArithmetic {
+    public static var zero: Gradient<Bound> { Gradient(.zero, .zero) }
+    
+    public static func +(lhs: Gradient<Bound>, rhs: Gradient<Bound>) -> Gradient<Bound> {
+        Gradient(lhs.from + rhs.from, lhs.from + rhs.from)
+    }
+    
+    public static func +(lhs: Bound, rhs: Gradient<Bound>) -> Gradient<Bound> {
+        Gradient(lhs + rhs.from, lhs + rhs.from)
+    }
+    
+    public static func +(lhs: Gradient<Bound>, rhs: Bound) -> Gradient<Bound> {
+        Gradient(lhs.from + rhs, lhs.from + rhs)
+    }
+    
+    public static func +=(lhs: inout Gradient<Bound>, rhs: Gradient<Bound>) {
+        lhs = lhs + rhs
+    }
+    
+    public static func +=(lhs: inout Gradient<Bound>, rhs: Bound) {
+        lhs = lhs + rhs
+    }
+    
+    public static func -(lhs: Gradient<Bound>, rhs: Gradient<Bound>) -> Gradient<Bound> {
+        Gradient(lhs.from - rhs.from, lhs.from - rhs.from)
+    }
+    
+    public static func -(lhs: Bound, rhs: Gradient<Bound>) -> Gradient<Bound> {
+        Gradient(lhs - rhs.from, lhs - rhs.from)
+    }
+    
+    public static func -(lhs: Gradient<Bound>, rhs: Bound) -> Gradient<Bound> {
+        Gradient(lhs.from - rhs, lhs.from - rhs)
+    }
+    
+    public static func -=(lhs: inout Gradient<Bound>, rhs: Gradient<Bound>) {
+        lhs = lhs - rhs
+    }
+    
+    public static func -=(lhs: inout Gradient<Bound>, rhs: Bound) {
+        lhs = lhs - rhs
+    }
+
+}
+
 //
 //@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 //extension Gradient where Bound: Animatable {
