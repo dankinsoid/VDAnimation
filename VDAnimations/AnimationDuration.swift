@@ -23,20 +23,20 @@ public enum AnimationDuration {
     
 }
 
-public func /(_ lhs: AnimationDuration, _ rhs: Double) -> AnimationDuration {
+public func /<F: BinaryFloatingPoint>(_ lhs: AnimationDuration, _ rhs: F) -> AnimationDuration {
     switch lhs {
-    case .absolute(let value): return .absolute(value / rhs)
-    case .relative(let value): return .relative(value / rhs)
+    case .absolute(let value): return .absolute(value / Double(rhs))
+    case .relative(let value): return .relative(value / Double(rhs))
     }
 }
 
-public func *(_ lhs: AnimationDuration, _ rhs: Double) -> AnimationDuration {
+public func *<F: BinaryFloatingPoint>(_ lhs: AnimationDuration, _ rhs: F) -> AnimationDuration {
     switch lhs {
-    case .absolute(let value): return .absolute(value * rhs)
-    case .relative(let value): return .relative(value * rhs)
+    case .absolute(let value): return .absolute(value * Double(rhs))
+    case .relative(let value): return .relative(value * Double(rhs))
     }
 }
 
-public func *(_ lhs: Double, _ rhs: AnimationDuration) -> AnimationDuration {
+public func *<F: BinaryFloatingPoint>(_ lhs: F, _ rhs: AnimationDuration) -> AnimationDuration {
     rhs * lhs
 }

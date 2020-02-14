@@ -103,7 +103,6 @@ fileprivate final class CATimer: NSObject {
     }
     
     @objc private func handler(displayLink: CADisplayLink) {
-//        print(displayLink.targetTimestamp - CACurrentMediaTime())
         update(displayLink.timestamp - (startedAt ?? CACurrentMediaTime()))
     }
     

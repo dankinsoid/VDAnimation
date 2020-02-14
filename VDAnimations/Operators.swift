@@ -14,8 +14,8 @@ extension VDAnimationProtocol {
         modified.chain.options.duration[.absolute(value)]
     }
     
-    public func duration(relative value: Double) -> VDAnimationProtocol {
-        modified.chain.options.duration[.relative(value)]
+    public func duration<F: BinaryFloatingPoint>(relative value: F) -> VDAnimationProtocol {
+        modified.chain.options.duration[.relative(Double(value))]
     }
     
     public func curve(_ value: BezierCurve) -> VDAnimationProtocol {
@@ -40,14 +40,14 @@ extension VDAnimationProtocol {
         Autoreverse(self)
     }
     
-    public func delay(_ value: TimeInterval) -> VDAnimationProtocol {
+    public func delay<F: BinaryFloatingPoint>(_ value: F) -> VDAnimationProtocol {
         Sequential {
             Interval(value)
             self
         }
     }
     
-    public func delay(relative value: TimeInterval) -> VDAnimationProtocol {
+    public func delay<F: BinaryFloatingPoint>(relative value: F) -> VDAnimationProtocol {
         Sequential {
             Interval(relative: value)
             self

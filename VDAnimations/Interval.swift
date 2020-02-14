@@ -15,12 +15,12 @@ public struct Interval: VDAnimationProtocol {
     }
     public let duration: AnimationDuration?
     
-    public init(_ duration: Double) {
-        self.duration = .absolute(duration)
+    public init<F: BinaryFloatingPoint>(_ duration: F) {
+        self.duration = .absolute(Double(duration))
     }
     
-    public init(relative: Double) {
-        duration = .relative(relative)
+    public init<F: BinaryFloatingPoint>(relative: F) {
+        duration = .relative(Double(relative))
     }
     
     public init() {

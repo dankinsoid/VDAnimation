@@ -33,8 +33,8 @@ extension VDAnimationProtocol {
         start(with: .empty, { completion?($0) })
     }
     
-    public func set(_ progress: Double) {
-        set(position: .progress(progress), for: .empty)
+    public func set<F: BinaryFloatingPoint>(_ progress: F) {
+        set(position: .progress(Double(progress)), for: .empty)
     }
     
 }
