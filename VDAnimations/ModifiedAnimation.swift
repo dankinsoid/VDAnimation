@@ -17,11 +17,11 @@ public struct ModifiedAnimation: VDAnimationProtocol {
     
     @discardableResult
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
-        animation.start(with: options.or(options), completion)
+        animation.start(with: options.or(self.options), completion)
     }
     
     public func set(position: AnimationPosition, for options: AnimationOptions) {
-        animation.set(position: position, for: options.or(options))
+        animation.set(position: position, for: options.or(self.options))
     }
     
 }
