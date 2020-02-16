@@ -24,24 +24,26 @@ extension UIViewController: TransatableController {
     
 }
 
-extension TransatableController {
-    public func present<VC>(_ viewController: VC, animation: (Self, VC) -> ()) {}
-}
-
 public final class TransitionDelegate: NSObject, UIViewControllerTransitioningDelegate {
    
     let presenting: (TransitionContext) -> VDAnimationProtocol
+    let dismissing: ((TransitionContext) -> VDAnimationProtocol)?
     
-    init(_ presenting: @escaping (TransitionContext) -> VDAnimationProtocol) {
+    convenience public init(_ presenting: @escaping (TransitionContext) -> VDAnimationProtocol) {
+        self.init(presenting, nil)
+    }
+    
+    public init(_ presenting: @escaping (TransitionContext) -> VDAnimationProtocol, _ dismissing: ((TransitionContext) -> VDAnimationProtocol)?) {
         self.presenting = presenting
+        self.dismissing = dismissing
     }
     
     public func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        AnimatedTransitioning(self.presenting)
+        AnimatedTransitioning(self.presenting, needReverse: false)
     }
     
     public func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        nil
+        AnimatedTransitioning(dismissing ?? presenting, needReverse: dismissing == nil)
     }
     
     public func interactionControllerForPresentation(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
@@ -60,12 +62,14 @@ public final class TransitionDelegate: NSObject, UIViewControllerTransitioningDe
 
 final class AnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioning {
     
-    let presenting: (TransitionContext) -> VDAnimationProtocol
-    let defaultDuration = TimeInterval(UINavigationController.hideShowBarDuration)
+    private let presenting: (TransitionContext) -> VDAnimationProtocol
     private var presentingAnimation: VDAnimationProtocol?
+    private let defaultDuration = TimeInterval(UINavigationController.hideShowBarDuration)
+    private let needReverse: Bool
     
-    init(_ presenting: @escaping (TransitionContext) -> VDAnimationProtocol) {
+    init(_ presenting: @escaping (TransitionContext) -> VDAnimationProtocol, needReverse: Bool) {
         self.presenting = presenting
+        self.needReverse = needReverse
     }
     
     func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
@@ -78,6 +82,8 @@ final class AnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioni
         guard let context = transitionContext.context else { return }
         let containerView = context.container
         
+        print(context.from.subviews.count)
+        
         containerView.backgroundColor = .clear
         containerView.addSubview(context.to)
         containerView.clipsToBounds = true
@@ -86,7 +92,9 @@ final class AnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioni
         let animation = presentAnimation(context)
         
         let duration = animation.options.duration?.absolute ?? defaultDuration
-        let options = AnimationOptions.empty.chain.duration[.absolute(duration)]
+        let options = AnimationOptions.empty.chain
+            .duration[.absolute(duration)]
+//            .autoreverseStep[needReverse ? .back : nil]
         
         animation.start(with: options) { _ in
             context.from.isHidden = false
