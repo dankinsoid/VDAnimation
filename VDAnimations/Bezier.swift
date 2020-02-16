@@ -13,7 +13,7 @@ public enum Curve {
 //    case bezier(BezierCurve),  //spring
 }
 
-//easeIn = x^1.75
+//easeIn = x^1.75; 
 //easeOut = x^1.1(2-x)
 //easeInOut = 2x^2, x<=0.5; -1+(2-2x)x, x > 0.5
 
@@ -26,16 +26,19 @@ public enum Curve {
 //p = (p'- d)/k
 
 public struct BezierCurve: Equatable {
-    public static let linear = BezierCurve(.zero, .one)
-    public static let ease = BezierCurve(CGPoint(x: 0.25, y: 0.1), CGPoint(x: 0.25, y: 1))
-    public static let easeIn = BezierCurve(CGPoint(x: 0.45, y: 0), .one) //0.42
-    public static let easeOut = BezierCurve(.zero, CGPoint(x: 0.55, y: 1)) //0.58
-    public static let easeInOut = BezierCurve(easeIn.point1, easeOut.point2)
+    public static let linear = BezierCurve(.zero, .one, { $0 })
+    public static let ease = BezierCurve((x: 0.25, y: 0.1), (x: 0.25, y: 1), nil)
+    public static let easeIn = BezierCurve((x: 0.45, y: 0), (1, 1), { pow($0, 1.75) })
+    public static let easeOut = BezierCurve((0, 0), (x: 0.55, y: 1), { pow($0, 1.1) * (2 - $0) }) //0.58
+    public static let easeInOut = BezierCurve(easeIn.point1, easeOut.point2, {
+        $0 < 0.5 ? 2 * $0 * $0 : ($0 * (2 - 2 * $0) - 1)
+    })
     
     private var start: CGPoint = .zero
     public var point1: CGPoint
     public var point2: CGPoint
     private var end: CGPoint = .one
+    private var approximate: ((CGFloat) -> CGFloat)?
     
     public var reversed: BezierCurve {
         BezierCurve((1 - point2.x, 1 - point2.y), (1 - point1.x, 1 - point1.y))
@@ -43,22 +46,36 @@ public struct BezierCurve: Equatable {
     
     public var builtin: UIView.AnimationCurve? {
         switch self {
-        case .easeIn: return .easeIn
-        case .easeOut: return .easeOut
-        case .easeInOut: return .easeInOut
-        case .linear: return .linear
-        default: return nil
+        case .easeIn:       return .easeIn
+        case .easeOut:      return .easeOut
+        case .easeInOut:    return .easeInOut
+        case .linear:       return .linear
+        default:            return nil
         }
     }
     
+    public static func == (lhs: BezierCurve, rhs: BezierCurve) -> Bool {
+        lhs.point1 == rhs.point1 && lhs.point1 == rhs.point1 && lhs.start == rhs.start && lhs.end == rhs.end
+    }
+    
     public init(_ p1: CGPoint, _ p2: CGPoint) {
+        self = BezierCurve(p1, p2, nil)
+    }
+    
+    private init<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F), _ fun: ((CGFloat) -> CGFloat)?) {
+        point1 = CGPoint(x: CGFloat(p1.x), y: CGFloat(p1.y))
+        point2 = CGPoint(x: CGFloat(p2.x), y: CGFloat(p2.y))
+        approximate = fun
+    }
+    
+    private init(_ p1: CGPoint, _ p2: CGPoint, _ fun: ((CGFloat) -> CGFloat)?) {
         point1 = p1
         point2 = p2
+        approximate = fun
     }
     
     public init<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F)) {
-        point1 = CGPoint(x: CGFloat(p1.x), y: CGFloat(p1.y))
-        point2 = CGPoint(x: CGFloat(p2.x), y: CGFloat(p2.y))
+        self = BezierCurve(p1, p2, nil)
     }
 //    x(t) = (1-t)^3 * x0 + 3t(1-t)^2 * x1 + 3t^2 * (1-t) * x2 + t^3 * x3
 //    y(t) = (1-t)^3 * y0 + 3t(1-t)^2 * y1 + 3t^2 * (1-t) * y2 + t^3 * y3
@@ -129,6 +146,9 @@ public struct BezierCurve: Equatable {
     
     private func findT(_ y: CGFloat) -> CGFloat {
         guard y > 0, y < 1 else { return y }
+        if let fun = approximate {
+            
+        }
         var t: CGFloat = 0.0
         var y1: CGFloat = 0.0
         while t < 1, y1 < y {

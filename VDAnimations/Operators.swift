@@ -40,6 +40,10 @@ extension VDAnimationProtocol {
         Autoreverse(self)
     }
     
+    public func autoreverse(repeat count: Int) -> VDAnimationProtocol {
+        RepeatAnimation(count, for: Autoreverse(self))
+    }
+    
     public func delay<F: BinaryFloatingPoint>(_ value: F) -> VDAnimationProtocol {
         Sequential {
             Interval(value)
