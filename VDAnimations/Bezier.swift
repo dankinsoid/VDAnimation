@@ -13,7 +13,7 @@ public enum Curve {
 //    case bezier(BezierCurve),  //spring
 }
 
-//easeIn = x^1.75; 
+//easeIn = x^1.75;
 //easeOut = x^1.1(2-x)
 //easeInOut = 2x^2, x<=0.5; -1+(2-2x)x, x > 0.5
 
@@ -31,7 +31,8 @@ public struct BezierCurve: Equatable {
     public static let easeIn = BezierCurve((x: 0.45, y: 0), (1, 1), { pow($0, 1.75) })
     public static let easeOut = BezierCurve((0, 0), (x: 0.55, y: 1), { pow($0, 1.1) * (2 - $0) }) //0.58
     public static let easeInOut = BezierCurve(easeIn.point1, easeOut.point2, {
-        $0 < 0.5 ? 2 * $0 * $0 : ($0 * (2 - 2 * $0) - 1)
+        let sqr = $0 * $0
+        return $0 < 0.5 ? 2 * sqr : ($0 * (2 - 2 * $0) - 1)
     })
     
     private var start: CGPoint = .zero

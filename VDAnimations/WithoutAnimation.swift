@@ -15,24 +15,30 @@ public struct WithoutAnimation: ClosureAnimation {
     }
     
     private let block: () -> ()
+    private let initial: (() -> ())?
     
     public init(_ closure: @escaping () -> ()) {
         block = closure
+        initial = nil
+    }
+    
+    public init(_ closure: @escaping () -> (), onReverse: @escaping () -> ()) {
+        block = closure
+        initial = onReverse
     }
     
     @discardableResult
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         let duration = options.duration?.absolute ?? 0
+        let anim = options.isReversed ? (initial ?? block) : block
         if duration == 0 {
-            execute(completion)
+            execute(anim, completion)
             return .end
         } else {
             let remote = RemoteDelegate(completion)
-            execute { result in
-                DispatchTimer.execute(seconds: duration) {
-                    guard !remote.isStopped else { return }
-                    completion(result)
-                }
+            DispatchTimer.execute(seconds: duration) {
+                guard !remote.isStopped else { return }
+                self.execute(anim, completion)
             }
             return remote.delegate
         }
@@ -40,10 +46,13 @@ public struct WithoutAnimation: ClosureAnimation {
     
     public func set(position: AnimationPosition, for options: AnimationOptions) {
         let end = options.isReversed ? position.reversed : position
-        if end.complete == 1 { execute({_ in}) }
+        switch end.complete {
+        case 1:     execute(block) {_ in}
+        default:    break
+        }
     }
     
-    private func execute(_ completion: @escaping (Bool) -> ()) {
+    private func execute(_ block: () -> (), _ completion: @escaping (Bool) -> ()) {
         UIView.performWithoutAnimation(block)
         completion(true)
     }

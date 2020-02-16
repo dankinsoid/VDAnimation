@@ -36,6 +36,10 @@ public struct PropertyAnimator<Base, A: ClosureAnimation>: VDAnimationProtocol {
         animatable.setState(options.isReversed == true ? position.reversed : position)
     }
     
+    public func withoutAnimation() -> WithoutAnimation {
+        WithoutAnimation({ self.animatable.setState(.end) }, onReverse: { self.animatable.setState(.start) })
+    }
+    
     public subscript<A>(dynamicMember keyPath: ReferenceWritableKeyPath<Base, A>) -> AnimatePropertyMapper<Base, A> {
         AnimatePropertyMapper(object: get, animatable: animatable, keyPath: keyPath)
     }
