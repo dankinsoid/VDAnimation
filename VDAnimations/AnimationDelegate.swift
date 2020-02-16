@@ -9,8 +9,8 @@
 import Foundation
 
 public struct AnimationDelegate {
-    public static let empty = AnimationDelegate { $0 }
-    public static let end = AnimationDelegate {_ in .end }
+    public static var empty: AnimationDelegate { AnimationDelegate({ $0 }) }
+    public static var end: AnimationDelegate { AnimationDelegate({_ in .end }) }
     
     private var stopAction: (AnimationPosition) -> AnimationPosition
     
@@ -46,33 +46,41 @@ final class RemoteDelegate {
 
 final class MutableDelegate {
     var delegate = AnimationDelegate.empty
-    
-    var asDelegate: AnimationDelegate {
-        AnimationDelegate {
-            self.delegate.stop($0)
-        }
-    }
+    var asDelegate: AnimationDelegate { AnimationDelegate { self.delegate.stop($0) } }
 }
 
-public struct Interactive {
+public protocol Interactive {
+    var percent: Double { get nonmutating set }
+    func play()
+    func cancel()
+    func pause()
+    @discardableResult
+    func stop(_ position: AnimationPosition) -> AnimationPosition
+}
+
+struct Interact: Interactive {
+    static let empty = Interact(getter: { 0 }, setter: {_ in }, player: {}, pause: {}, cancellable: {})
+    static let end = Interact(getter: { 1 }, setter: {_ in }, player: {}, pause: {}, cancellable: {})
     
-    public var percent: Double {
+    var percent: Double {
         get { getter() }
         nonmutating set { setter(newValue) }
     }
     private let getter: () -> Double
     private let setter: (Double) -> ()
-    private let player: () -> AnimationDelegate
+    private let player: () -> ()
+    private let pauseAction: () -> ()
     private let cancellable: () -> ()
     
-    init(getter: @escaping () -> Double, setter: @escaping (Double) -> (), player: @escaping () -> AnimationDelegate, cancellable: @escaping () -> ()) {
+    init(getter: @escaping () -> Double, setter: @escaping (Double) -> (), player: @escaping () -> (), pause: @escaping () -> (), cancellable: @escaping () -> ()) {
         self.getter = getter
         self.setter = setter
         self.player = player
+        self.pauseAction = pause
         self.cancellable = cancellable
     }
     
-    public func play() -> AnimationDelegate {
+    public func play() {
         player()
     }
     
@@ -80,12 +88,12 @@ public struct Interactive {
         cancellable()
     }
     
+    public func pause() {
+        pauseAction()
+    }
+    
+    public func stop(_ position: AnimationPosition) -> AnimationPosition {
+        position
+    }
+    
 }
-
-// stop(at: start, end, percent)
-// pause() -> Interactive
-
-// Interactive
-// percent { get, set }
-// play() -> AnimationDelegate
-// cancel()

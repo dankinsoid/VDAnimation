@@ -39,7 +39,8 @@ public struct WithoutAnimation: ClosureAnimation {
     }
     
     public func set(position: AnimationPosition, for options: AnimationOptions) {
-        execute({_ in })
+        let end = options.isReversed ? position.reversed : position
+        if end.complete == 1 { execute({_ in}) }
     }
     
     private func execute(_ completion: @escaping (Bool) -> ()) {

@@ -86,6 +86,18 @@ public struct Animate: ClosureAnimation {
         interactor.set(state: position)
     }
     
+//    private func interactive(for animator: VDViewAnimator) -> Interactive {
+//        Interactive(
+//            getter: { Double(animator.fractionComplete) },
+//            setter: { animator.fractionComplete = CGFloat($0) },
+//            player: {
+//                animator.startAnimation()
+//                return self.delegate(for: animator)
+//            },
+//            cancellable: { animator.finishAnimation(at: .current) }
+//        )
+//    }
+    
     public func spring(_ dampingRatio: CGFloat = 0.3) -> Animate {
         chain.springTiming[UISpringTimingParameters(dampingRatio: dampingRatio)]
     }
@@ -157,7 +169,7 @@ fileprivate final class Animator {
 }
 
 fileprivate final class Interactor {
-    private var animator: VDViewAnimator?
+    var animator: VDViewAnimator?
     let animation: () -> ()
     var position = UIViewAnimatingPosition.start
     

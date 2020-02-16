@@ -9,7 +9,6 @@
 import UIKit
 
 public struct Interval: VDAnimationProtocol {
-    
     public var modified: ModifiedAnimation {
         ModifiedAnimation(options: AnimationOptions.empty.chain.duration[duration], animation: self)
     }
@@ -30,7 +29,8 @@ public struct Interval: VDAnimationProtocol {
     @discardableResult
     public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
         let result = RemoteDelegate(completion)
-        DispatchTimer.execute(seconds: options.duration?.absolute ?? duration?.absolute ?? 0) {
+        let seconds = options.duration?.absolute ?? duration?.absolute ?? 0
+        DispatchTimer.execute(seconds: seconds) {
             guard !result.isStopped else { return }
             completion(true)
         }
