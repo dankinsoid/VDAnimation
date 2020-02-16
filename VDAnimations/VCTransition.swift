@@ -89,6 +89,7 @@ final class AnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioni
         let options = AnimationOptions.empty.chain.duration[.absolute(duration)]
         
         animation.start(with: options) { _ in
+            context.from.isHidden = false
             transitionContext.completeTransition(!transitionContext.transitionWasCancelled)
         }
     }
@@ -153,7 +154,13 @@ public struct TransitionContext {
 
 extension UIViewControllerContextTransitioning {
     var context: TransitionContext? {
-        guard let fromVC = viewController(forKey: .from), let toVC = viewController(forKey: .to) else { return nil }
-        return TransitionContext(from: fromVC.view, to: toVC.view, container: containerView, finalFrame: finalFrame(for: toVC))
+        guard let fromVC = viewController(forKey: .from),
+            let toVC = viewController(forKey: .to) else { return nil }
+        return TransitionContext(
+            from: fromVC.view,
+            to: toVC.view,
+            container: containerView,
+            finalFrame: finalFrame(for: toVC)
+        )
     }
 }

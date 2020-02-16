@@ -37,6 +37,10 @@ public struct BezierCurve: Equatable {
     public var point2: CGPoint
     private var end: CGPoint = .one
     
+    public var reversed: BezierCurve {
+        BezierCurve((1 - point2.x, 1 - point2.y), (1 - point1.x, 1 - point1.y))
+    }
+    
     public var builtin: UIView.AnimationCurve? {
         switch self {
         case .easeIn: return .easeIn
