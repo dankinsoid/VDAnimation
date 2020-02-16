@@ -119,7 +119,48 @@ final class AnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioni
     
 }
 
-final class InteractiveTransition: UIPercentDrivenInteractiveTransition {
+final class InteractiveTransition: UIPercentDrivenInteractiveTransition, UIViewImplicitlyAnimating {
+    
+//    var animation: VDAnimationProtocol
+    var delegate: AnimationDelegate?
+    var state = UIViewAnimatingState.inactive
+    var isRunning = false
+    var isReversed = false
+    var fractionComplete: CGFloat = 0.0 {
+        didSet { update(fractionComplete) }
+    }
+    
+    func startAnimation() {
+        guard delegate == nil else { return }
+//        delegate = animation.start()
+    }
+    
+    func startAnimation(afterDelay delay: TimeInterval) {
+        guard delay > 0 else { return startAnimation() }
+        DispatchTimer.execute(seconds: delay, startAnimation)
+    }
+    
+    func pauseAnimation() {
+        pause()
+    }
+    
+    func stopAnimation(_ withoutFinishing: Bool) {
+        delegate?.stop()
+    }
+    
+    func finishAnimation(at finalPosition: UIViewAnimatingPosition) {
+        switch finalPosition {
+        case .start:
+            pause()
+            fractionComplete = 0
+        case .current:
+            pause()
+        default:
+            break
+        }
+        finish()
+    }
+    
 }
 
 //final class ImplicitlyAnimating: NSObject, UIViewImplicitlyAnimating {

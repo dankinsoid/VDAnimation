@@ -120,7 +120,10 @@ public struct Sequential: VDAnimationProtocol {
     }
     
     private func setDuration(duration full: TimeInterval, options: AnimationOptions) -> [AnimationOptions] {
-        guard full > 0 else { return [AnimationOptions](repeating: options.chain.duration[.absolute(0)], count: animations.count) }
+        guard full > 0 else {
+            return [AnimationOptions](repeating: options.chain.duration[.absolute(0)], count: animations.count)
+
+        }
         var ks: [Double?] = []
         var childrenRelativeTime = 0.0
         for anim in animations {

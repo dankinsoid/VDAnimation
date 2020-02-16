@@ -125,6 +125,7 @@ public struct AnimatedPropertyMaker<R> {
     public subscript<D: UIKitPropertySettable>(dynamicMember keyPath: KeyPath<R, D>) -> AnimatedPropertyMaker<D> {
         AnimatedPropertyMaker<D>(object: { self.object()?[keyPath: keyPath] })
     }
+    
 }
 
 extension AnimatePropertyMapper where R: UIKitPropertySettable, T: ScalableConvertable {

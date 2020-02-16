@@ -8,7 +8,6 @@
 
 import Foundation
 
-
 public struct AnimationDelegate {
     public static let empty = AnimationDelegate { $0 }
     public static let end = AnimationDelegate {_ in .end }
@@ -54,3 +53,39 @@ final class MutableDelegate {
         }
     }
 }
+
+public struct Interactive {
+    
+    public var percent: Double {
+        get { getter() }
+        nonmutating set { setter(newValue) }
+    }
+    private let getter: () -> Double
+    private let setter: (Double) -> ()
+    private let player: () -> AnimationDelegate
+    private let cancellable: () -> ()
+    
+    init(getter: @escaping () -> Double, setter: @escaping (Double) -> (), player: @escaping () -> AnimationDelegate, cancellable: @escaping () -> ()) {
+        self.getter = getter
+        self.setter = setter
+        self.player = player
+        self.cancellable = cancellable
+    }
+    
+    public func play() -> AnimationDelegate {
+        player()
+    }
+    
+    public func cancel() {
+        cancellable()
+    }
+    
+}
+
+// stop(at: start, end, percent)
+// pause() -> Interactive
+
+// Interactive
+// percent { get, set }
+// play() -> AnimationDelegate
+// cancel()
