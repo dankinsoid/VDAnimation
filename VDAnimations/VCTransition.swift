@@ -28,7 +28,7 @@ extension TransatableController {
     public func present<VC>(_ viewController: VC, animation: (Self, VC) -> ()) {}
 }
 
-final class TransitionDelegate: NSObject, UIViewControllerTransitioningDelegate {
+public final class TransitionDelegate: NSObject, UIViewControllerTransitioningDelegate {
    
     let presenting: (TransitionContext) -> VDAnimationProtocol
     
@@ -36,23 +36,23 @@ final class TransitionDelegate: NSObject, UIViewControllerTransitioningDelegate 
         self.presenting = presenting
     }
     
-    func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+    public func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         AnimatedTransitioning(self.presenting)
     }
     
-    func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+    public func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         nil
     }
     
-    func interactionControllerForPresentation(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
+    public func interactionControllerForPresentation(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
         nil
     }
     
-    func interactionControllerForDismissal(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
+    public func interactionControllerForDismissal(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
         nil
     }
     
-    func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {
+    public func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {
         nil
     }
     
@@ -61,7 +61,8 @@ final class TransitionDelegate: NSObject, UIViewControllerTransitioningDelegate 
 final class AnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioning {
     
     let presenting: (TransitionContext) -> VDAnimationProtocol
-    let defaultDuration = Double(UINavigationController.hideShowBarDuration)
+    let defaultDuration = TimeInterval(UINavigationController.hideShowBarDuration)
+    private var presentingAnimation: VDAnimationProtocol?
     
     init(_ presenting: @escaping (TransitionContext) -> VDAnimationProtocol) {
         self.presenting = presenting
@@ -69,7 +70,7 @@ final class AnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioni
     
     func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
         guard let context = transitionContext?.context else { return defaultDuration }
-        let animation = presenting(context)
+        let animation = presentAnimation(context)
         return animation.options.duration?.absolute ?? defaultDuration
     }
     
@@ -81,9 +82,8 @@ final class AnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioni
         containerView.addSubview(context.to)
         containerView.clipsToBounds = true
         containerView.sendSubviewToBack(context.to)
-//        let snapshot = toVC.view.snapshotView(afterScreenUpdates: true)!
         
-        let animation = presenting(context)
+        let animation = presentAnimation(context)
         
         let duration = animation.options.duration?.absolute ?? defaultDuration
         let options = AnimationOptions.empty.chain.duration[.absolute(duration)]
@@ -91,6 +91,13 @@ final class AnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioni
         animation.start(with: options) { _ in
             transitionContext.completeTransition(!transitionContext.transitionWasCancelled)
         }
+    }
+    
+    private func presentAnimation(_ context: TransitionContext) -> VDAnimationProtocol {
+        if let anim = presentingAnimation { return anim }
+        let animation = presentingAnimation ?? presenting(context)
+        presentingAnimation = animation
+        return animation
     }
     
 //    func interruptibleAnimator(using transitionContext: UIViewControllerContextTransitioning) -> UIViewImplicitlyAnimating {
