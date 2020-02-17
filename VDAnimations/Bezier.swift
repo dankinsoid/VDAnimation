@@ -264,3 +264,109 @@ extension NSLayoutConstraint.Axis {
     }
     
 }
+
+indirect enum Operation<T: FloatingPoint> {
+    case value(T), multiply(Operation<T>, Operation<T>), plus(Operation<T>, Operation<T>)
+    
+    func compute() -> T {
+        switch self {
+        case .value(let result):
+            return result
+        case .multiply(let lhs, let rhs):
+            return lhs.compute() * rhs.compute()
+        case .plus(let lhs, let rhs):
+            return lhs.compute() + rhs.compute()
+        }
+    }
+}
+
+indirect enum Func<T: BinaryFloatingPoint>: ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral {
+    typealias FloatLiteralType = Double
+    typealias IntegerLiteralType = Int
+    
+    case x, const(T), multiply(Func<T>), plus(Func<T>), pow(Func<T>), f(Func<T>, Func<T>)
+    
+    init(floatLiteral value: Double) {
+        self = .const(T.init(value))
+    }
+    
+    init(integerLiteral value: Int) {
+        self = .const(T.init(value))
+    }
+    
+    subscript(_ value: T) -> T {
+        switch self {
+        case .x:
+            return value
+        case .const(let result):
+            return result
+        case .multiply(let rhs):
+            return value * rhs[value]
+        case .plus(let rhs):
+            return value + rhs[value]
+        case .f(let f, let g):
+            return f[g[value]]
+        case .pow(let rhs):
+            let power = Double(rhs[value])
+            if power == -1 { return 1 / value }
+            return T.init(Darwin.pow(Double(value), power))
+        }
+    }
+    
+//    subscript(_ value: Func<T>) -> Func<T> {
+//        .f(self, value)
+//    }
+    
+    /// f(x) = x * k, f(x) = x / k
+    /// y = x / (x + 2), y * (x + 2) = x, y * x + y * 2 = x , 2 * y / (1 - y);
+    /// f(x) = x, x = f(x)
+    /// f(x) = 2, x = any
+    /// f(x) = x + 2, x = f(x) - 2
+    /// x + 2 + 4, (x + 2) + 3, .f(.plus(.const(3)), .plus(.const(2)))
+    /// f(x) = x ^ 2, x = f(x) ^ 0.5
+    
+//    var reverse: Func<T> {
+//        switch self {
+//        case .x:
+//            return .x
+//        case .const:
+//            return .multiply(1)
+//        case .multiply(let rhs):
+//            return .x / rhs
+//        case .plus(let rhs):
+//            return 0 - rhs
+//        case .pow(let power):
+//            return .pow(<#T##Func<BinaryFloatingPoint>#>)
+//        case .f(_, _):
+//            <#code#>
+//        }
+//    }
+    
+    public static func +(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> {
+        .f(.plus(rhs), lhs)
+    }
+    
+    public static func *(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> {
+        .f(.multiply(rhs), lhs)
+    }
+    
+    public static func /(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> {
+       lhs * (rhs ^ -1)
+    }
+    
+    public static func ^(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> {
+        .f(.pow(rhs), lhs)
+    }
+    
+    public static func -(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> {
+        lhs + (-1 * rhs)
+    }
+    
+}
+
+prefix func -<T: BinaryFloatingPoint>( _ rhs: Func<T>) -> Func<T> { -1 * rhs }
+prefix func +<T: BinaryFloatingPoint>( _ rhs: Func<T>) -> Func<T> { rhs }
+
+let fun: Func<Double> = (.x * 3) ^ (.x - 1) + 3 / .x
+
+let m = fun[9]
