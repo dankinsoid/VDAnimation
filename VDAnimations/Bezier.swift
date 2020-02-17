@@ -284,7 +284,7 @@ indirect enum Func<T: BinaryFloatingPoint>: ExpressibleByFloatLiteral, Expressib
     typealias FloatLiteralType = Double
     typealias IntegerLiteralType = Int
     
-    case x, const(T), multiply(Func<T>), plus(Func<T>), pow(Func<T>), f(Func<T>, Func<T>)
+    case x, const(T), multiply(Func<T>, Func<T>), plus(Func<T>, Func<T>), pow(Func<T>, Func<T>)
     
     init(floatLiteral value: Double) {
         self = .const(T.init(value))
@@ -300,16 +300,16 @@ indirect enum Func<T: BinaryFloatingPoint>: ExpressibleByFloatLiteral, Expressib
             return value
         case .const(let result):
             return result
-        case .multiply(let rhs):
-            return value * rhs[value]
-        case .plus(let rhs):
-            return value + rhs[value]
-        case .f(let f, let g):
-            return f[g[value]]
-        case .pow(let rhs):
+        case .multiply(let lhs, let rhs):
+            return lhs[value] * rhs[value]
+        case .plus(let lhs, let rhs):
+            return lhs[value] + rhs[value]
+//        case .f(let f, let g):
+//            return f[g[value]]
+        case .pow(let lhs, let rhs):
             let power = Double(rhs[value])
             if power == -1 { return 1 / value }
-            return T.init(Darwin.pow(Double(value), power))
+            return T.init(Darwin.pow(Double(lhs[value]), power))
         }
     }
     
@@ -342,31 +342,16 @@ indirect enum Func<T: BinaryFloatingPoint>: ExpressibleByFloatLiteral, Expressib
 //        }
 //    }
     
-    public static func +(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> {
-        .f(.plus(rhs), lhs)
-    }
-    
-    public static func *(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> {
-        .f(.multiply(rhs), lhs)
-    }
-    
-    public static func /(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> {
-       lhs * (rhs ^ -1)
-    }
-    
-    public static func ^(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> {
-        .f(.pow(rhs), lhs)
-    }
-    
-    public static func -(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> {
-        lhs + (-1 * rhs)
-    }
-    
+    public static func +(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { .plus(lhs, rhs) }
+    public static func *(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { .multiply(lhs, rhs) }
+    public static func /(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { lhs * (rhs ^ -1) }
+    public static func ^(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { .pow(lhs, rhs) }
+    public static func -(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { lhs + (-1 * rhs) }
 }
 
 prefix func -<T: BinaryFloatingPoint>( _ rhs: Func<T>) -> Func<T> { -1 * rhs }
 prefix func +<T: BinaryFloatingPoint>( _ rhs: Func<T>) -> Func<T> { rhs }
 
-let fun: Func<Double> = (.x * 3) ^ (.x - 1) + 3 / .x
+let fun: Func<Double> = (.x * 3) ^ (.x - 1) + 3
 
 let m = fun[9]
