@@ -82,8 +82,6 @@ final class AnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioni
         guard let context = transitionContext.context else { return }
         let containerView = context.container
         
-        print(context.from.subviews.count)
-        
         containerView.backgroundColor = .clear
         containerView.addSubview(context.to)
         containerView.clipsToBounds = true

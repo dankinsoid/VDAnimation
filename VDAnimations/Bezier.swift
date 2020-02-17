@@ -284,7 +284,7 @@ indirect enum Func<T: BinaryFloatingPoint>: ExpressibleByFloatLiteral, Expressib
     typealias FloatLiteralType = Double
     typealias IntegerLiteralType = Int
     
-    case x, const(T), multiply(Func<T>, Func<T>), plus(Func<T>, Func<T>), pow(Func<T>, Func<T>)
+    case x, const(T), multiply(Func), plus(Func), pow(Func), f(Func, Func), ln(Func)
     
     init(floatLiteral value: Double) {
         self = .const(T.init(value))
@@ -300,16 +300,139 @@ indirect enum Func<T: BinaryFloatingPoint>: ExpressibleByFloatLiteral, Expressib
             return value
         case .const(let result):
             return result
-        case .multiply(let lhs, let rhs):
-            return lhs[value] * rhs[value]
-        case .plus(let lhs, let rhs):
-            return lhs[value] + rhs[value]
-//        case .f(let f, let g):
-//            return f[g[value]]
-        case .pow(let lhs, let rhs):
+        case .multiply(let rhs):
+            return value * rhs[value]
+        case .plus(let rhs):
+            return value + rhs[value]
+        case .f(let f, let g):
+            return f.simplify(value)[g[value]]
+        case .pow(let rhs):
             let power = Double(rhs[value])
             if power == -1 { return 1 / value }
-            return T.init(Darwin.pow(Double(lhs[value]), power))
+            return T.init(Darwin.pow(Double(value), power))
+        case .ln(let rhs):
+            return T.init(Darwin.log(Double(rhs[value])))
+        }
+    }
+    
+    func simplify(_ value: T) -> Func {
+        switch self {
+        case .x, .const:
+            return self
+        case .multiply(let rhs):
+            return .multiply(.const(rhs[value]))
+        case .plus(let rhs):
+            return .plus(.const(rhs[value]))
+        case .f(let f, let g):
+            return .f(f.simplify(value), .const(g[value]))
+        case .pow(let rhs):
+            return .pow(.const(rhs[value]))
+        case .ln(let rhs):
+            return .ln(.const(rhs[value]))
+        }
+    }
+    
+    func simplify() -> Func {
+        switch self {
+        case .x, .const:
+            return self
+        case .multiply(let rhs):
+            let simp = rhs.simplify()
+            if let k = simp.count(), k == 1 {
+                return .x
+            }
+            return .multiply(simp)
+        case .plus(let rhs):
+            let simp = rhs.simplify()
+            if let k = simp.count(), k == 0 {
+                return .x
+            }
+            return .plus(simp)
+        case .f(let f, let g):
+            ///2 + 3 + 5 = .f(.plus(.f(.plus(3), 2)), 5)
+            let simp = g.simplify()
+            if let k = simp.count() {
+                return f.simplify(k)
+            }
+            return .f(f.simplify(), simp)
+        case .pow(let rhs):
+            let simp = rhs.simplify()
+            if let k = simp.count() {
+                if k == 0 {
+                    return 1
+                } else if k == 1 {
+                    return .x
+                }
+            }
+            return .pow(simp)
+        case .ln(let rhs):
+            if let k = rhs.simplify().count(), Double(k) == M_E {
+                return 1
+            }
+            return .ln(rhs.simplify())
+        }
+    }
+    
+    func count() -> T? {
+        switch self {
+        case .const(let result):
+            return result
+        case .ln(let rhs):
+            if let value = rhs.count() {
+                return Func.ln(.const(value))[value]
+            }
+        case .f(let f, let g):
+            if let value = g.count() {
+                return Func.f(f, .const(value))[value]
+            }
+        default:
+            break
+        }
+        return nil
+    }
+    
+    var derivative: Func {
+        switch self {
+        case .x:
+            return 1
+        case .const:
+            return 0
+        case .multiply(let rhs):
+            return rhs + .x * rhs.derivative
+        case .plus(let rhs):
+            return 1 + rhs.derivative
+        case .f(let f, let g):
+            switch f {
+            case .x, .const, .ln:
+                return f.of(g).derivative
+            case .multiply(let rhs):
+                return (rhs.derivative * g) + (rhs * g.derivative)
+                    //.f(.plus(.f(.multiply(rhs.derivative), g)), .f(.multiply(g.derivative), rhs))
+            case .plus(let rhs):
+                return rhs.derivative + g.derivative
+//                return .f(.plus(rhs.derivative), g.derivative)
+            case .f:
+                return .f(of(f).derivative * f.derivative, g)
+            case .pow(let rhs):
+                return self * (.ln(g) * rhs).derivative
+            }
+        case .pow(let rhs):
+            ///x ^ g(x) = e ^ (ln(x) * g(x)) = e^(f(x)); f'(x) * e^f(x) = (ln(x) * g(x))' * e^(ln(x) * g(x))
+            return (.ln(.x) * rhs).derivative * self
+        case .ln(let rhs):
+            return rhs.derivative / rhs
+        }
+    }
+    
+    func of(_ x: Func) -> Func {
+        switch self {
+        case .x:                    return x
+        case .const:                return self
+        case .multiply(let rhs):    return .multiply(rhs.of(x))
+        case .plus(let rhs):        return .plus(rhs.of(x))
+        case .f(let f, let g):      return .f(f.of(x), g.of(x))
+        case .pow(let rhs):         return .pow(rhs.of(x))
+        case .ln(let rhs):          return .ln(rhs.of(x))
         }
     }
     
@@ -342,16 +465,52 @@ indirect enum Func<T: BinaryFloatingPoint>: ExpressibleByFloatLiteral, Expressib
 //        }
 //    }
     
-    public static func +(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { .plus(lhs, rhs) }
-    public static func *(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { .multiply(lhs, rhs) }
+    public static func +(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { .f(.plus(rhs), lhs) }
+    public static func *(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { .f(.multiply(rhs), lhs) }
     public static func /(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { lhs * (rhs ^ -1) }
-    public static func ^(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { .pow(lhs, rhs) }
+    public static func ^(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { .f(.pow(rhs), lhs) }
     public static func -(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { lhs + (-1 * rhs) }
 }
 
 prefix func -<T: BinaryFloatingPoint>( _ rhs: Func<T>) -> Func<T> { -1 * rhs }
 prefix func +<T: BinaryFloatingPoint>( _ rhs: Func<T>) -> Func<T> { rhs }
 
-let fun: Func<Double> = (.x * 3) ^ (.x - 1) + 3
-
-let m = fun[9]
+extension Func: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .x:
+            return "x"
+        case .const(let result):
+            return "\(result)"
+        case .multiply(let rhs):
+            return " * " + rhs.description
+        case .plus(let rhs):
+            return " + " + rhs.description
+        case .f(let f, let g):
+            return "(\(g.description)\(f.description))"
+        case .pow(let rhs):
+            return "^" + rhs.description
+        case .ln(let rhs):
+            return "ln(\(rhs))"
+        }
+    }
+    
+    var sign: String {
+        switch self {
+        case .x:
+            return "1"
+        case .const(let result):
+            return "C"
+        case .multiply(let rhs):
+            return "*"
+        case .plus(let rhs):
+            return "+"
+        case .f(let f, let g):
+            return "f(x)"
+        case .pow(let rhs):
+            return "^"
+        case .ln:
+            return "ln"
+        }
+    }
+}
