@@ -13,9 +13,11 @@ public enum Curve {
 //    case bezier(BezierCurve),  //spring
 }
 
-//easeIn = x^1.75;
-//easeOut = x^1.1(2-x)
-//easeInOut = 2x^2, x<=0.5; -1+(2-2x)x, x > 0.5
+//easeIn: y = x^1.75; x = y^(4/7)
+//easeOut: y = x^1.1(2-x) = 2x - x^2; x^2 - 2x + y = 0; D = 4 - 4y; x = 2 +- √(4-4y)/2 = 2 - √(1 - y)
+//easeInOut = 2x^2, x<=0.5; 1-2(x-1)^2, x > 0.5
+// sqrt(y/2)
+//y = -2x^2 + 2x - 1; 2x^2 - 2x + y-1 = 0; D = 12 - 8y; x = 0.5(1 +- sqrt(3 - 2y))
 
 //f(x)
 //y0+f(x0+x(x1-x0))*(y1-y0)
@@ -26,20 +28,31 @@ public enum Curve {
 //p = (p'- d)/k
 
 public struct BezierCurve: Equatable {
-    public static let linear = BezierCurve(.zero, .one, { $0 })
-    public static let ease = BezierCurve((x: 0.25, y: 0.1), (x: 0.25, y: 1), nil)
-    public static let easeIn = BezierCurve((x: 0.45, y: 0), (1, 1), { pow($0, 1.75) })
-    public static let easeOut = BezierCurve((0, 0), (x: 0.55, y: 1), { pow($0, 1.1) * (2 - $0) }) //0.58
-    public static let easeInOut = BezierCurve(easeIn.point1, easeOut.point2, {
-        let sqr = $0 * $0
-        return $0 < 0.5 ? 2 * sqr : ($0 * (2 - 2 * $0) - 1)
-    })
+    public static let linear = BezierCurve(.zero, .one, yx: { $0 }, xy: { $0 })
+    public static let ease = BezierCurve((x: 0.25, y: 0.1), (x: 0.25, y: 1), yx: nil, xy: nil)
+    public static let easeIn = BezierCurve((x: 0.45, y: 0), (1, 1), yx: { pow($0, 1.75) }, xy: { pow($0, 4/7) })
+    public static let easeOut = BezierCurve((0, 0), (x: 0.55, y: 1), yx: { $0 * (2 - $0) }, xy: { 2 - sqrt(1 - $0) }) //0.58
+    public static let easeInOut = BezierCurve(
+        easeIn.point1, easeOut.point2,
+        yx: {
+                let sqr = ($0 - 1)
+                return $0 < 0.5 ? 2 * $0 * $0 : 1 - 2 * sqr * sqr
+            },
+        xy: {
+            if $0 < 0.5 {
+                return sqrt($0 / 2)
+            } else {
+                return 1 - sqrt((1 - $0) / 2)
+            }
+        }
+    )
     
     private var start: CGPoint = .zero
     public var point1: CGPoint
     public var point2: CGPoint
     private var end: CGPoint = .one
-    private var approximate: ((CGFloat) -> CGFloat)?
+    private let yByX: ((CGFloat) -> CGFloat)?
+    private let xByY: ((CGFloat) -> CGFloat)?
     
     public var reversed: BezierCurve {
         BezierCurve((1 - point2.x, 1 - point2.y), (1 - point1.x, 1 - point1.y))
@@ -60,23 +73,25 @@ public struct BezierCurve: Equatable {
     }
     
     public init(_ p1: CGPoint, _ p2: CGPoint) {
-        self = BezierCurve(p1, p2, nil)
+        self = BezierCurve(p1, p2, yx: nil, xy: nil)
     }
     
-    private init<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F), _ fun: ((CGFloat) -> CGFloat)?) {
+    private init<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F), yx: ((CGFloat) -> CGFloat)?, xy: ((CGFloat) -> CGFloat)?) {
         point1 = CGPoint(x: CGFloat(p1.x), y: CGFloat(p1.y))
         point2 = CGPoint(x: CGFloat(p2.x), y: CGFloat(p2.y))
-        approximate = fun
+        yByX = yx
+        xByY = xy
     }
     
-    private init(_ p1: CGPoint, _ p2: CGPoint, _ fun: ((CGFloat) -> CGFloat)?) {
+    private init(_ p1: CGPoint, _ p2: CGPoint, yx: ((CGFloat) -> CGFloat)?, xy: ((CGFloat) -> CGFloat)?) {
         point1 = p1
         point2 = p2
-        approximate = fun
+        yByX = yx
+        xByY = xy
     }
     
     public init<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F)) {
-        self = BezierCurve(p1, p2, nil)
+        self = BezierCurve(p1, p2, yx: nil, xy: nil)
     }
 //    x(t) = (1-t)^3 * x0 + 3t(1-t)^2 * x1 + 3t^2 * (1-t) * x2 + t^3 * x3
 //    y(t) = (1-t)^3 * y0 + 3t(1-t)^2 * y1 + 3t^2 * (1-t) * y2 + t^3 * y3
@@ -116,16 +131,27 @@ public struct BezierCurve: Equatable {
         let p234 = CGPoint.between(p23, p34, k: coefficient)
         let p1234 = CGPoint.between(p123, p234, k: coefficient)
         
-        var curve1 = BezierCurve(p12, p123)
+        var curve1 = BezierCurve(p12, p123, yx: yByX, xy: xByY)
         curve1.end = p1234
-        var curve2 = BezierCurve(p234, p34)
+        var curve2 = BezierCurve(p234, p34, yx: yByX, xy: xByY)
         curve2.start = p1234
         return (curve1, curve2)
     }
     
     public var normalized: BezierCurve {
         let length = end - start
-        return BezierCurve((point1 - start) / length, (point2 - start) / length)
+        let p0 = start
+        var yx: ((CGFloat) -> CGFloat)?
+        var xy: ((CGFloat) -> CGFloat)?
+        if let f = yByX {
+            let yk = 1 / length.y
+            yx = { yk * (f($0 * length.x + p0.x) - p0.y) }
+        }
+        if let f = xByY {
+            let xk = 1 / length.y
+            xy = { xk * (f($0 * length.y + p0.y) - p0.x) }
+        }
+        return BezierCurve((point1 - start) / length, (point2 - start) / length, yx: yx, xy: xy)
     }
     
     public func split(ranges: [ClosedRange<Double>]) -> [(BezierCurve, Double)] {
@@ -147,9 +173,6 @@ public struct BezierCurve: Equatable {
     
     private func findT(_ y: CGFloat) -> CGFloat {
         guard y > 0, y < 1 else { return y }
-        if let fun = approximate {
-            
-        }
         var t: CGFloat = 0.0
         var y1: CGFloat = 0.0
         while t < 1, y1 < y {
@@ -159,8 +182,11 @@ public struct BezierCurve: Equatable {
         return max(0, t - 0.01)
     }
     
-    func progress(at time: CGFloat) -> CGFloat {
+    public func progress(at time: CGFloat) -> CGFloat {
         guard time > 0, time < 1 else { return time }
+        if let yx = yByX {
+            return yx(time)
+        }
         var t: CGFloat = 0.0
         var x1: CGFloat = 0.0
         while t < 1, x1 < time {
@@ -263,254 +289,4 @@ extension NSLayoutConstraint.Axis {
         }
     }
     
-}
-
-indirect enum Operation<T: FloatingPoint> {
-    case value(T), multiply(Operation<T>, Operation<T>), plus(Operation<T>, Operation<T>)
-    
-    func compute() -> T {
-        switch self {
-        case .value(let result):
-            return result
-        case .multiply(let lhs, let rhs):
-            return lhs.compute() * rhs.compute()
-        case .plus(let lhs, let rhs):
-            return lhs.compute() + rhs.compute()
-        }
-    }
-}
-
-indirect enum Func<T: BinaryFloatingPoint>: ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral {
-    typealias FloatLiteralType = Double
-    typealias IntegerLiteralType = Int
-    
-    case x, const(T), multiply(Func), plus(Func), pow(Func), f(Func, Func), ln(Func)
-    
-    init(floatLiteral value: Double) {
-        self = .const(T.init(value))
-    }
-    
-    init(integerLiteral value: Int) {
-        self = .const(T.init(value))
-    }
-    
-    subscript(_ value: T) -> T {
-        switch self {
-        case .x:
-            return value
-        case .const(let result):
-            return result
-        case .multiply(let rhs):
-            return value * rhs[value]
-        case .plus(let rhs):
-            return value + rhs[value]
-        case .f(let f, let g):
-            return f.simplify(value)[g[value]]
-        case .pow(let rhs):
-            let power = Double(rhs[value])
-            if power == -1 { return 1 / value }
-            return T.init(Darwin.pow(Double(value), power))
-        case .ln(let rhs):
-            return T.init(Darwin.log(Double(rhs[value])))
-        }
-    }
-    
-    func simplify(_ value: T) -> Func {
-        switch self {
-        case .x, .const:
-            return self
-        case .multiply(let rhs):
-            return .multiply(.const(rhs[value]))
-        case .plus(let rhs):
-            return .plus(.const(rhs[value]))
-        case .f(let f, let g):
-            return .f(f.simplify(value), .const(g[value]))
-        case .pow(let rhs):
-            return .pow(.const(rhs[value]))
-        case .ln(let rhs):
-            return .ln(.const(rhs[value]))
-        }
-    }
-    
-    func simplify() -> Func {
-        switch self {
-        case .x, .const:
-            return self
-        case .multiply(let rhs):
-            let simp = rhs.simplify()
-            if let k = simp.count(), k == 1 {
-                return .x
-            }
-            return .multiply(simp)
-        case .plus(let rhs):
-            let simp = rhs.simplify()
-            if let k = simp.count(), k == 0 {
-                return .x
-            }
-            return .plus(simp)
-        case .f(let f, let g):
-            ///2 + 3 + 5 = .f(.plus(.f(.plus(3), 2)), 5)
-            let simp = g.simplify()
-            if let k = simp.count() {
-                return f.simplify(k)
-            }
-            return .f(f.simplify(), simp)
-        case .pow(let rhs):
-            let simp = rhs.simplify()
-            if let k = simp.count() {
-                if k == 0 {
-                    return 1
-                } else if k == 1 {
-                    return .x
-                }
-            }
-            return .pow(simp)
-        case .ln(let rhs):
-            if let k = rhs.simplify().count(), Double(k) == M_E {
-                return 1
-            }
-            return .ln(rhs.simplify())
-        }
-    }
-    
-    func count() -> T? {
-        switch self {
-        case .const(let result):
-            return result
-        case .ln(let rhs):
-            if let value = rhs.count() {
-                return Func.ln(.const(value))[value]
-            }
-        case .f(let f, let g):
-            if let value = g.count() {
-                return Func.f(f, .const(value))[value]
-            }
-        default:
-            break
-        }
-        return nil
-    }
-    
-    var derivative: Func {
-        switch self {
-        case .x:
-            return 1
-        case .const:
-            return 0
-        case .multiply(let rhs):
-            return rhs + .x * rhs.derivative
-        case .plus(let rhs):
-            return 1 + rhs.derivative
-        case .f(let f, let g):
-            switch f {
-            case .x, .const, .ln:
-                return f.of(g).derivative
-            case .multiply(let rhs):
-                return (rhs.derivative * g) + (rhs * g.derivative)
-                    //.f(.plus(.f(.multiply(rhs.derivative), g)), .f(.multiply(g.derivative), rhs))
-            case .plus(let rhs):
-                return rhs.derivative + g.derivative
-//                return .f(.plus(rhs.derivative), g.derivative)
-            case .f:
-                return .f(of(f).derivative * f.derivative, g)
-            case .pow(let rhs):
-                return self * (.ln(g) * rhs).derivative
-            }
-        case .pow(let rhs):
-            ///x ^ g(x) = e ^ (ln(x) * g(x)) = e^(f(x)); f'(x) * e^f(x) = (ln(x) * g(x))' * e^(ln(x) * g(x))
-            return (.ln(.x) * rhs).derivative * self
-        case .ln(let rhs):
-            return rhs.derivative / rhs
-        }
-    }
-    
-    func of(_ x: Func) -> Func {
-        switch self {
-        case .x:                    return x
-        case .const:                return self
-        case .multiply(let rhs):    return .multiply(rhs.of(x))
-        case .plus(let rhs):        return .plus(rhs.of(x))
-        case .f(let f, let g):      return .f(f.of(x), g.of(x))
-        case .pow(let rhs):         return .pow(rhs.of(x))
-        case .ln(let rhs):          return .ln(rhs.of(x))
-        }
-    }
-    
-//    subscript(_ value: Func<T>) -> Func<T> {
-//        .f(self, value)
-//    }
-    
-    /// f(x) = x * k, f(x) = x / k
-    /// y = x / (x + 2), y * (x + 2) = x, y * x + y * 2 = x , 2 * y / (1 - y);
-    /// f(x) = x, x = f(x)
-    /// f(x) = 2, x = any
-    /// f(x) = x + 2, x = f(x) - 2
-    /// x + 2 + 4, (x + 2) + 3, .f(.plus(.const(3)), .plus(.const(2)))
-    /// f(x) = x ^ 2, x = f(x) ^ 0.5
-    
-//    var reverse: Func<T> {
-//        switch self {
-//        case .x:
-//            return .x
-//        case .const:
-//            return .multiply(1)
-//        case .multiply(let rhs):
-//            return .x / rhs
-//        case .plus(let rhs):
-//            return 0 - rhs
-//        case .pow(let power):
-//            return .pow(<#T##Func<BinaryFloatingPoint>#>)
-//        case .f(_, _):
-//            <#code#>
-//        }
-//    }
-    
-    public static func +(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { .f(.plus(rhs), lhs) }
-    public static func *(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { .f(.multiply(rhs), lhs) }
-    public static func /(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { lhs * (rhs ^ -1) }
-    public static func ^(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { .f(.pow(rhs), lhs) }
-    public static func -(_ lhs: Func<T>, _ rhs: Func<T>) -> Func<T> { lhs + (-1 * rhs) }
-}
-
-prefix func -<T: BinaryFloatingPoint>( _ rhs: Func<T>) -> Func<T> { -1 * rhs }
-prefix func +<T: BinaryFloatingPoint>( _ rhs: Func<T>) -> Func<T> { rhs }
-
-extension Func: CustomStringConvertible {
-    var description: String {
-        switch self {
-        case .x:
-            return "x"
-        case .const(let result):
-            return "\(result)"
-        case .multiply(let rhs):
-            return " * " + rhs.description
-        case .plus(let rhs):
-            return " + " + rhs.description
-        case .f(let f, let g):
-            return "(\(g.description)\(f.description))"
-        case .pow(let rhs):
-            return "^" + rhs.description
-        case .ln(let rhs):
-            return "ln(\(rhs))"
-        }
-    }
-    
-    var sign: String {
-        switch self {
-        case .x:
-            return "1"
-        case .const(let result):
-            return "C"
-        case .multiply(let rhs):
-            return "*"
-        case .plus(let rhs):
-            return "+"
-        case .f(let f, let g):
-            return "f(x)"
-        case .pow(let rhs):
-            return "^"
-        case .ln:
-            return "ln"
-        }
-    }
 }
