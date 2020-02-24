@@ -182,14 +182,14 @@ public struct BezierCurve: Equatable {
         return max(0, t - 0.01)
     }
     
-    public func progress(at time: CGFloat) -> CGFloat {
-        guard time > 0, time < 1 else { return time }
+    public func y(at x: CGFloat) -> CGFloat {
+        guard x > 0, x < 1 else { return x }
         if let yx = yByX {
-            return yx(time)
+            return yx(x)
         }
         var t: CGFloat = 0.0
         var x1: CGFloat = 0.0
-        while t < 1, x1 < time {
+        while t < 1, x1 < x {
             t += 0.02
             x1 = value(t: t, axe: .horizontal)
         }

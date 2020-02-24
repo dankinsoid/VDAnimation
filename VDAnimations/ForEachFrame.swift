@@ -68,7 +68,7 @@ public struct ForEachFrame: VDAnimationProtocol {
     private func transform(options: AnimationOptions) -> ((CGFloat) -> CGFloat)? {
         guard let bezier = options.curve, bezier != .linear else { return curve }
         return {[curve] in
-            bezier.progress(at: curve?($0) ?? $0)
+            bezier.y(at: curve?($0) ?? $0)
         }
     }
     
