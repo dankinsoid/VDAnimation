@@ -28,35 +28,17 @@ public enum Curve {
 //p = (p'- d)/k
 
 public struct BezierCurve: Equatable {
-    public static let linear = BezierCurve(.zero, .one, yx: { $0 }, xy: { $0 })
-    public static let ease = BezierCurve((x: 0.25, y: 0.1), (x: 0.25, y: 1), yx: nil, xy: nil)
-    public static let easeIn = BezierCurve((x: 0.45, y: 0), (1, 1), yx: { pow($0, 1.75) }, xy: { pow($0, 4/7) })
-    public static let easeOut = BezierCurve((0, 0), (x: 0.55, y: 1), yx: { $0 * (2 - $0) }, xy: { 2 - sqrt(1 - $0) }) //0.58
-    public static let easeInOut = BezierCurve(
-        easeIn.point1, easeOut.point2,
-        yx: {
-                let sqr = ($0 - 1)
-                return $0 < 0.5 ? 2 * $0 * $0 : 1 - 2 * sqr * sqr
-            },
-        xy: {
-            if $0 < 0.5 {
-                return sqrt($0 / 2)
-            } else {
-                return 1 - sqrt((1 - $0) / 2)
-            }
-        }
-    )
+    public static let linear = BezierCurve(.zero, .one, .linear)
+    public static let ease = BezierCurve((x: 0.25, y: 0.1), (x: 0.25, y: 1), nil)
+    public static let easeIn = BezierCurve((x: 0.45, y: 0), (1, 1), .easeIn)
+    public static let easeOut = BezierCurve((0, 0), (x: 0.55, y: 1), .easeOut) //0.58
+    public static let easeInOut = BezierCurve(easeIn.point1, easeOut.point2, .easeInOut)
     
     private var start: CGPoint = .zero
     public var point1: CGPoint
     public var point2: CGPoint
     private var end: CGPoint = .one
-    private let yByX: ((CGFloat) -> CGFloat)?
-    private let xByY: ((CGFloat) -> CGFloat)?
-    
-    public var reversed: BezierCurve {
-        BezierCurve((1 - point2.x, 1 - point2.y), (1 - point1.x, 1 - point1.y))
-    }
+    private let approximate: Approximate?
     
     public var builtin: UIView.AnimationCurve? {
         switch self {
@@ -73,25 +55,23 @@ public struct BezierCurve: Equatable {
     }
     
     public init(_ p1: CGPoint, _ p2: CGPoint) {
-        self = BezierCurve(p1, p2, yx: nil, xy: nil)
+        self = BezierCurve(p1, p2, nil)
     }
     
-    private init<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F), yx: ((CGFloat) -> CGFloat)?, xy: ((CGFloat) -> CGFloat)?) {
+    private init<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F), _ approximate: Approximate?) {
         point1 = CGPoint(x: CGFloat(p1.x), y: CGFloat(p1.y))
         point2 = CGPoint(x: CGFloat(p2.x), y: CGFloat(p2.y))
-        yByX = yx
-        xByY = xy
+        self.approximate = approximate
     }
     
-    private init(_ p1: CGPoint, _ p2: CGPoint, yx: ((CGFloat) -> CGFloat)?, xy: ((CGFloat) -> CGFloat)?) {
+    private init(_ p1: CGPoint, _ p2: CGPoint, _ approximate: Approximate?) {
         point1 = p1
         point2 = p2
-        yByX = yx
-        xByY = xy
+        self.approximate = approximate
     }
     
     public init<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F)) {
-        self = BezierCurve(p1, p2, yx: nil, xy: nil)
+        self = BezierCurve(p1, p2, nil)
     }
 //    x(t) = (1-t)^3 * x0 + 3t(1-t)^2 * x1 + 3t^2 * (1-t) * x2 + t^3 * x3
 //    y(t) = (1-t)^3 * y0 + 3t(1-t)^2 * y1 + 3t^2 * (1-t) * y2 + t^3 * y3
@@ -131,27 +111,17 @@ public struct BezierCurve: Equatable {
         let p234 = CGPoint.between(p23, p34, k: coefficient)
         let p1234 = CGPoint.between(p123, p234, k: coefficient)
         
-        var curve1 = BezierCurve(p12, p123, yx: yByX, xy: xByY)
+        var curve1 = BezierCurve(p12, p123, approximate)
         curve1.end = p1234
-        var curve2 = BezierCurve(p234, p34, yx: yByX, xy: xByY)
+        var curve2 = BezierCurve(p234, p34, approximate)
         curve2.start = p1234
         return (curve1, curve2)
     }
     
     public var normalized: BezierCurve {
         let length = end - start
-        let p0 = start
-        var yx: ((CGFloat) -> CGFloat)?
-        var xy: ((CGFloat) -> CGFloat)?
-        if let f = yByX {
-            let yk = 1 / length.y
-            yx = { yk * (f($0 * length.x + p0.x) - p0.y) }
-        }
-        if let f = xByY {
-            let xk = 1 / length.y
-            xy = { xk * (f($0 * length.y + p0.y) - p0.x) }
-        }
-        return BezierCurve((point1 - start) / length, (point2 - start) / length, yx: yx, xy: xy)
+        let app = approximate?.normalized(start: start, end: end)
+        return BezierCurve((point1 - start) / length, (point2 - start) / length, app)
     }
     
     public func split(ranges: [ClosedRange<Double>]) -> [(BezierCurve, Double)] {
@@ -184,8 +154,8 @@ public struct BezierCurve: Equatable {
     
     public func y(at x: CGFloat) -> CGFloat {
         guard x > 0, x < 1 else { return x }
-        if let yx = yByX {
-            return yx(x)
+        if let app = approximate {
+            return app.y(x)
         }
         var t: CGFloat = 0.0
         var x1: CGFloat = 0.0
@@ -287,6 +257,55 @@ extension NSLayoutConstraint.Axis {
         case .horizontal:   return .vertical
         default:            return .horizontal
         }
+    }
+    
+}
+
+fileprivate struct Approximate {
+    private let yByX: (CGFloat) -> CGFloat
+    private let xByY: (CGFloat) -> CGFloat
+    var start: CGPoint
+    var end: CGPoint
+    
+    static let linear = Approximate(yx: { $0 }, xy: { $0 })
+    static let easeIn = Approximate(yx: { pow($0, 1.75) }, xy: { pow($0, 4/7) })
+    static let easeOut = Approximate(yx: { $0 * (2 - $0) }, xy: { 2 - sqrt(1 - $0) }) //0.58
+    static let easeInOut = Approximate(
+        yx: {
+            let sqr = ($0 - 1)
+            return $0 < 0.5 ? 2 * $0 * $0 : 1 - 2 * sqr * sqr
+        },
+        xy: {
+            if $0 < 0.5 {
+                return sqrt($0 / 2)
+            } else {
+                return 1 - sqrt((1 - $0) / 2)
+            }
+        }
+    )
+    
+    init(_ p1: CGPoint = .zero, _ p2: CGPoint = .one, yx: @escaping (CGFloat) -> CGFloat, xy: @escaping (CGFloat) -> CGFloat) {
+        start = p1
+        end = p2
+        yByX = yx
+        xByY = xy
+    }
+    
+    func normalized(start p0: CGPoint, end p1: CGPoint) -> Approximate {
+        let lenght = end - start
+        let newStart = lenght * p0
+        let newEnd = lenght * p1
+        return Approximate(newStart, newEnd, yx: yByX, xy: xByY)
+    }
+    
+    func x(_ y: CGFloat) -> CGFloat {
+        let lenght = end - start
+        return (xByY(y * lenght.y + start.y) - start.x) / lenght.x
+    }
+    
+    func y(_ x: CGFloat) -> CGFloat {
+        let lenght = end - start
+        return (yByX(x * lenght.x + start.x) - start.y) / lenght.y
     }
     
 }
