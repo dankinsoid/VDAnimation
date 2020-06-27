@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'VDAnimation'
-  s.version          = '0.1.6'
+  s.version          = '0.1.7'
   s.summary          = 'A short description of VDAnimation.'
   s.description      = <<-DESC
 TODO: Add long description of the pod here.
@@ -23,4 +23,5 @@ TODO: Add long description of the pod here.
   s.swift_versions = '5.1'
   s.source_files = 'VDAnimations/**/*'
   s.frameworks = 'UIKit'
+  s.dependency 'ConstraintsOperators'
 end

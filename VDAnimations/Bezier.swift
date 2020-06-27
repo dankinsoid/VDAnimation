@@ -41,12 +41,10 @@ public struct BezierCurve: Equatable {
         }
     }
     
-    var export: String {
-        return point1.export + "," + point2.export
-    }
-    
-    func exportWith(name: String) -> String {
-        return "\"\(name)\":\"\(export)\""
+    public init<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F)) {
+        point1 = CGPoint(x: CGFloat(p1.x), y: CGFloat(p1.y))
+        point2 = CGPoint(x: CGFloat(p2.x), y: CGFloat(p2.y))
+        self = BezierCurve(point1, point2)
     }
     
     public init(_ p1: CGPoint, _ p2: CGPoint) {
@@ -171,50 +169,8 @@ public struct BezierCurve: Equatable {
         return 0
     }
     
-    
     public static func between(_ c1: BezierCurve, _ c2: BezierCurve, k: CGFloat = 0.5) -> BezierCurve {
         return BezierCurve(CGPoint.between(c1.point1, c2.point1, k: k), CGPoint.between(c1.point2, c2.point2, k: k))
-    }
-    
-}
-
-extension CGPoint {
-    
-    var export: String {
-        return x.export + "," + y.export
-    }
-    
-    static let one = CGPoint(x: 1, y: 1)
-    
-    static func between(_ p1: CGPoint, _ p2: CGPoint, k: CGFloat) -> CGPoint {
-        return CGPoint(x: p1.x + (p2.x - p1.x) * k, y: p1.y + (p2.y - p1.y) * k)
-    }
-    
-    static func /(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
-        return CGPoint(x: lhs.x / rhs.x, y: lhs.y / rhs.y)
-    }
-    
-    static func *(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
-        return CGPoint(x: lhs.x * rhs.x, y: lhs.y * rhs.y)
-    }
-    
-    static func *(_ lhs: CGPoint, _ rhs: CGSize) -> CGPoint {
-        return CGPoint(x: lhs.x * rhs.width, y: lhs.y * rhs.height)
-    }
-    
-    static func +(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
-        return CGPoint(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
-    }
-    
-    static func -(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
-        return CGPoint(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
-    }
-    
-    subscript(_ axe: NSLayoutConstraint.Axis) -> CGFloat {
-        switch axe {
-        case .horizontal: return x
-        case .vertical: return y
-        }
     }
     
 }
@@ -424,50 +380,50 @@ extension CGFloat {
 //
 //}
 //
-//extension CGPoint: AdditiveArithmetic {
-//
-//    public static let one = CGPoint(x: 1, y: 1)
-//
-//    public static func between(_ p1: CGPoint, _ p2: CGPoint, k: CGFloat) -> CGPoint {
-//        return CGPoint(x: p1.x + (p2.x - p1.x) * k, y: p1.y + (p2.y - p1.y) * k)
-//    }
-//
-//    public static func /(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
-//        return CGPoint(x: lhs.x / rhs.x, y: lhs.y / rhs.y)
-//    }
-//
-//    public static func *(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
-//        return CGPoint(x: lhs.x * rhs.x, y: lhs.y * rhs.y)
-//    }
-//
-//    public static func *(_ lhs: CGPoint, _ rhs: CGSize) -> CGPoint {
-//        return CGPoint(x: lhs.x * rhs.width, y: lhs.y * rhs.height)
-//    }
-//
-//    public static func +(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
-//        return CGPoint(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
-//    }
-//
-//    public static func -(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
-//        return CGPoint(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
-//    }
-//
-//    public static func +=(lhs: inout CGPoint, rhs: CGPoint) {
-//        lhs = lhs + rhs
-//    }
-//
-//    public static func -=(lhs: inout CGPoint, rhs: CGPoint) {
-//        lhs = lhs - rhs
-//    }
-//
-//    public subscript(_ axe: NSLayoutConstraint.Axis) -> CGFloat {
-//        switch axe {
-//        case .horizontal:   return x
-//        default:            return y
-//        }
-//    }
-//
-//}
+extension CGPoint: AdditiveArithmetic {
+
+    static let one = CGPoint(x: 1, y: 1)
+
+    public static func between(_ p1: CGPoint, _ p2: CGPoint, k: CGFloat) -> CGPoint {
+        return CGPoint(x: p1.x + (p2.x - p1.x) * k, y: p1.y + (p2.y - p1.y) * k)
+    }
+
+    public static func /(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
+        return CGPoint(x: lhs.x / rhs.x, y: lhs.y / rhs.y)
+    }
+
+    public static func *(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
+        return CGPoint(x: lhs.x * rhs.x, y: lhs.y * rhs.y)
+    }
+
+    public static func *(_ lhs: CGPoint, _ rhs: CGSize) -> CGPoint {
+        return CGPoint(x: lhs.x * rhs.width, y: lhs.y * rhs.height)
+    }
+
+    public static func +(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
+        return CGPoint(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
+    }
+
+    public static func -(_ lhs: CGPoint, _ rhs: CGPoint) -> CGPoint {
+        return CGPoint(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
+    }
+
+    public static func +=(lhs: inout CGPoint, rhs: CGPoint) {
+        lhs = lhs + rhs
+    }
+
+    public static func -=(lhs: inout CGPoint, rhs: CGPoint) {
+        lhs = lhs - rhs
+    }
+
+    public subscript(_ axe: NSLayoutConstraint.Axis) -> CGFloat {
+        switch axe {
+        case .horizontal:   return x
+        default:            return y
+        }
+    }
+
+}
 //
 //extension NSLayoutConstraint.Axis {
 //
