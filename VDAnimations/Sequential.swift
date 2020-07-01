@@ -108,7 +108,9 @@ public struct Sequential: VDAnimationProtocol {
     }
     
     private static func fullDuration(for array: [VDAnimationProtocol]) -> AnimationDuration? {
-        guard array.contains(where: { $0.options.duration?.absolute != 0 }) else { return nil }
+        guard array.contains(where: {
+            $0.options.duration?.absolute != 0 && !$0.options.isInstant
+        }) else { return nil }
         let dur = array.reduce(0, { $0 + ($1.options.duration?.absolute ?? 0) })
         var rel = min(1, array.reduce(0, { $0 + ($1.options.duration?.relative ?? 0) }))
         if rel == 0 {

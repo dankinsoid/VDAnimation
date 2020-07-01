@@ -11,7 +11,10 @@ import UIKit
 public struct WithoutAnimation: ClosureAnimation {
     
     public var modified: ModifiedAnimation {
-        ModifiedAnimation(options: AnimationOptions.empty.chain.duration[.absolute(0)], animation: self)
+        ModifiedAnimation(
+            options: AnimationOptions.empty.chain.duration[.absolute(0)].isInstant[true],
+            animation: self
+        )
     }
     
     private let block: () -> ()

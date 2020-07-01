@@ -11,6 +11,7 @@ import Foundation
 public struct AnimationOptions {
     static let empty = AnimationOptions()
     public var duration: AnimationDuration?
+    public var isInstant = false
     public var curve: BezierCurve?
     public var autoreverseStep: AutoreverseStep?
     

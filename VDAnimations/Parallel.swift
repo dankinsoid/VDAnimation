@@ -126,7 +126,9 @@ public struct Parallel: VDAnimationProtocol {
     }
     
     private static func maxDuration(for array: [VDAnimationProtocol]) -> AnimationDuration? {
-        guard array.contains(where: { $0.options.duration?.absolute != nil }) else { return nil }
+        guard array.contains(where: {
+            $0.options.duration?.absolute != nil && !$0.options.isInstant
+        }) else { return nil }
         let maxDuration = array.reduce(0, { max($0, $1.options.duration?.absolute ?? 0) })
         return .absolute(maxDuration)
     }
