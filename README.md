@@ -25,9 +25,12 @@ Sequential {
       someView.ca.backgroundColor.set(.green)
     }
   }
-  UIViewAnimate {
+  Animate {
     self.imageHeightConstraint.constant = 50
     self.view.layoutIfNeeded()
+  }
+  ForEachFrame { progress in
+  	someLabel.textColor = (UIColor.white...UIColor.red).at(progress)
   }
 }
 .curve(.easeInOut)
@@ -36,12 +39,13 @@ Sequential {
 ```
 ## Usage
 #### Basic animations
-1. UIViewAnimate - simple UIKit animation, it's initialized by closure
-2. Animate (beta) - simple SwiftUI animation, it's initialized by closure
+1. Animate - simple UIKit animation, it's initialized by closure
+2. SwiftUIAnimate (beta) - simple SwiftUI animation, it's initialized by closure
 3. Sequential - sequential animations running one after another
 4. Parallel - parallel animations running simultaneously
-5. Interval - TODO
-6. WithoutAnimation - TODO
+5. Interval - time interval
+6. WithoutAnimation
+7. ForEachFrame
 
 #### Modifiers
 1. duration(TimeInterval) - sets the animation duration in seconds
