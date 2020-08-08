@@ -16,14 +16,14 @@ let package = Package(
             targets: ["VDAnimation"]),
     ],
     dependencies: [
-        // Dependencies declare other packages that this package depends on.
+        .package(url: "https://github.com/dankinsoid/ConstraintsOperators.git", from: "2.3.4")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "VDAnimation",
-            dependencies: []),
+            dependencies: ["ConstraintsOperators"]),
         .testTarget(
             name: "VDAnimationTests",
             dependencies: ["VDAnimation"]),
