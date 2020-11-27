@@ -49,15 +49,15 @@ extension Gradient: AdditiveArithmetic where Bound: AdditiveArithmetic {
     public static var zero: Gradient<Bound> { Gradient(.zero, .zero) }
     
     public static func +(lhs: Gradient<Bound>, rhs: Gradient<Bound>) -> Gradient<Bound> {
-        Gradient(lhs.from + rhs.from, lhs.from + rhs.from)
+        Gradient(lhs.from + rhs.from, lhs.to + rhs.to)
     }
     
     public static func +(lhs: Bound, rhs: Gradient<Bound>) -> Gradient<Bound> {
-        Gradient(lhs + rhs.from, lhs + rhs.from)
+        Gradient(lhs + rhs.from, lhs + rhs.to)
     }
     
     public static func +(lhs: Gradient<Bound>, rhs: Bound) -> Gradient<Bound> {
-        Gradient(lhs.from + rhs, lhs.from + rhs)
+        Gradient(lhs.from + rhs, lhs.to + rhs)
     }
     
     public static func +=(lhs: inout Gradient<Bound>, rhs: Gradient<Bound>) {
@@ -69,15 +69,15 @@ extension Gradient: AdditiveArithmetic where Bound: AdditiveArithmetic {
     }
     
     public static func -(lhs: Gradient<Bound>, rhs: Gradient<Bound>) -> Gradient<Bound> {
-        Gradient(lhs.from - rhs.from, lhs.from - rhs.from)
+        Gradient(lhs.from - rhs.from, lhs.to - rhs.to)
     }
     
     public static func -(lhs: Bound, rhs: Gradient<Bound>) -> Gradient<Bound> {
-        Gradient(lhs - rhs.from, lhs - rhs.from)
+        Gradient(lhs - rhs.from, lhs - rhs.to)
     }
     
     public static func -(lhs: Gradient<Bound>, rhs: Bound) -> Gradient<Bound> {
-        Gradient(lhs.from - rhs, lhs.from - rhs)
+        Gradient(lhs.from - rhs, lhs.to - rhs)
     }
     
     public static func -=(lhs: inout Gradient<Bound>, rhs: Gradient<Bound>) {
