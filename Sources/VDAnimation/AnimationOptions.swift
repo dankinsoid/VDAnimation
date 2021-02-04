@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import VDKit
 
 public struct AnimationOptions {
     static let empty = AnimationOptions()

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import VDKit
 
 public protocol VDAnimationProtocol {
     @discardableResult

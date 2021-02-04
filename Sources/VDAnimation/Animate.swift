@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import VDKit
 
 ///UIKit animation
 public struct Animate: ClosureAnimation {

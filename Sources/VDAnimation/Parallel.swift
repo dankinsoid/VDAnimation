@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import VDKit
 
 public struct Parallel: VDAnimationProtocol {
     private let animations: [VDAnimationProtocol]

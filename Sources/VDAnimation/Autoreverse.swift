@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import VDKit
 
 struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
     private let animation: Animation

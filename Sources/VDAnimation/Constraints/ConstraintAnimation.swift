@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import VDKit
 import ConstraintsOperators
 
 public struct ConstraintsAnimation<T, C: ConstraintsCreator, K: ConstraintsCreator>: VDAnimationProtocol where C.Second == K.First, K.A == NSLayoutConstraint.Attribute, C.Constraint == NSLayoutConstraint {

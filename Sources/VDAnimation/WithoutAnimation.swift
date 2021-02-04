@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import VDKit
 
 public struct WithoutAnimation: ClosureAnimation {
     

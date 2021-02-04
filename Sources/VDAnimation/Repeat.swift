@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import VDKit
 
 struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
     private let count: Int?

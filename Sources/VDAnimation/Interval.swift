@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import VDKit
 
 public struct Interval: VDAnimationProtocol {
     public var modified: ModifiedAnimation {
