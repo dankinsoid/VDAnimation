@@ -32,14 +32,28 @@ extension AnimationOptions {
     var isReversed: Bool { autoreverseStep == .back }
 }
 
+public enum AnimationStopPosition: ExpressibleByFloatLiteral {
+	case start, progress(Double), end, current
+	
+	public init(floatLiteral value: Double) {
+		switch value {
+		case 0: self = .start
+		case 1: self = .end
+		default: self = .progress(value)
+		}
+	}
+	
+}
+
 public enum AnimationPosition: ExpressibleByFloatLiteral {
-    case start, progress(Double), end
+    case start, progress(Double), end, current
     
-    public var complete: Double {
+    public var complete: Double? {
         switch self {
         case .start:            return 0
         case .progress(let k):  return k
         case .end:              return 1
+				case .current:					return nil
         }
     }
     
@@ -48,6 +62,7 @@ public enum AnimationPosition: ExpressibleByFloatLiteral {
         case .start:            return .end
         case .progress(let k):  return .progress(1 - k)
         case .end:              return .start
+				case .current:					return .current
         }
     }
     

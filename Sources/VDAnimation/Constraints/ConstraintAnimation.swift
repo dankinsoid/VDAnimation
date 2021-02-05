@@ -39,6 +39,8 @@ public struct ConstraintsAnimation<T, C: ConstraintsCreator, K: ConstraintsCreat
             constraint = scale(k)
         case .end:
             constraint = to()
+				case .current:
+					return
         }
         constraint.didUpdate()
     }

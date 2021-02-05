@@ -40,8 +40,9 @@ public struct SwiftUIAnimate: ClosureAnimation {
     
     public func set(position: AnimationPosition, for options: AnimationOptions) {
         switch position {
-        case .start:    return
-        case .progress: return
+        case .start:    break
+        case .progress: break
+				case .current:	break
         case .end:      block()
         }
     }

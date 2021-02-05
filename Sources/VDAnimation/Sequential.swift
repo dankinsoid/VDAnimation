@@ -96,6 +96,8 @@ public struct Sequential: VDAnimationProtocol {
                 animations[i].set(position: .progress((k - array[i].lowerBound) / (array[i].upperBound - array[i].lowerBound)))
             }
             interator.prevIndex = i
+				case .current:
+					animations.forEach { $0.set(position: .current) }
         }
     }
     

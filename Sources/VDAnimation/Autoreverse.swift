@@ -47,6 +47,7 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
         switch position {
         case .start, .end:      return .start
         case .progress(let k):  return .progress(1 - abs(k - 0.5) * 2)
+				case .current:					return .current
         }
     }
     

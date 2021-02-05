@@ -105,6 +105,8 @@ final class PropertyOwner<T> {
             setter(scale(initial ?? value, k, value))
         case .end:
             setter(value)
+				case .current:
+					break
         }
     }
     

@@ -77,6 +77,8 @@ public struct Animate: ClosureAnimation {
                 animator.finishAnimation(at: .current)
             case .end:
                 animator.finishAnimation(at: .end)
+						case .current:
+							animator.finishAnimation(at: .current)
             }
             return $0
         }
@@ -199,6 +201,8 @@ fileprivate final class Interactor {
             guard position != .end else { return }
             _ = create()
             reset(at: .end)
+				case .current:
+					reset(at: .current)
         }
     }
     

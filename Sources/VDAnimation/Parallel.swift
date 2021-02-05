@@ -99,6 +99,8 @@ public struct Parallel: VDAnimationProtocol {
                 }
             }
             interactor.prevProgress = k
+				case .current:
+					animations.forEach { $0.set(position: position) }
         }
     }
     
