@@ -44,7 +44,7 @@ Sequential {
 3. Sequential - sequential animations running one after another
 4. Parallel - parallel animations running simultaneously
 5. Interval - time interval
-6. WithoutAnimation
+6. Instant - any block of code, always zero duration
 7. ForEachFrame
 
 #### Modifiers

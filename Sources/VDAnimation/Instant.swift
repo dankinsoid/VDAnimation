@@ -1,5 +1,5 @@
 //
-//  WithoutAnimation.swift
+//  Instant.swift
 //  CA
 //
 //  Created by crypto_user on 03.02.2020.
