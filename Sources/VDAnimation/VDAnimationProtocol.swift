@@ -11,13 +11,13 @@ import VDKit
 
 public protocol VDAnimationProtocol {
     @discardableResult
-    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate
+    func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate
     var modified: ModifiedAnimation { get }
-    func set(position: AnimationPosition, for options: AnimationOptions)
+    func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool)
 }
 
 public protocol ClosureAnimation: VDAnimationProtocol {
-    init(_ closure: @escaping () -> ())
+    init(_ closure: @escaping () -> Void)
 }
 
 extension VDAnimationProtocol {
@@ -26,28 +26,33 @@ extension VDAnimationProtocol {
     var chain: ValueChaining<Self> { ValueChaining(self) }
     
     public func set(position: AnimationPosition) {
-        set(position: position, for: .empty)
+			set(position: position, for: .empty, execute: true)
     }
     
     @discardableResult
-    public func start(_ completion: ((Bool) -> ())? = nil) -> AnimationDelegate {
+    public func start(_ completion: ((Bool) -> Void)? = nil) -> AnimationDelegate {
         start(with: .empty, { completion?($0) })
     }
+	
+	@discardableResult
+	public func start(_ completion: (() -> Void)? = nil) -> AnimationDelegate {
+		start(with: .empty, { _ in completion?() })
+	}
     
     public func set<F: BinaryFloatingPoint>(_ progress: F) {
-        set(position: .progress(Double(progress)), for: .empty)
+			set(position: .progress(Double(progress)), for: .empty, execute: true)
     }
     
 }
 
 extension Optional: VDAnimationProtocol where Wrapped: VDAnimationProtocol {
     
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
         self?.start(with: options, completion) ?? .end
     }
     
-    public func set(position: AnimationPosition, for options: AnimationOptions) {
-        self?.set(position: position, for: options)
+    public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
+			self?.set(position: position, for: options, execute: execute)
     }
     
 }

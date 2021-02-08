@@ -13,7 +13,7 @@ public protocol TransatableController: UIViewController {}
 
 extension UIViewController: TransatableController {
     
-    public func present(_ viewController: UIViewController, completion: (() -> ())? = nil, _ animation: @escaping (TransitionContext) -> VDAnimationProtocol) {
+    public func present(_ viewController: UIViewController, completion: (() -> Void)? = nil, _ animation: @escaping (TransitionContext) -> VDAnimationProtocol) {
         var delegate: TransitionDelegate? = TransitionDelegate(animation)
         viewController.modalPresentationStyle = .fullScreen
         viewController.transitioningDelegate = delegate

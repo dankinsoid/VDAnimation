@@ -28,7 +28,7 @@ public struct Interval: VDAnimationProtocol {
     }
     
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
         let result = RemoteDelegate(completion)
         let seconds = options.duration?.absolute ?? duration?.absolute ?? 0
         DispatchTimer.execute(seconds: seconds) {
@@ -38,13 +38,13 @@ public struct Interval: VDAnimationProtocol {
         return result.delegate
     }
     
-    public func set(position: AnimationPosition, for options: AnimationOptions) {}
+    public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {}
     
 }
 
 enum DispatchTimer {
     
-    static func execute(after time: DispatchTimeInterval, on queue: DispatchQueue = .main, _ handler: @escaping () -> ()) {
+    static func execute(after time: DispatchTimeInterval, on queue: DispatchQueue = .main, _ handler: @escaping () -> Void) {
         var timer: DispatchSourceTimer? = DispatchSource.makeTimerSource(flags: [], queue: queue)
         timer?.schedule(deadline: .now() + time, repeating: .never)
         timer?.setEventHandler {
@@ -54,7 +54,7 @@ enum DispatchTimer {
         timer?.activate()
     }
     
-    static func execute(seconds: TimeInterval, on queue: DispatchQueue = .main, _ handler: @escaping () -> ()) {
+    static func execute(seconds: TimeInterval, on queue: DispatchQueue = .main, _ handler: @escaping () -> Void) {
         execute(after: .nanoseconds(Int(seconds * 1_000_000_000)), on: queue, handler)
     }
     

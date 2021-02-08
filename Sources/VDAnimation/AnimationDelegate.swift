@@ -27,10 +27,10 @@ public struct AnimationDelegate {
 
 final class RemoteDelegate {
     var position: AnimationPosition?
-    var completion: ((Bool) -> ())?
+    var completion: ((Bool) -> Void)?
     var isStopped: Bool { position != nil }
     
-    init(_ completion: ((Bool) -> ())? = nil) {
+    init(_ completion: ((Bool) -> Void)? = nil) {
         self.completion = completion
     }
     
@@ -67,12 +67,12 @@ struct Interact: Interactive {
         nonmutating set { setter(newValue) }
     }
     private let getter: () -> Double
-    private let setter: (Double) -> ()
-    private let player: () -> ()
-    private let pauseAction: () -> ()
-    private let cancellable: () -> ()
+    private let setter: (Double) -> Void
+    private let player: () -> Void
+    private let pauseAction: () -> Void
+    private let cancellable: () -> Void
     
-    init(getter: @escaping () -> Double, setter: @escaping (Double) -> (), player: @escaping () -> (), pause: @escaping () -> (), cancellable: @escaping () -> ()) {
+    init(getter: @escaping () -> Double, setter: @escaping (Double) -> Void, player: @escaping () -> Void, pause: @escaping () -> Void, cancellable: @escaping () -> Void) {
         self.getter = getter
         self.setter = setter
         self.player = player

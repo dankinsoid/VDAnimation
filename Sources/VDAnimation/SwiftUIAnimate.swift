@@ -11,14 +11,14 @@ import SwiftUI
 ///SwiftUI animation
 @available(iOS 13.0, macOS 10.15, *)
 public struct SwiftUIAnimate: ClosureAnimation {
-    private let block: () -> ()
+    private let block: () -> Void
     
-    public init(_ block: @escaping () -> ()) {
+    public init(_ block: @escaping () -> Void) {
         self.block = block
     }
     
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
         guard let dur = options.duration?.absolute, dur > 0 else {
             completion(true)
             return .end
@@ -38,7 +38,7 @@ public struct SwiftUIAnimate: ClosureAnimation {
         return .empty
     }
     
-    public func set(position: AnimationPosition, for options: AnimationOptions) {
+    public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
         switch position {
         case .start:    break
         case .progress: break

@@ -15,12 +15,12 @@ public struct Animate: ClosureAnimation {
     private let animator = Animator()
     private var springTiming: UISpringTimingParameters?
     
-    public init(_ block: @escaping () -> ()) {
+    public init(_ block: @escaping () -> Void) {
         interactor = Interactor(block)
     }
     
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
         switch options.autoreverseStep {
         case .none:
             animator.animator = nil
@@ -34,7 +34,7 @@ public struct Animate: ClosureAnimation {
         }
     }
     
-    private func startAnimation(with options: AnimationOptions, complete: Bool, reverse: Bool, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
+    private func startAnimation(with options: AnimationOptions, complete: Bool, reverse: Bool, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
         interactor.reset(at: .start)
         guard options.duration?.absolute ?? 0 > 0 || !complete else {
             var end = AnimationPosition.start
@@ -84,7 +84,7 @@ public struct Animate: ClosureAnimation {
         }
     }
     
-    public func set(position: AnimationPosition, for options: AnimationOptions) {
+    public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
         let position = options.isReversed ? position.reversed : position
         interactor.set(state: position)
     }
@@ -173,10 +173,10 @@ fileprivate final class Animator {
 
 fileprivate final class Interactor {
     var animator: VDViewAnimator?
-    let animation: () -> ()
+    let animation: () -> Void
     var position = UIViewAnimatingPosition.start
     
-    init(_ block: @escaping () -> ()) {
+    init(_ block: @escaping () -> Void) {
         animation = block
     }
     

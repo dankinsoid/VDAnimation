@@ -44,7 +44,7 @@
 //        return rv
 //    }
 //
-//    static func ff(_ action: () -> ()) {
+//    static func ff(_ action: () -> Void) {
 //        guard let window = UIApplication.shared.keyWindow else { return }
 //        let all = [window.layer] + window.layer.allSublayers()
 //        print(all.count)

@@ -10,21 +10,21 @@ import UIKit
 
 public struct ForEachFrame: VDAnimationProtocol {
 	private let preferredFramesPerSecond: Int
-	private let update: (CGFloat) -> ()
+	private let update: (CGFloat) -> Void
 	private let curve: ((CGFloat) -> CGFloat)?
 	
-	init(fps: Int, curve: ((CGFloat) -> CGFloat)?, _ update: @escaping (CGFloat) -> ()) {
+	init(fps: Int, curve: ((CGFloat) -> CGFloat)?, _ update: @escaping (CGFloat) -> Void) {
 		self.preferredFramesPerSecond = fps
 		self.update = update
 		self.curve = curve
 	}
 	
-	public init(fps: Int = 0, _ update: @escaping (CGFloat) -> ()) {
+	public init(fps: Int = 0, _ update: @escaping (CGFloat) -> Void) {
 		self = ForEachFrame(fps: fps, curve: nil, update)
 	}
 	
 	@discardableResult
-	public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
+	public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
 		let duration = options.duration?.absolute ?? 0
 		let isReversed = options.isReversed
 		guard duration > 0 else {
@@ -51,7 +51,7 @@ public struct ForEachFrame: VDAnimationProtocol {
 		return delegate(for: timer, completion)
 	}
 	
-	private func delegate(for timer: CATimer, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
+	private func delegate(for timer: CATimer, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
 		AnimationDelegate {[update] in
 			timer.stop()
 			if let progress = $0.complete.map({ CGFloat($0) }) {
@@ -64,7 +64,7 @@ public struct ForEachFrame: VDAnimationProtocol {
 		}
 	}
 	
-	public func set(position: AnimationPosition, for options: AnimationOptions) {
+	public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
 		if let progress = position.complete {
 			update(CGFloat(progress))
 		}
@@ -82,12 +82,12 @@ public struct ForEachFrame: VDAnimationProtocol {
 fileprivate final class CATimer: NSObject {
 	
 	let preferredFramesPerSecond: Int
-	let update: (TimeInterval) -> ()
+	let update: (TimeInterval) -> Void
 	private var startedAt: CFTimeInterval?
 	
 	private var displayLink: CADisplayLink?
 	
-	init(preferredFPS: Int, _ update: @escaping (TimeInterval) -> ()) {
+	init(preferredFPS: Int, _ update: @escaping (TimeInterval) -> Void) {
 		self.preferredFramesPerSecond = preferredFPS
 		self.update = update
 	}

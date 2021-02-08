@@ -19,7 +19,7 @@ public struct PropertyAnimator<Base, A: ClosureAnimation>: VDAnimationProtocol {
     }
         
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
         animatable.updateInitial()
         var option = options
         option.autoreverseStep = nil
@@ -32,12 +32,12 @@ public struct PropertyAnimator<Base, A: ClosureAnimation>: VDAnimationProtocol {
         }
     }
     
-    public func set(position: AnimationPosition, for options: AnimationOptions) {
+    public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
         animatable.setState(options.isReversed == true ? position.reversed : position)
     }
     
-    public func withoutAnimation() -> WithoutAnimation {
-        WithoutAnimation({ self.animatable.setState(.end) }, onReverse: { self.animatable.setState(.start) })
+    public func instant() -> Instant {
+			Instant({ self.animatable.setState(.end) }, onReverse: { self.animatable.setState(.start) })
     }
     
     public subscript<A>(dynamicMember keyPath: ReferenceWritableKeyPath<Base, A>) -> AnimatePropertyMapper<Base, A> {
@@ -47,12 +47,12 @@ public struct PropertyAnimator<Base, A: ClosureAnimation>: VDAnimationProtocol {
 }
 
 final class PropertyAnimatable {
-    var updateInitial: () -> ()
-    var setState: (AnimationPosition) -> ()
+    var updateInitial: () -> Void
+    var setState: (AnimationPosition) -> Void
     
     static let empty = PropertyAnimatable(update: {}, set: {_ in})
     
-    init(update: @escaping () -> (), set: @escaping (AnimationPosition) -> ()) {
+    init(update: @escaping () -> Void, set: @escaping (AnimationPosition) -> Void) {
         updateInitial = update
         setState = set
     }
@@ -77,14 +77,14 @@ final class PropertyOwner<T> {
     private var initial: T?
     private let value: T
     private let scale: (T, Double, T) -> T
-    private let setter: (T?) -> ()
+    private let setter: (T?) -> Void
     private let getter: () -> T?
     
     var asAnimatable: PropertyAnimatable {
         PropertyAnimatable(update: updateInitial, set: set)
     }
     
-    init(from initial: T?, getter: @escaping () -> T?, setter: @escaping (T?) -> (), scale: @escaping (T, Double, T) -> T, value: T) {
+    init(from initial: T?, getter: @escaping () -> T?, setter: @escaping (T?) -> Void, scale: @escaping (T, Double, T) -> T, value: T) {
         self.scale = scale
         self.setter = setter
         self.initial = initial

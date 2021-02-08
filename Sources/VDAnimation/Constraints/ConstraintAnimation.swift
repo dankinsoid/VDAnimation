@@ -21,15 +21,15 @@ public struct ConstraintsAnimation<T, C: ConstraintsCreator, K: ConstraintsCreat
         self.scale = scale
     }
     
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
-        set(position: .start, for: options)
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
+			set(position: .start, for: options, execute: true)
         return Animate {
             let constraint = options.isReversed ? self.from() : self.to()
             constraint.didUpdate()
         }.start(with: options.chain.autoreverseStep[nil], completion)
     }
     
-    public func set(position: AnimationPosition, for options: AnimationOptions) {
+    public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
         let state = options.isReversed ? position.reversed : position
         let constraint: NSLayoutConstraint
         switch state {

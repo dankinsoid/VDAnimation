@@ -17,12 +17,12 @@ public struct ModifiedAnimation: VDAnimationProtocol {
     var chain: ValueChaining<ModifiedAnimation> { ValueChaining(self) }
     
     @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
+    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
         animation.start(with: options.or(self.options), completion)
     }
     
-    public func set(position: AnimationPosition, for options: AnimationOptions) {
-        animation.set(position: position, for: options.or(self.options))
+    public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
+			animation.set(position: position, for: options.or(self.options), execute: execute)
     }
     
 }

@@ -8,7 +8,7 @@
 
 import UIKit
 
-class VDViewAnimator: UIViewPropertyAnimator {
+final class VDViewAnimator: UIViewPropertyAnimator {
     
     private var completions: [(UIViewAnimatingPosition) -> Void] = []
     private var observing: NSKeyValueObservation?

@@ -9,56 +9,66 @@
 import UIKit
 import VDKit
 
-public struct WithoutAnimation: ClosureAnimation {
-    
-    public var modified: ModifiedAnimation {
-        ModifiedAnimation(
-            options: AnimationOptions.empty.chain.duration[.absolute(0)].isInstant[true],
-            animation: self
-        )
-    }
-    
-    private let block: () -> ()
-    private let initial: (() -> ())?
-    
-    public init(_ closure: @escaping () -> ()) {
-        block = closure
-        initial = nil
-    }
-    
-    public init(_ closure: @escaping () -> (), onReverse: @escaping () -> ()) {
-        block = closure
-        initial = onReverse
-    }
-    
-    @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
-        let duration = options.duration?.absolute ?? 0
-        let anim = options.isReversed ? (initial ?? block) : block
-        if duration == 0 {
-            execute(anim, completion)
-            return .end
-        } else {
-            let remote = RemoteDelegate(completion)
-            DispatchTimer.execute(seconds: duration) {
-                guard !remote.isStopped else { return }
-                self.execute(anim, completion)
-            }
-            return remote.delegate
-        }
-    }
-    
-    public func set(position: AnimationPosition, for options: AnimationOptions) {
-        let end = options.isReversed ? position.reversed : position
-        switch end.complete {
-        case 1:     execute(block) {_ in}
-        default:    break
-        }
-    }
-    
-    private func execute(_ block: () -> (), _ completion: @escaping (Bool) -> ()) {
-        UIView.performWithoutAnimation(block)
-        completion(true)
-    }
-    
+public struct Instant: ClosureAnimation {
+	
+	public var modified: ModifiedAnimation {
+		ModifiedAnimation(
+			options: AnimationOptions.empty.chain.duration[.absolute(0)].isInstant[true],
+			animation: self
+		)
+	}
+	
+	private let block: () -> Void
+	private let initial: (() -> Void)?
+	private let usePerform: Bool
+	
+	public init(_ closure: @escaping () -> Void) {
+		block = closure
+		initial = nil
+		usePerform = false
+	}
+	
+	public init(withoutAnimation: Bool = false, _ closure: @escaping () -> Void, onReverse: @escaping () -> Void) {
+		block = closure
+		initial = onReverse
+		usePerform = withoutAnimation
+	}
+	
+	public init(withoutAnimation: Bool = false, _ closure: @escaping () -> Void) {
+		block = closure
+		initial = nil
+		usePerform = withoutAnimation
+	}
+	
+	@discardableResult
+	public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
+		let duration = options.duration?.absolute ?? 0
+		let anim = options.isReversed ? (initial ?? block) : block
+		if duration == 0 {
+			execute(anim, completion)
+			return .end
+		} else {
+			let remote = RemoteDelegate(completion)
+			DispatchTimer.execute(seconds: duration) {
+				guard !remote.isStopped else { return }
+				self.execute(anim, completion)
+			}
+			return remote.delegate
+		}
+	}
+	
+	public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
+		let end = options.isReversed ? position.reversed : position
+		switch end.complete {
+		case 1:     if execute { self.execute(block) {_ in } }
+		default:    break
+		}
+	}
+	
+	private func execute(_ block: () -> Void, _ completion: @escaping (Bool) -> Void) {
+		usePerform ? UIView.performWithoutAnimation(block) : block()
+		completion(true)
+	}
+	
 }
+

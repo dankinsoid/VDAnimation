@@ -24,7 +24,7 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
 	}
 	
 	@discardableResult
-	func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> ()) -> AnimationDelegate {
+	func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
 		if let i = count {
 			let cnt = max(0, i)
 			guard cnt > 0 else {
@@ -51,7 +51,7 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
 		}
 	}
 	
-	private func start(with options: AnimationOptions, result: MutableDelegate, _ completion: @escaping (Bool) -> (), i: Int, condition: @escaping (Int) -> Bool) {
+	private func start(with options: AnimationOptions, result: MutableDelegate, _ completion: @escaping (Bool) -> Void, i: Int, condition: @escaping (Int) -> Bool) {
 		let index = options.isReversed ? (count ?? (i + 1)) - i - 1 : i
 		guard condition(i) else {
 			completion(true)
@@ -60,33 +60,29 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
 		}
 		let option = getOptions(options: options, i: index)
 		if i > 0 {
-			let reverse = option.autoreverseStep?.inverted ?? .back
-			let newOptions = option.chain.autoreverseStep[reverse].duration[.absolute(0)]
-			result.delegate = animation.start(with: newOptions) {
+			animation.set(position: option.autoreverseStep?.inverted == .back ? .end : .start, for: option, execute: false)
+			result.delegate = animation.start(with: option) {
 				guard $0 else { return completion(false) }
-				result.delegate = self.animation.start(with: option) {
-					guard $0 else { return completion(false) }
-					self.start(with: options, result: result, completion, i: max(0, i &+ 1), condition: condition)
-				}
+				start(with: options, result: result, completion, i: max(0, i &+ 1), condition: condition)
 			}
 		} else {
 			result.delegate = animation.start(with: option) {
 				guard $0 else { return completion(false) }
-				self.start(with: options, result: result, completion, i: max(0, i &+ 1), condition: condition)
+				start(with: options, result: result, completion, i: max(0, i &+ 1), condition: condition)
 			}
 		}
 	}
 	
-	func set(position: AnimationPosition, for options: AnimationOptions) {
+	func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
 		let position = options.isReversed == true ? position.reversed : position
 		switch position {
 		case .start, .end, .current:
-			animation.set(position: position)
+			animation.set(position: position, for: .empty, execute: execute)
 		case .progress(let k):
 			if count != nil {
-				animation.set(position: .progress(getProgress(for: k)))
+				animation.set(position: .progress(getProgress(for: k)), for: .empty, execute: execute)
 			} else {
-				animation.set(position: position)
+				animation.set(position: position, for: .empty, execute: execute)
 			}
 		}
 	}
