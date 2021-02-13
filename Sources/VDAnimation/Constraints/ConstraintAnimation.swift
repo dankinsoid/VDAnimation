@@ -10,12 +10,12 @@ import UIKit
 import VDKit
 import ConstraintsOperators
 
-public struct ConstraintsAnimation<T, C: ConstraintsCreator, K: ConstraintsCreator>: VDAnimationProtocol where C.Second == K.First, K.A == NSLayoutConstraint.Attribute, C.Constraint == NSLayoutConstraint {
-    let from: () -> C.Constraint
-    let to: () -> C.Constraint
-    let scale: (Double) -> C.Constraint
+public struct ConstraintsAnimation<T>: VDAnimationProtocol {
+    let from: () -> [NSLayoutConstraint]
+    let to: () -> [NSLayoutConstraint]
+    let scale: (Double) -> [NSLayoutConstraint]
     
-    init(from: @escaping @autoclosure () -> C.Constraint, to: @escaping @autoclosure () -> C.Constraint, scale: @escaping (Double) -> C.Constraint) {
+    init(from: @escaping @autoclosure () -> [NSLayoutConstraint], to: @escaping @autoclosure () -> [NSLayoutConstraint], scale: @escaping (Double) -> [NSLayoutConstraint]) {
         self.from = from
         self.to = to
         self.scale = scale
@@ -25,13 +25,13 @@ public struct ConstraintsAnimation<T, C: ConstraintsCreator, K: ConstraintsCreat
 			set(position: .start, for: options, execute: true)
         return Animate {
             let constraint = options.isReversed ? self.from() : self.to()
-            constraint.didUpdate()
+					constraint.forEach { $0.didUpdate() }
         }.start(with: options.chain.autoreverseStep[nil], completion)
     }
     
     public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
         let state = options.isReversed ? position.reversed : position
-        let constraint: NSLayoutConstraint
+        let constraint: [NSLayoutConstraint]
         switch state {
         case .start:
             constraint = from()
@@ -42,13 +42,13 @@ public struct ConstraintsAnimation<T, C: ConstraintsCreator, K: ConstraintsCreat
 				case .current:
 					return
         }
-        constraint.didUpdate()
+			constraint.forEach { $0.didUpdate() }
     }
     
 }
 
-public struct LayoutGradient<A, C: ConstraintsCreator> {
-    let from: LayoutAttribute<A, C>
-    let to: LayoutAttribute<A, C>
-    let scale: (Double) -> LayoutAttribute<A, C>
+public struct LayoutGradient<A, B: UILayoutable, C: AttributeConvertable> {
+    let from: LayoutAttribute<A, B, C>
+    let to: LayoutAttribute<A, B, C>
+    let scale: (Double) -> LayoutAttribute<A, B, C>
 }

@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/dankinsoid/ConstraintsOperators.git",
         "state": {
           "branch": null,
-          "revision": "8ca6e5d16f2b3add1ba4228225cd480cca3eb43c",
-          "version": "2.3.5"
+          "revision": "4e618c65befca84e17c18552459a141cd88ef98d",
+          "version": "2.3.21"
         }
       },
       {
@@ -15,8 +15,8 @@
         "repositoryURL": "https://github.com/dankinsoid/VDKit.git",
         "state": {
           "branch": null,
-          "revision": "a0b2c2367f1e234ac853723c1b08ee7e1ddcd070",
-          "version": "1.0.42"
+          "revision": "6161324ab5b5c17ca571e7cfc361f035fc446df1",
+          "version": "1.0.47"
         }
       }
     ]

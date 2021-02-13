@@ -16,8 +16,8 @@ let package = Package(
             targets: ["VDAnimation"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/dankinsoid/ConstraintsOperators.git", from: "2.3.4"),
-			.package(url: "https://github.com/dankinsoid/VDKit.git", from: "1.0.42")
+        .package(url: "https://github.com/dankinsoid/ConstraintsOperators.git", from: "2.3.20"),
+			.package(url: "https://github.com/dankinsoid/VDKit.git", from: "1.0.47")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
