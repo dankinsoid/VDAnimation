@@ -12,21 +12,21 @@ import VDKit
 extension VDAnimationProtocol {
     
     public func duration(_ value: TimeInterval) -> VDAnimationProtocol {
-        modified.chain.options.duration[.absolute(value)]
+        modified.chain.options.duration[.absolute(value)].apply()
     }
     
     public func duration<F: BinaryFloatingPoint>(relative value: F) -> VDAnimationProtocol {
-        modified.chain.options.duration[.relative(Double(value))]
+        modified.chain.options.duration[.relative(Double(value))].apply()
     }
     
     public func curve(_ value: BezierCurve) -> VDAnimationProtocol {
-        modified.chain.options.curve[value]
+        modified.chain.options.curve[value].apply()
 //        let result = modified
 //        return result.chain.options.curve[CA.curve(value, result.options.curve)]
     }
     
     public func curve<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F)) -> VDAnimationProtocol {
-        modified.chain.options.curve[.init(p1, p2)]
+        modified.chain.options.curve[.init(p1, p2)].apply()
     }
     
     public func `repeat`(_ count: Int) -> VDAnimationProtocol {

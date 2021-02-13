@@ -12,7 +12,7 @@ import VDKit
 public struct Parallel: VDAnimationProtocol {
 	private let animations: [VDAnimationProtocol]
 	public var modified: ModifiedAnimation {
-		ModifiedAnimation(options: AnimationOptions.empty.chain.duration[maxDuration], animation: self)
+		ModifiedAnimation(options: AnimationOptions.empty.chain.duration[maxDuration].apply(), animation: self)
 	}
 	private let maxDuration: AnimationDuration?
 	private let interactor: Interactor
@@ -123,7 +123,7 @@ public struct Parallel: VDAnimationProtocol {
 			case .relative(let r):      return full * min(1, r)
 			}
 		}
-		var result = childrenDurations.map({ options.chain.duration[.absolute($0)] })
+		var result = childrenDurations.map({ options.chain.duration[.absolute($0)].apply() })
 		setCurve(&result, duration: full, options: options)
 		return result
 	}

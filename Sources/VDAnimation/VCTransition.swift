@@ -91,7 +91,7 @@ final class AnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioni
         let animation = presentAnimation(context)
         
         let duration = animation.options.duration?.absolute ?? defaultDuration
-        let options = AnimationOptions.empty.chain.duration[.absolute(duration)]
+        let options = AnimationOptions.empty.chain.duration[.absolute(duration)].apply()
 //            .autoreverseStep[needReverse ? .back : nil]
         
         animation.start(with: options) { _ in

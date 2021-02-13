@@ -12,7 +12,7 @@ import VDKit
 public struct Sequential: VDAnimationProtocol {
 	private let animations: [VDAnimationProtocol]
 	public var modified: ModifiedAnimation {
-		ModifiedAnimation(options: AnimationOptions.empty.chain.duration[fullDuration], animation: self)
+		ModifiedAnimation(options: AnimationOptions.empty.chain.duration[fullDuration].apply(), animation: self)
 	}
 	private let fullDuration: AnimationDuration?
 	private let interator: Interactor
@@ -130,7 +130,7 @@ public struct Sequential: VDAnimationProtocol {
 	
 	private func setDuration(duration full: TimeInterval, options: AnimationOptions) -> [AnimationOptions] {
 		guard full > 0 else {
-			return [AnimationOptions](repeating: options.chain.duration[.absolute(0)], count: animations.count)
+			return [AnimationOptions](repeating: options.chain.duration[.absolute(0)].apply(), count: animations.count)
 			
 		}
 		var ks: [Double?] = []
@@ -153,9 +153,9 @@ public struct Sequential: VDAnimationProtocol {
 		}
 		var result: [AnimationOptions]
 		if relativeK == 0 {
-			result = [AnimationOptions](repeating: options.chain.duration[.absolute(full / Double(animations.count))], count: animations.count)
+			result = [AnimationOptions](repeating: options.chain.duration[.absolute(full / Double(animations.count))].apply(), count: animations.count)
 		} else {
-			result = ks.map({ options.chain.duration[.absolute(full * ($0 ?? add) / relativeK)] })
+			result = ks.map({ options.chain.duration[.absolute(full * ($0 ?? add) / relativeK)].apply() })
 		}
 		setCurve(&result, duration: full, options: options)
 		return result

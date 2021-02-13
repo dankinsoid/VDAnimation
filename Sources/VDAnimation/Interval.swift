@@ -11,7 +11,7 @@ import VDKit
 
 public struct Interval: VDAnimationProtocol {
     public var modified: ModifiedAnimation {
-        ModifiedAnimation(options: AnimationOptions.empty.chain.duration[duration], animation: self)
+        ModifiedAnimation(options: AnimationOptions.empty.chain.duration[duration].apply(), animation: self)
     }
     public let duration: AnimationDuration?
     

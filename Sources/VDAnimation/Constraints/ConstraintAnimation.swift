@@ -26,7 +26,7 @@ public struct ConstraintsAnimation<T>: VDAnimationProtocol {
         return Animate {
             let constraint = options.isReversed ? self.from() : self.to()
 					constraint.forEach { $0.didUpdate() }
-        }.start(with: options.chain.autoreverseStep[nil], completion)
+				}.start(with: options.chain.autoreverseStep[nil].apply(), completion)
     }
     
     public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {

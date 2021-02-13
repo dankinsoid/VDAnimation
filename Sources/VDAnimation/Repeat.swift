@@ -13,7 +13,7 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
 	private let count: Int?
 	private let animation: A
 	var modified: ModifiedAnimation {
-		ModifiedAnimation(options: AnimationOptions.empty.chain.duration[duration], animation: self)
+		ModifiedAnimation(options: AnimationOptions.empty.chain.duration[duration].apply(), animation: self)
 	}
 	private let duration: AnimationDuration?
 	

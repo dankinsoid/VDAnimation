@@ -102,7 +102,7 @@ public struct Animate: ClosureAnimation {
 //    }
     
     public func spring(_ dampingRatio: CGFloat = 0.3) -> Animate {
-        chain.springTiming[UISpringTimingParameters(dampingRatio: dampingRatio)]
+        chain.springTiming[UISpringTimingParameters(dampingRatio: dampingRatio)].apply()
     }
     
 }

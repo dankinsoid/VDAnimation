@@ -12,7 +12,7 @@ import VDKit
 struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
     private let animation: Animation
     var modified: ModifiedAnimation {
-        ModifiedAnimation(options: AnimationOptions.empty.chain.duration[duration], animation: self)
+        ModifiedAnimation(options: AnimationOptions.empty.chain.duration[duration].apply(), animation: self)
     }
     private let duration: AnimationDuration?
     
@@ -39,7 +39,7 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
     }
     
     func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
-			let option = options.chain.autoreverseStep[nil]
+			let option = options.chain.autoreverseStep[nil].apply()
 			animation.set(position: targetPosition(for: position), for: option, execute: execute)
     }
     
