@@ -30,8 +30,8 @@ extension VDAnimationProtocol {
     }
     
     @discardableResult
-    public func start(_ completion: ((Bool) -> Void)? = nil) -> AnimationDelegate {
-        start(with: .empty, { completion?($0) })
+    public func start(_ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
+        start(with: .empty, { completion($0) })
     }
 	
 	@discardableResult
