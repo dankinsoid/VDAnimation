@@ -16,7 +16,7 @@ public struct Instant: ClosureAnimation {
 	
 	public var modified: ModifiedAnimation {
 		ModifiedAnimation(
-			options: AnimationOptions.empty.chain.duration[.absolute(0)].isInstant[true].apply(),
+			options: AnimationOptions.empty.chain.duration[.absolute(0)].isInstant[apply: true],
 			animation: self
 		)
 	}
