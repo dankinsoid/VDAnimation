@@ -27,7 +27,7 @@ public struct Sequential: VDAnimationProtocol {
 		self = .init(animations)
 	}
 	
-	public init(@AnimatorBuilder _ animations: () -> [VDAnimationProtocol]) {
+	public init(@AnimationsBuilder _ animations: () -> [VDAnimationProtocol]) {
 		self = .init(animations())
 	}
 	
