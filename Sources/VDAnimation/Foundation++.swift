@@ -42,6 +42,27 @@ extension Gradient where Bound: ScalableConvertable {
     }
 }
 
+@available(iOS 13.0, *)
+extension Gradient where Bound: Animatable {
+	public func at(_ percent: Double) -> Bound {
+		var result = from
+		var dif = (to.animatableData - from.animatableData)
+		dif.scale(by: percent)
+		result.animatableData = result.animatableData + dif
+		return result
+	}
+}
+
+//extension Gradient where Bound: VectorArithmetic {
+//	public func at(_ percent: Double) -> Bound {
+//		var result = from
+//		var dif = (to - from)
+//		dif.scale(by: percent)
+//		result = result + dif
+//		return result
+//	}
+//}
+
 extension Gradient: Equatable where Bound: Equatable {}
 extension Gradient: Hashable where Bound: Hashable {}
 

@@ -14,5 +14,4 @@ public final class ConstraintsOwner {
     init(_ constraints: [NSLayoutConstraint]) {
         self.constraints = constraints
     }
-    
 }

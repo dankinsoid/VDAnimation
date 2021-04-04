@@ -6,7 +6,20 @@
 //  Copyright © 2020 Voidilov. All rights reserved.
 //
 
-//import Foundation
+import UIKit
+
+extension CGAffineTransform {
+	
+	public func added(_ other: CGAffineTransform) -> CGAffineTransform {
+		let concatenated = concatenating(other)
+		return CGAffineTransform(
+			a: concatenated.a, b: concatenated.b,
+			c: concatenated.c, d: concatenated.d,
+			tx: tx + other.tx, ty: ty + other.ty
+		)
+	}
+}
+
 //
 //extension CALayer {
 //

@@ -8,92 +8,57 @@
 
 import Foundation
 
-public struct AnimationDelegate {
-    public static var empty: AnimationDelegate { AnimationDelegate({ $0 }) }
-    public static var end: AnimationDelegate { AnimationDelegate({_ in .end }) }
-    
-    private var stopAction: (AnimationPosition) -> AnimationPosition
-    
-    public init(_ action: @escaping (AnimationPosition) -> AnimationPosition) {
-        stopAction = action
-    }
-    
-    @discardableResult
-    public func stop(_ position: AnimationPosition = .end) -> AnimationPosition {
-        stopAction(position)
-    }
-
+public protocol AnimationDelegateProtocol {
+	var isRunning: Bool { get }
+	var position: AnimationPosition { get nonmutating set }
+	var options: AnimationOptions { get }
+	var isInstant: Bool { get }
+//	var animationState: AnimationState { get }
+	
+	func play(with options: AnimationOptions)
+	func pause()
+	func stop(at position: AnimationPosition?)
+	func add(completion: @escaping (Bool) -> Void)
 }
 
-final class RemoteDelegate {
-    var position: AnimationPosition?
-    var completion: ((Bool) -> Void)?
-    var isStopped: Bool { position != nil }
-    
-    init(_ completion: ((Bool) -> Void)? = nil) {
-        self.completion = completion
-    }
-    
-    var delegate: AnimationDelegate {
-        AnimationDelegate {
-            self.position = $0
-            self.completion?($0.complete == 1)
-            return $0
-        }
-    }
-    
+public protocol AnimationDelegateWrapper: AnimationDelegateProtocol {
+	var inner: AnimationDelegateProtocol { get }
 }
 
-final class MutableDelegate {
-    var delegate = AnimationDelegate.empty
-    var asDelegate: AnimationDelegate { AnimationDelegate { self.delegate.stop($0) } }
+extension AnimationDelegateWrapper {
+	public var isRunning: Bool { inner.isRunning }
+	public var position: AnimationPosition { get { inner.position } nonmutating set { inner.position = newValue } }
+	public var options: AnimationOptions { inner.options }
+	public var isInstant: Bool { inner.isInstant }
+	
+	public func pause() { inner.pause() }
+	public func stop(at position: AnimationPosition?) { inner.stop(at: position) }
+	public func add(completion: @escaping (Bool) -> Void) { inner.add(completion: completion) }
 }
 
-public protocol Interactive {
-    var percent: Double { get nonmutating set }
-    func play()
-    func cancel()
-    func pause()
-    @discardableResult
-    func stop(_ position: AnimationPosition) -> AnimationPosition
+public enum AnimationState: Equatable {
+	case inactive, running, paused, stopped
 }
 
-struct Interact: Interactive {
-    static let empty = Interact(getter: { 0 }, setter: {_ in }, player: {}, pause: {}, cancellable: {})
-    static let end = Interact(getter: { 1 }, setter: {_ in }, player: {}, pause: {}, cancellable: {})
-    
-    var percent: Double {
-        get { getter() }
-        nonmutating set { setter(newValue) }
-    }
-    private let getter: () -> Double
-    private let setter: (Double) -> Void
-    private let player: () -> Void
-    private let pauseAction: () -> Void
-    private let cancellable: () -> Void
-    
-    init(getter: @escaping () -> Double, setter: @escaping (Double) -> Void, player: @escaping () -> Void, pause: @escaping () -> Void, cancellable: @escaping () -> Void) {
-        self.getter = getter
-        self.setter = setter
-        self.player = player
-        self.pauseAction = pause
-        self.cancellable = cancellable
-    }
-    
-    public func play() {
-        player()
-    }
-    
-    public func cancel() {
-        cancellable()
-    }
-    
-    public func pause() {
-        pauseAction()
-    }
-    
-    public func stop(_ position: AnimationPosition) -> AnimationPosition {
-        position
-    }
-    
+extension AnimationDelegateProtocol {
+	public func stop() {
+		stop(at: .current)
+	}
+	public func play() { play(with: .empty) }
+	public func pause(at position: AnimationPosition) {
+		pause()
+		self.position = position
+	}
+	public var progress: Double {
+		get { position.complete }
+		nonmutating set { position = .progress(newValue) }
+	}
+	
+	func set(position: AnimationPosition?, stop: Bool) {
+		if stop {
+			self.stop(at: position)
+		} else if let position = position {
+			self.position = position
+		}
+	}
 }

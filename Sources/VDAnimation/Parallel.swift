@@ -11,16 +11,9 @@ import VDKit
 
 public struct Parallel: VDAnimationProtocol {
 	private let animations: [VDAnimationProtocol]
-	public var modified: ModifiedAnimation {
-		ModifiedAnimation(options: AnimationOptions.empty.chain.duration[maxDuration].apply(), animation: self)
-	}
-	private let maxDuration: AnimationDuration?
-	private let interactor: Interactor
 	
 	public init(_ animations: [VDAnimationProtocol]) {
 		self.animations = animations
-		self.maxDuration = Parallel.maxDuration(for: animations)
-		self.interactor = Interactor()
 	}
 	
 	public init(_ animations: VDAnimationProtocol...) {
@@ -31,181 +24,277 @@ public struct Parallel: VDAnimationProtocol {
 		self = .init(animations())
 	}
 	
-	@discardableResult
-	public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
-		interactor.prevProgress = 0
-		guard !animations.isEmpty else {
-			completion(true)
-			return .end
+	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
+		if animations.count == 1 {
+			return animations[0].delegate(with: options)
+		} else if animations.isEmpty {
+			return EmptyAnimationDelegate()
+		} else {
+			return Delegate(animations: animations.map { $0.delegate(with: .empty) }, options: options)
 		}
-		guard animations.count > 1 else {
-			return animations[0].start(with: options, completion)
+	}
+	
+	final class Delegate: AnimationDelegateProtocol {
+		var isRunning: Bool { animations.contains(where: { $0.isRunning }) }
+		var position: AnimationPosition {
+			get { getPosition() }
+			set {
+				set(position: newValue, needStop: false)
+			}
 		}
-		let array = getOptions(for: options)
-		let full = options.duration?.absolute ?? maxDuration?.absolute ?? 0
-		let delegates = Delegates()
-		delegates.list.reserveCapacity(animations.count)
-		let parallelCompletion = ParallelCompletion(animations.enumerated().map { arg in
-			{ compl in
-				if options.isReversed {
-					let delay = full - (array[arg.offset].duration?.absolute ?? 0)
-					let remote = RemoteDelegate()
-					delegates.list.append(remote.delegate)
-					DispatchTimer.execute(seconds: delay) {
-						guard !remote.isStopped else { return compl(false) }
-						delegates.list.append(arg.element.start(with: array[arg.offset], compl))
+		var isInstant: Bool { !animations.contains(where: { !$0.isInstant }) }
+		private let animations: [Delay]
+		private var completions: [(Bool) -> Void] = []
+		private let maxDuration: AnimationDuration?
+		var options: AnimationOptions
+		private var progresses: [ClosedRange<Double>] = []
+		private var allOptions: [AnimationOptions] = []
+		private let initOptions: [AnimationOptions]
+		private var prevProgress: Double = 0
+		private var wasStopped = false
+		
+		init(animations: [AnimationDelegateProtocol], options: AnimationOptions) {
+			self.maxDuration = Delegate.maxDuration(for: animations)
+			self.animations = animations.map { Delay($0) }
+			self.options = options.or(AnimationOptions(duration: maxDuration))
+			initOptions = animations.map { $0.options }
+			prepare()
+		}
+		
+		private func prepare() {
+			updateOptions()
+			let count = animations.count
+			var completed = 0
+			var finished = true
+			animations.forEach {
+				$0.add {[weak self] in
+					guard let `self` = self else { return }
+					completed += 1
+					finished = finished && $0
+					if completed >= count || !$0 {
+						self.prevProgress = self.progress
+						completed = 0
+						if !self.wasStopped && self.options.complete != false {
+							self.wasStopped = true
+							self.animations.forEach {
+								$0.stop(at: .current)
+							}
+						}
+						self.complete(finished)
+						finished = true
 					}
-				} else {
-					delegates.list.append(arg.element.start(with: array[arg.offset], compl))
 				}
 			}
-		})
-		parallelCompletion.start {[interactor] in
-			interactor.prevProgress = 1
-			completion($0)
 		}
-		return delegate(for: delegates)
-	}
-	
-	private func delegate(for array: Delegates) -> AnimationDelegate {
-		AnimationDelegate {
-			array.list.forEach { $0.stop(.start) }
-			self.set(position: $0, for: .empty, execute: true)
-			return $0
-		}
-	}
-	
-	public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
-		let position = options.isReversed == true ? position.reversed : position
-		switch position {
-		case .start:
-			animations.forEach { $0.set(position: position, for: .empty, execute: execute) }
-			interactor.prevProgress = 0
-		case .end:
-			animations.forEach { $0.set(position: position, for: .empty, execute: execute) }
-			interactor.prevProgress = 1
-		case .progress(let k):
-			guard !animations.isEmpty else { return }
-			let array = getProgresses(animations.map({ $0.options }), duration: maxDuration?.absolute ?? 1, options: .empty)
-			for i in 0..<array.count {
-				if array[i].upperBound <= k || array[i].upperBound == 0 {
-					guard array[i].upperBound > interactor.prevProgress else { continue }
-					animations[i].set(position: .end, for: .empty, execute: execute)
-				} else if array[i].lowerBound >= k {
-					guard array[i].lowerBound < interactor.prevProgress else { continue }
-					animations[i].set(position: .start, for: .empty, execute: false)
-				} else {
-					animations[i].set(position: .progress(k / array[i].upperBound), for: .empty, execute: execute)
-				}
+		
+		func play(with options: AnimationOptions) {
+			if options != .empty {
+				self.options = options.or(self.options)
+				updateOptions()
 			}
-			interactor.prevProgress = k
-		case .current:
-			animations.forEach { $0.set(position: position, for: .empty, execute: execute) }
+			guard !isRunning else { return }
+			start()
 		}
-	}
-	
-	private func getOptions(for options: AnimationOptions) -> [AnimationOptions] {
-		guard !animations.isEmpty else { return [] }
-		let dur = options.duration?.absolute ?? maxDuration?.absolute ?? 0
-		return setDuration(duration: dur, options: options)
-	}
-	
-	private func setDuration(duration full: TimeInterval, options: AnimationOptions) -> [AnimationOptions] {
-		guard !animations.isEmpty else { return [] }
-		let maxDuration = self.maxDuration?.absolute ?? 0
-		let k = maxDuration == 0 ? 1 : full / maxDuration
-		let childrenDurations: [Double] = animations.map {
-			guard let setted = $0.options.duration else {
-				return full
-			}
-			switch setted {
-			case .absolute(let time):   return time * k
-			case .relative(let r):      return full * min(1, r)
+		
+		func pause() {
+			animations.forEach {
+				$0.pause()
 			}
 		}
-		var result = childrenDurations.map({ options.chain.duration[.absolute($0)].apply() })
-		setCurve(&result, duration: full, options: options)
-		return result
-	}
-	
-	private static func maxDuration(for array: [VDAnimationProtocol]) -> AnimationDuration? {
-		guard array.contains(where: {
-			$0.options.duration?.absolute != nil && !$0.options.isInstant
-		}) else { return nil }
-		let maxDuration = array.reduce(0, { max($0, $1.options.duration?.absolute ?? 0) })
-		return .absolute(maxDuration)
-	}
-	
-	private func setCurve(_ array: inout [AnimationOptions], duration: Double, options: AnimationOptions) {
-		guard let fullCurve = options.curve, fullCurve != .linear else {
-			return
-		}
-		let progresses = getProgresses(array, duration: duration, options: options)
-		for i in 0..<animations.count {
-			var (curve1, newDuration) = fullCurve.split(range: progresses[i])
-			if let curve2 = animations[i].options.curve {
-				curve1 = BezierCurve.between(curve1, curve2)
-			}
-			array[i].duration = .absolute(duration * newDuration)
-			array[i].curve = curve1
-		}
-	}
-	
-	private func getProgresses(_ array: [AnimationOptions], duration: Double, options: AnimationOptions) -> [ClosedRange<Double>] {
-		guard !array.isEmpty else { return [] }
-		guard duration > 0 else {
-			return Array(repeating: 0...1, count: array.count)
-		}
-		var progresses: [ClosedRange<Double>] = []
-		for anim in array {
-			let end: Double
-			if let relative = anim.duration?.relative {
-				end = min(1, max(0, relative))
+		
+		func stop(at position: AnimationPosition?) {
+			wasStopped = true
+			if let position = position {
+				set(position: position, needStop: true)
 			} else {
-				end = (anim.duration?.absolute ?? duration) / duration
-			}
-			progresses.append(0...end)
-		}
-		return progresses
-	}
-	
-}
-
-fileprivate final class ParallelCompletion {
-	typealias T = (Bool) -> Void
-	let common: Int
-	var current = 0
-	var error = false
-	let functions: [(@escaping T) -> Void]
-	
-	init(_ functions: [(@escaping T) -> Void]) {
-		self.common = functions.count
-		self.functions = functions
-	}
-	
-	func start(completion: @escaping T) {
-		for function in functions {
-			function { position in
-				guard !self.error else { return }
-				self.current += 1
-				if self.current >= self.common {
-					self.current = 0
-					completion(position)
-				} else if !position {
-					self.error = true
-					completion(false)
+				animations.forEach {
+					$0.stop(at: .current)
 				}
 			}
 		}
+		
+		func add(completion: @escaping (Bool) -> Void) {
+			completions.append(completion)
+		}
+		
+		private func updateOptions() {
+			progresses = getProgresses()
+			allOptions = setDuration()
+		}
+		
+		private func complete(_ completed: Bool) {
+			completions.forEach {
+				$0(completed)
+			}
+		}
+		
+		func start() {
+			guard animations.count > 1 else {
+				return animations[0].play()
+			}
+			let full = options.duration?.absolute ?? maxDuration?.absolute ?? 0
+			zip(animations, allOptions).forEach { arg in
+				if options.isReversed == true {
+					let delay = full - (arg.1.duration?.absolute ?? 0)
+					arg.0.play(with: arg.1, delay: delay)
+				} else {
+					arg.0.play(with: arg.1, delay: 0)
+				}
+			}
+		}
+		
+		func set(position: AnimationPosition, needStop stop: Bool) {
+			switch position {
+			case .start:
+				animations.forEach { $0.set(position: .start, stop: stop) }
+				prevProgress = 0
+			case .end:
+				animations.forEach { $0.set(position: .end, stop: stop) }
+				prevProgress = 1
+			case .progress(let k):
+				guard !animations.isEmpty else { return }
+				for i in 0..<progresses.count {
+					if progresses[i].upperBound <= k || progresses[i].upperBound == 0 {
+						guard progresses[i].upperBound > prevProgress else { continue }
+						animations[i].set(position: .end, stop: stop)
+					} else if progresses[i].lowerBound >= k {
+						guard progresses[i].lowerBound < prevProgress else { continue }
+						animations[i].set(position: .start, stop: stop)
+					} else {
+						animations[i].set(position: .progress(k / progresses[i].upperBound), stop: stop)
+					}
+				}
+				prevProgress = k
+			}
+		}
+		
+		private func getPosition() -> AnimationPosition {
+			guard !animations.isEmpty else { return .end }
+			if let i = progresses.firstIndex(of: 0...1) {
+				return animations[i].position
+			}
+			let i = animations.firstIndex(where: { $0.isRunning }) ?? 0
+			return .progress((progresses[i].upperBound - progresses[i].lowerBound) * animations[i].position.complete)
+		}
+		
+		private func setDuration() -> [AnimationOptions] {
+			guard !animations.isEmpty else { return [] }
+			let full = options.duration?.absolute ?? maxDuration?.absolute ?? 0
+			let maxDuration = self.maxDuration?.absolute ?? 0
+			let k = maxDuration == 0 ? 1 : full / maxDuration
+			let childrenDurations: [Double] = initOptions.map {
+				guard let setted = $0.duration else {
+					return full
+				}
+				switch setted {
+				case .absolute(let time):   return time * k
+				case .relative(let r):      return full * min(1, r)
+				}
+			}
+			var result = childrenDurations.map({ options.chain.duration[.absolute($0)].complete[false].apply() })
+			setCurve(&result, duration: full)
+			return result
+		}
+		
+		private static func maxDuration(for array: [AnimationDelegateProtocol]) -> AnimationDuration? {
+			guard array.contains(where: {
+				$0.options.duration?.absolute != nil && !$0.isInstant
+			}) else { return nil }
+			let maxDuration = array.reduce(0, { max($0, $1.options.duration?.absolute ?? 0) })
+			return .absolute(maxDuration)
+		}
+		
+		private func setCurve(_ array: inout [AnimationOptions], duration: Double) {
+			guard let fullCurve = options.curve, fullCurve != .linear else {
+				return
+			}
+			for i in 0..<animations.count {
+				var (curve1, newDuration) = fullCurve.split(range: progresses[i])
+				if let curve2 = animations[i].options.curve {
+					curve1 = BezierCurve.between(curve1, curve2)
+				}
+				array[i].duration = .absolute(duration * newDuration)
+				array[i].curve = curve1
+			}
+		}
+		
+		private func getProgresses() -> [ClosedRange<Double>] {
+			guard !animations.isEmpty else { return [] }
+			let array = initOptions
+			let duration = options.duration?.absolute ?? maxDuration?.absolute ?? 0
+			guard duration > 0 else {
+				return Array(repeating: 0...1, count: array.count)
+			}
+			var progresses: [ClosedRange<Double>] = []
+			for anim in array {
+				let end: Double
+				if let relative = anim.duration?.relative {
+					end = min(1, max(0, relative))
+				} else {
+					end = (anim.duration?.absolute ?? duration) / duration
+				}
+				progresses.append(0...end)
+			}
+			return progresses
+		}
 	}
 	
+	private final class Delay: AnimationDelegateProtocol {
+		let animation: AnimationDelegateProtocol
+		var isRunning: Bool { animation.isRunning || interval?.isRunning == true }
+		var position: AnimationPosition {
+			get { animation.position }
+			set { animation.position = newValue }
+		}
+		var options: AnimationOptions { animation.options }
+		var isInstant: Bool { animation.isInstant }
+		var interval: Interval.Delegate?
+		var delay: TimeInterval { interval?.duration ?? 0 }
+		
+		init(_ animation: AnimationDelegateProtocol) {
+			self.animation = animation
+		}
+		
+		func add(completion: @escaping (Bool) -> Void) {
+			animation.add(completion: completion)
+		}
+		
+		func play(with options: AnimationOptions) {
+			play(with: options, delay: delay)
+		}
+		
+		func play(with options: AnimationOptions, delay: TimeInterval) {
+			if delay > 0 {
+				if interval == nil {
+					interval = Interval.Delegate(options: .empty)
+					interval?.duration = delay
+					interval?.add {[weak self] in
+						if $0 {
+							self?.animation.play(with: options)
+						}
+					}
+				}
+				if interval?.position == .end {
+					animation.play(with: options)
+				} else {
+					interval?.play(with: AnimationOptions(duration: .absolute(delay)))
+				}
+			} else {
+				interval?.stop(at: .current)
+				interval = nil
+				animation.play(with: options)
+			}
+		}
+		
+		func stop(at position: AnimationPosition?) {
+			interval?.stop(at: .current)
+			interval = nil
+			animation.stop(at: position)
+		}
+		
+		func pause() {
+			interval?.pause()
+			animation.pause()
+		}
+	}
 }
-
-fileprivate final class Interactor {
-	var prevProgress: Double = 0
-}
-
-fileprivate final class Delegates {
-	var list: [AnimationDelegate] = []
-}
-

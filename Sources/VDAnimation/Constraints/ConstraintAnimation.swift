@@ -20,31 +20,70 @@ public struct ConstraintsAnimation<T>: VDAnimationProtocol {
         self.to = to
         self.scale = scale
     }
-    
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
-			set(position: .start, for: options, execute: true)
-        return Animate {
-            let constraint = options.isReversed ? self.from() : self.to()
-					constraint.forEach { $0.didUpdate() }
-				}.start(with: options.chain.autoreverseStep[nil].apply(), completion)
-    }
-    
-    public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
-        let state = options.isReversed ? position.reversed : position
-        let constraint: [NSLayoutConstraint]
-        switch state {
-        case .start:
-            constraint = from()
-        case .progress(let k):
-            constraint = scale(k)
-        case .end:
-            constraint = to()
-				case .current:
-					return
-        }
+	
+	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
+		Delegate(options: options, from: from, to: to, scale: scale)
+	}
+	
+	final class Delegate: AnimationDelegateProtocol {
+		var isInstant: Bool { inner.isInstant }
+		var isRunning: Bool { inner.isRunning }
+		var position: AnimationPosition {
+			get { inner.position }
+			set { set(position: newValue) }
+		}
+		var inner: AnimationDelegateProtocol
+		var options: AnimationOptions { inner.options }
+		private var completions: [(Bool) -> Void] = []
+		
+		let from: () -> [NSLayoutConstraint]
+		let to: () -> [NSLayoutConstraint]
+		let scale: (Double) -> [NSLayoutConstraint]
+		
+		init(options: AnimationOptions, from: @escaping () -> [NSLayoutConstraint], to: @escaping () -> [NSLayoutConstraint], scale: @escaping (Double) -> [NSLayoutConstraint]) {
+			self.inner = Animate {
+				let constraint = options.isReversed == true ? from() : to()
+				constraint.forEach { $0.didUpdate() }
+			}.delegate(with: options)
+			self.from = from
+			self.to = to
+			self.scale = scale
+		}
+		
+		func play(with options: AnimationOptions) {
+			inner.play(with: options)
+		}
+		
+		func pause() {
+			inner.pause()
+		}
+		
+		func stop(at position: AnimationPosition?) {
+			inner.stop(at: position)
+		}
+		
+		func add(completion: @escaping (Bool) -> Void) {
+			completions.append(completion)
+		}
+		
+		private func set(position: AnimationPosition) {
+			if inner.isRunning {
+				inner.position = position
+				return
+			}
+			let state = options.isReversed == true ? position.reversed : position
+			let constraint: [NSLayoutConstraint]
+			switch state {
+			case .start:
+				constraint = from()
+			case .progress(let k):
+				constraint = scale(k)
+			case .end:
+				constraint = to()
+			}
 			constraint.forEach { $0.didUpdate() }
-    }
-    
+		}
+	}
 }
 
 public struct LayoutGradient<A, B: UILayoutable, C: AttributeConvertable> {

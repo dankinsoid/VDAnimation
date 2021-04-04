@@ -9,30 +9,26 @@
 import Foundation
 import VDKit
 
-public struct AnimationOptions {
-    static let empty = AnimationOptions()
-    public var duration: AnimationDuration?
-    public var isInstant = false
-    public var curve: BezierCurve?
-    public var autoreverseStep: AutoreverseStep?
-    
-    var chain: ValueChaining<AnimationOptions> { ValueChaining(self) }
-    
-    public func or(_ other: AnimationOptions) -> AnimationOptions {
-        AnimationOptions(
-            duration: duration ?? other.duration,
-            curve: curve ?? other.curve,
-            autoreverseStep: autoreverseStep ?? other.autoreverseStep
-        )
-    }
-    
+public struct AnimationOptions: Equatable {
+	static let empty = AnimationOptions()
+	public var duration: AnimationDuration?
+	public var curve: BezierCurve?
+	public var complete: Bool?
+	public var isReversed: Bool?
+	
+	var chain: ValueChaining<AnimationOptions> { ValueChaining(self) }
+	
+	public func or(_ other: AnimationOptions) -> AnimationOptions {
+		AnimationOptions(
+			duration: duration ?? other.duration,
+			curve: curve ?? other.curve,
+			complete: complete ?? other.complete,
+			isReversed: isReversed ?? other.isReversed
+		)
+	}
 }
 
-extension AnimationOptions {
-    var isReversed: Bool { autoreverseStep == .back }
-}
-
-public enum AnimationStopPosition: ExpressibleByFloatLiteral {
+public enum AnimationStopPosition: ExpressibleByFloatLiteral, Equatable {
 	case start, progress(Double), end, current
 	
 	public init(floatLiteral value: Double) {
@@ -42,56 +38,51 @@ public enum AnimationStopPosition: ExpressibleByFloatLiteral {
 		default: self = .progress(value)
 		}
 	}
+}
+
+public enum AnimationPosition: ExpressibleByFloatLiteral, Equatable {
+	case start, progress(Double), end
 	
+	public var complete: Double {
+		switch self {
+		case .start:            return 0
+		case .progress(let k):  return k
+		case .end:              return 1
+		}
+	}
+	
+	public var reversed: AnimationPosition {
+		switch self {
+		case .start:            return .end
+		case .progress(let k):  return .progress(1 - k)
+		case .end:              return .start
+		}
+	}
+	
+	public init(floatLiteral value: Double) {
+		switch value {
+		case 0: self = .start
+		case 1: self = .end
+		default: self = .progress(value)
+		}
+	}
+	
+	public static func ==(_ lhs: AnimationPosition, _ rhs: AnimationPosition) -> Bool {
+		lhs.complete == rhs.complete
+	}
 }
 
-public enum AnimationPosition: ExpressibleByFloatLiteral {
-    case start, progress(Double), end, current
-    
-    public var complete: Double? {
-        switch self {
-        case .start:            return 0
-        case .progress(let k):  return k
-        case .end:              return 1
-				case .current:					return nil
-        }
-    }
-    
-    public var reversed: AnimationPosition {
-        switch self {
-        case .start:            return .end
-        case .progress(let k):  return .progress(1 - k)
-        case .end:              return .start
-				case .current:					return .current
-        }
-    }
-    
-    public init(floatLiteral value: Double) {
-        switch value {
-        case 0: self = .start
-        case 1: self = .end
-        default: self = .progress(value)
-        }
-    }
-    
+extension Optional where Wrapped == AnimationPosition {
+	public static var current: AnimationPosition? { nil }
 }
 
-enum OptionsPriority: Double, Comparable {
-    case usual = 0, required = 1
-    
-    static func <(lhs: OptionsPriority, rhs: OptionsPriority) -> Bool {
-        lhs.rawValue < rhs.rawValue
-    }
-    
-}
-
-public enum AutoreverseStep {
-    case forward, back
-    
-    public var inverted: AutoreverseStep {
-        switch self {
-        case .forward:  return .back
-        case .back:     return .forward
-        }
-    }
+public enum AutoreverseStep: Equatable {
+	case forward, back
+	
+	public var inverted: AutoreverseStep {
+		switch self {
+		case .forward:  return .back
+		case .back:     return .forward
+		}
+	}
 }

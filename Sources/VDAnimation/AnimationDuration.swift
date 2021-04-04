@@ -8,7 +8,7 @@
 
 import Foundation
 
-public enum AnimationDuration {
+public enum AnimationDuration: Equatable {
     case absolute(TimeInterval), relative(Double)
     
     public var absolute: TimeInterval? {
@@ -21,6 +21,24 @@ public enum AnimationDuration {
         return nil
     }
     
+}
+
+extension AnimationDuration {
+	
+	public var value: Double {
+		get {
+			switch self {
+			case .absolute(let value): return value
+			case .relative(let value): return value
+			}
+		}
+		set {
+			switch self {
+			case .absolute: self = .absolute(newValue)
+			case .relative: self = .relative(newValue)
+			}
+		}
+	}
 }
 
 public func /<F: BinaryFloatingPoint>(_ lhs: AnimationDuration, _ rhs: F) -> AnimationDuration {

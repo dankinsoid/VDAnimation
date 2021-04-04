@@ -10,19 +10,11 @@ import Foundation
 import VDKit
 
 public struct ModifiedAnimation: VDAnimationProtocol {
+	var options: AnimationOptions
+	let animation: VDAnimationProtocol
+	var chain: ValueChaining<ModifiedAnimation> { ValueChaining(self) }
     
-    public var modified: ModifiedAnimation { self }
-    var options: AnimationOptions
-    let animation: VDAnimationProtocol
-    var chain: ValueChaining<ModifiedAnimation> { ValueChaining(self) }
-    
-    @discardableResult
-    public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
-        animation.start(with: options.or(self.options), completion)
-    }
-    
-    public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
-			animation.set(position: position, for: options.or(self.options), execute: execute)
-    }
-    
+	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
+		animation.delegate(with: options.or(self.options))
+	}
 }

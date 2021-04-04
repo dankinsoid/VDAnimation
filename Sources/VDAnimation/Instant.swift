@@ -14,13 +14,6 @@ public typealias WithoutAnimation = Instant
 
 public struct Instant: ClosureAnimation {
 	
-	public var modified: ModifiedAnimation {
-		ModifiedAnimation(
-			options: AnimationOptions.empty.chain.duration[.absolute(0)].isInstant[true].apply(),
-			animation: self
-		)
-	}
-	
 	private let block: () -> Void
 	private let initial: (() -> Void)?
 	private let usePerform: Bool
@@ -43,35 +36,51 @@ public struct Instant: ClosureAnimation {
 		usePerform = withoutAnimation
 	}
 	
-	@discardableResult
-	public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegate {
-		let duration = options.duration?.absolute ?? 0
-		let anim = options.isReversed ? (initial ?? block) : block
-		if duration == 0 {
-			execute(anim, completion)
-			return .end
-		} else {
-			let remote = RemoteDelegate(completion)
-			DispatchTimer.execute(seconds: duration) {
-				guard !remote.isStopped else { return }
-				self.execute(anim, completion)
+	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
+		Delegate(block, usePerform: usePerform)
+	}
+	
+	final class Delegate: AnimationDelegateProtocol {
+		var isRunning: Bool { false }
+		private var completions: [(Bool) -> Void] = []
+		let action: () -> Void
+		let usePerform: Bool
+		var isInstant: Bool { true }
+		var options: AnimationOptions {
+			AnimationOptions.empty.chain.duration[.absolute(0)].complete[true].apply()
+		}
+		var position: AnimationPosition = .start
+		private var hasStopped = false
+		
+		init(_ action: @escaping () -> Void, usePerform: Bool) {
+			self.usePerform = usePerform
+			self.action = action
+		}
+		
+		func play(with options: AnimationOptions) {
+			stop(at: .end, final: false)
+		}
+		
+		func pause() {}
+		
+		func stop(at position: AnimationPosition?) {
+			stop(at: position, final: true)
+		}
+		
+		func stop(at position: AnimationPosition?, final: Bool) {
+			self.position = position ?? self.position
+			guard !hasStopped else { return }
+			hasStopped = final
+			if self.position == .end, !final {
+				usePerform ? UIView.performWithoutAnimation(action) : action()
 			}
-			return remote.delegate
+			self.completions.forEach {
+				$0(self.position == .end)
+			}
+		}
+		
+		func add(completion: @escaping (Bool) -> Void) {
+			completions.append(completion)
 		}
 	}
-	
-	public func set(position: AnimationPosition, for options: AnimationOptions, execute: Bool = true) {
-		let end = options.isReversed ? position.reversed : position
-		switch end.complete {
-		case 1:     if execute { self.execute(block) {_ in } }
-		default:    break
-		}
-	}
-	
-	private func execute(_ block: () -> Void, _ completion: @escaping (Bool) -> Void) {
-		usePerform ? UIView.performWithoutAnimation(block) : block()
-		completion(true)
-	}
-	
 }
-

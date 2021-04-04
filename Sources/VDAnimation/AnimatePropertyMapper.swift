@@ -148,59 +148,7 @@ extension AnimatePropertyMapper where R: UIKitPropertySettable, T: ScalableConve
     public subscript(_ range: Gradient<T>) -> PropertyAnimator<R, Animate> { setter.set(range) }
 }
 
-@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension AnimatePropertyMapper where R: View, T: Animatable {
-    
-    private var setter: AnimatedPropertySetter<R, T, SwiftUIAnimate> {
-        AnimatedPropertySetter(
-            object: object,
-            keyPath: keyPath,
-            animatable: animatable,
-            scale: {
-                var result = $0
-                var lenght = $2.animatableData - $0.animatableData
-                lenght.scale(by: $1)
-                result.animatableData += lenght
-                return result
-            }
-        )
-    }
-    
-    public func set(_ value: T) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(value) }
-    public func set(from initial: T, _ value: T) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(from: initial, value) }
-    public func set(_ a: T, _ b: T, _ values: T...) -> VDAnimationProtocol { setter.set(a, b, values) }
-    public func set(_ values: [T]) -> VDAnimationProtocol { setter.set(values) }
-    public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> VDAnimationProtocol { setter.set(from: initial, a, b, values) }
-    public func set(from initial: T, _ values: [T]) -> VDAnimationProtocol { setter.set(from: initial, values) }
-    public subscript(_ range: Gradient<T>) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(range) }
-}
-
-@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension AnimatePropertyMapper where R: View, T: VectorArithmetic {
-    
-    private var setter: AnimatedPropertySetter<R, T, SwiftUIAnimate> {
-        AnimatedPropertySetter(
-            object: object,
-            keyPath: keyPath,
-            animatable: animatable,
-            scale: {
-                var lenght = $2 - $0
-                lenght.scale(by: $1)
-                return $0 + lenght
-            }
-        )
-    }
-    
-    public func set(_ value: T) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(value) }
-    public func set(from initial: T, _ value: T) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(from: initial, value) }
-    public func set(_ a: T, _ b: T, _ values: T...) -> VDAnimationProtocol { setter.set(a, b, values) }
-    public func set(_ values: [T]) -> VDAnimationProtocol { setter.set(values) }
-    public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> VDAnimationProtocol { setter.set(from: initial, a, b, values) }
-    public func set(from initial: T, _ values: [T]) -> VDAnimationProtocol { setter.set(from: initial, values) }
-    public subscript(_ range: Gradient<T>) -> PropertyAnimator<R, SwiftUIAnimate> { setter.set(range) }
-}
-
-public protocol UIKitPropertySettable: class {}
+public protocol UIKitPropertySettable: AnyObject {}
 
 extension UIKitPropertySettable {
     public var ca: AnimatedPropertyMaker<Self> {
