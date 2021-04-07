@@ -40,16 +40,19 @@ struct DisappearAnimation: VDAnimationProtocol {
 		
 		private func completed(_ completed: Bool) {
 			guard !wasStopped else { return }
-			let final: AnimationPosition = inner.options.isReversed == true ? .end : .start
 			if complete {
 				wasStopped = true
-				inner.stop(at: final)
+				inner.stop(at: .start)
 			} else {
-				inner.position = final
+				inner.position = .start
 			}
 			completions.forEach {
 				$0(completed)
 			}
+		}
+		
+		func stop(at position: AnimationPosition?) {
+			inner.stop(at: position?.complete == 1 ? .start : (position ?? .start))
 		}
 	}
 }

@@ -35,7 +35,7 @@ open class VDAnimationTransition: UIPercentDrivenInteractiveTransition {
 	
 	override open func cancel() {
 		super.cancel()
-		//		transitioning.animator?.start().stop(.start)//.set(position: .start)
+		transitioning.animator?.cancel()
 		delegate?.isInteractive = false
 		transitioning.animationCompleted(false)
 		completion?(false)
@@ -43,14 +43,25 @@ open class VDAnimationTransition: UIPercentDrivenInteractiveTransition {
 	
 	override open func finish() {
 		super.finish()
-		//		transitioning.animator?.start().stop(.end)//.set(position: .end)
+		transitioning.animator?.stop(at: .end)
 		delegate?.isInteractive = false
 		transitioning.animationCompleted(true)
 		completion?(true)
 	}
 	
+	open func complete(duration: Double?, finish: Bool) {
+		transitioning.animator?.add {[weak self] in
+			finish && $0 ? self?.finish() : self?.cancel()
+		}
+		if !finish {
+			transitioning.animator?.play(with: .init(duration: duration.map { .absolute($0) }, isReversed: true))
+		} else {
+			transitioning.animator?.play(with: .init(duration: duration.map { .absolute($0) }))
+		}
+	}
+	
 	override open func update(_ percentComplete: CGFloat) {
 		super.update(percentComplete)
-		//		transitioning.animator?.set(percentComplete)
+		transitioning.animator?.progress = Double(percentComplete)
 	}
 }

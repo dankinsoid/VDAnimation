@@ -10,13 +10,83 @@ import UIKit
 
 extension CGAffineTransform {
 	
-	public func added(_ other: CGAffineTransform) -> CGAffineTransform {
-		let concatenated = concatenating(other)
-		return CGAffineTransform(
-			a: concatenated.a, b: concatenated.b,
-			c: concatenated.c, d: concatenated.d,
-			tx: tx + other.tx, ty: ty + other.ty
+	public var transform3d: CATransform3D {
+		CATransform3DMakeAffineTransform(self)
+	}
+	
+	public var offset: CGPoint {
+		get { CGPoint(x: tx, y: ty) }
+		set {
+			tx = newValue.x
+			ty = newValue.y
+		}
+	}
+	
+	public var scale: CGSize {
+		CGSize(
+			width: c == 0 ? a : (a > 0 ? 1 : -1) * sqrt(pow(a, 2) + pow(c, 2)),
+			height: b == 0 ? d : (d > 0 ? 1 : -1) * sqrt(pow(b, 2) + pow(d, 2))
 		)
+	}
+	
+	public var angle: CGFloat {
+		atan2(b, a)
+	}
+	
+	public func added(_ other: CGAffineTransform) -> CGAffineTransform {
+		let scale1 = scale
+		let scale2 = other.scale
+		var result = CGAffineTransform.identity
+			.rotated(by: angle + other.angle)
+			.scaledBy(x: scale1.width * scale2.width, y: scale1.height * scale2.height)
+		result.tx = tx + other.tx
+		result.ty = ty + other.ty
+		return result
+	}
+}
+
+extension CATransform3D {
+	
+	public var affine: CGAffineTransform {
+		CATransform3DGetAffineTransform(self)
+	}
+	
+	public func inverted() -> CATransform3D {
+		CATransform3DInvert(self)
+	}
+	
+	public func concatenating(_ other: CATransform3D) -> CATransform3D {
+		CATransform3DConcat(self, other)
+	}
+	
+	public func added(_ other: CATransform3D) -> CATransform3D {
+		let new = CATransform3DConcat(self, other)
+		return CATransform3D(
+			m11: new.m11, m12: new.m12, m13: new.m13, m14: new.m14,
+			m21: new.m21, m22: new.m22, m23: new.m23, m24: new.m24,
+			m31: new.m31, m32: new.m32, m33: new.m33, m34: new.m34,
+			m41: m41 + other.m41, m42: m42 + other.m42, m43: m43 + other.m43, m44: new.m44
+		)
+	}
+}
+
+extension UIView {
+	public var transformInWindow: CGAffineTransform {
+		([self] + superviews).reversed().reduce(.identity) {
+			$0.concatenating($1.transform)
+		}
+	}
+}
+
+
+extension CALayer {
+	public var superlayers: [CALayer] {
+		superlayer.map { [$0] + $0.superlayers } ?? []
+	}
+	
+	public var transformInWindow: CATransform3D {
+		([self] + superlayers).reversed().reduce(.identity) { $0.concatenating($1.transform)
+		}
 	}
 }
 

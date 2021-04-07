@@ -41,7 +41,7 @@ private var transitionVCKey = "transitionVCKey"
 
 public final class ViewTransitionConfig<View: UIView> {
 	public var id: String = UUID().uuidString
-	public var modifier: VDTransition<View, Void>?
+	public var modifier: VDTransition<View>?
 	init() {}
 }
 
@@ -55,7 +55,11 @@ public final class VСTransitionConfig<VC: UIViewController> {
 	public var curve: BezierCurve = .easeInOut {
 		didSet { delegate?.curve = curve }
 	}
-	public var animation: VDTransition<VDAnimatedTransitioning.Context, VDAnimationProtocol>? {
+	public var modifier: VDTransition<UIView> {
+		get { vc?.view?.transition.modifier ?? .identity }
+		set { vc?.view?.transition.modifier = newValue }
+	}
+	public var animation: ((VDAnimatedTransitioning.Context) -> VDAnimationProtocol)? {
 		didSet { delegate?.additional = animation }
 	}
 	

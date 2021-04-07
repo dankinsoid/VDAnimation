@@ -12,7 +12,7 @@ open class VDTransitioningDelegate: NSObject, UIViewControllerTransitioningDeleg
 	
 	open var duration: TimeInterval = 0.25
 	open var curve: BezierCurve = .easeInOut
-	open var additional: VDTransition<VDAnimatedTransitioning.Context, VDAnimationProtocol>?
+	open var additional: ((VDAnimatedTransitioning.Context) -> VDAnimationProtocol)?
 	open var isInteractive = false
 	open var interactive: UIViewControllerInteractiveTransitioning?
 	open var panDriver: PanInteractiveTransitionDriver?
@@ -33,11 +33,11 @@ open class VDTransitioningDelegate: NSObject, UIViewControllerTransitioningDeleg
 	}
 	
 	open func interactionControllerForPresentation(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
-		isInteractive ? interactive : nil
+		isInteractive ? interactive : panDriver?.transition
 	}
 	
 	open func interactionControllerForDismissal(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
-		isInteractive ? interactive : nil
+		isInteractive ? interactive : panDriver?.transition
 	}
 	
 	open func transitioning(for type: TransitionType) -> VDAnimatedTransitioning {

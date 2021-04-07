@@ -12,7 +12,6 @@ extension VDTransitioningDelegate: UINavigationControllerDelegate {
 	open func navigationController(_ navigationController: UINavigationController, interactionControllerFor animationController: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
 		guard let transitioninig = animationController as? VDAnimatedTransitioning else { return nil }
 		if panDriver == nil {
-			
 			let pan = UIScreenEdgePanGestureRecognizer()
 			pan.edges = .left
 			navigationController.view.addGestureRecognizer(pan)
@@ -24,7 +23,7 @@ extension VDTransitioningDelegate: UINavigationControllerDelegate {
 					self?.panDriver = nil
 				}
 			}
-			panDriver = PanInteractiveTransitionDriver(recognizer: pan, transition: transition) { pan in
+			panDriver = PanInteractiveTransitionDriver(recognizer: pan, edge: .leading, transition: transition) { pan in
 				pan.location(in: pan.view).x / (pan.view?.frame.width ?? 1)
 			}
 		}

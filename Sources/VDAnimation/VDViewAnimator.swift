@@ -40,6 +40,10 @@ open class VDViewAnimator: UIViewPropertyAnimator, AnimationDelegateProtocol {
 		}
 	}
 	
+	open func cancel() {
+		finishAnimation(at: .start)
+	}
+	
 	override open func stopAnimation(_ withoutFinishing: Bool) {
 		if !withoutFinishing {
 			guard state != .stopped else {
@@ -55,6 +59,7 @@ open class VDViewAnimator: UIViewPropertyAnimator, AnimationDelegateProtocol {
 		let prevRunning = isRunning
 		super.pauseAnimation()
 		if prevRunning, fractionComplete >= 0.99, pausesOnCompletion {
+			wasCompleted = true
 			self.completions.forEach {
 				$0(.end)
 			}
@@ -72,6 +77,7 @@ open class VDViewAnimator: UIViewPropertyAnimator, AnimationDelegateProtocol {
 	}
 	
 	private func prepareStart() {
+		wasCompleted = false
 		if isReversed, fractionComplete == 0 {
 			fractionComplete = 0.01
 		}
@@ -80,6 +86,7 @@ open class VDViewAnimator: UIViewPropertyAnimator, AnimationDelegateProtocol {
 	override open func addCompletion(_ completion: @escaping (UIViewAnimatingPosition) -> Void) {
 		completions.append(completion)
 		super.addCompletion {[weak self] in
+			guard self?.wasCompleted == false else { return }
 			completion(self?.isReversed == true ? $0.reversed : $0)
 		}
 	}

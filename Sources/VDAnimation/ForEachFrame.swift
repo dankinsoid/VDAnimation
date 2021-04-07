@@ -8,7 +8,10 @@
 
 import UIKit
 
-public struct ForEachFrame: VDAnimationProtocol {
+@available(*, deprecated, message: "Renamed to 'TimerAnimation'")
+public typealias ForEachFrame = TimerAnimation
+
+public struct TimerAnimation: VDAnimationProtocol {
 	private let preferredFramesPerSecond: Int
 	private let update: (CGFloat) -> Void
 	private let curve: ((CGFloat) -> CGFloat)?
@@ -20,7 +23,7 @@ public struct ForEachFrame: VDAnimationProtocol {
 	}
 	
 	public init(fps: Int = 0, _ update: @escaping (CGFloat) -> Void) {
-		self = ForEachFrame(fps: fps, curve: nil, update)
+		self = TimerAnimation(fps: fps, curve: nil, update)
 	}
 	
 	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
@@ -31,7 +34,14 @@ public struct ForEachFrame: VDAnimationProtocol {
 		var isRunning: Bool { displayLink?.isPaused == false }
 		var position: AnimationPosition {
 			get { .progress(currentProgress(displayLink: displayLink)) }
-			set { update(CGFloat(newValue.complete)) }
+			set {
+				if displayLink?.isPaused != false {
+					settedProgress = newValue.complete
+					update(CGFloat(newValue.complete))
+				} else {
+					settedProgress = nil
+				}
+			}
 		}
 		var options: AnimationOptions
 		var isInstant: Bool { false }
@@ -39,12 +49,15 @@ public struct ForEachFrame: VDAnimationProtocol {
 		private let update: (CGFloat) -> Void
 		private let curve: ((CGFloat) -> CGFloat)?
 		private var completions: [(Bool) -> Void] = []
+		private var settedProgress: Double?
 		
 		private var startedAt: CFTimeInterval?
 		private var pausedAt: CFTimeInterval?
 		private var pausedTime: CFTimeInterval = 0
 		private var displayLink: CADisplayLink?
 		private var block: ((CGFloat) -> CGFloat)?
+		private var wasCompleted = false
+		private var wasPlayed = false
 		
 		init(fps: Int, curve: ((CGFloat) -> CGFloat)?, _ update: @escaping (CGFloat) -> Void, options: AnimationOptions) {
 			self.preferredFramesPerSecond = fps
@@ -59,6 +72,7 @@ public struct ForEachFrame: VDAnimationProtocol {
 		
 		func play(with options: AnimationOptions) {
 			self.options = options.or(self.options)
+			wasPlayed = true
 			start()
 		}
 		
@@ -84,40 +98,51 @@ public struct ForEachFrame: VDAnimationProtocol {
 			displayLink = nil
 			startedAt = nil
 			pausedAt = nil
-			completion(true)
 		}
 		
 		private func completion(_ completed: Bool) {
+			guard wasPlayed, !wasCompleted else { return }
+			wasCompleted = true
 			completions.forEach {
 				$0(completed)
 			}
 		}
 		
 		func start() {
-			let duration = options.duration?.absolute ?? 0
-			guard duration > 0 else {
+			guard currentProgress(displayLink: displayLink) < 1 else {
 				stop()
 				update(options.isReversed == true ? 0 : 1)
 				completion(true)
 				return
 			}
+			wasPlayed = true
+			wasCompleted = false
 			block = transform()
 			createAndStart()
 		}
 		
 		func createAndStart() {
 			if displayLink == nil {
-				pausedTime = 0
+				if let setted = settedProgress, let dur = options.duration?.absolute, dur > 0 {
+					pausedTime = setted / dur
+				} else {
+					pausedTime = 0
+				}
 				pausedAt = nil
 				displayLink = displayLink ?? CADisplayLink(target: self, selector: #selector(handler))
 				displayLink?.preferredFramesPerSecond = preferredFramesPerSecond
 				startedAt = CACurrentMediaTime()
 				displayLink?.add(to: .main, forMode: .default)
 			} else if displayLink?.isPaused == true {
-				pausedTime += pausedAt.map { CACurrentMediaTime() - $0 } ?? 0
+				if let setted = settedProgress, let dur = options.duration?.absolute, dur > 0 {
+					pausedTime = setted / dur
+				} else {
+					pausedTime += pausedAt.map { CACurrentMediaTime() - $0 } ?? 0
+				}
 				pausedAt = nil
 				displayLink?.isPaused = false
 			}
+			settedProgress = nil
 		}
 		
 		@objc private func handler(displayLink: CADisplayLink) {
@@ -125,6 +150,7 @@ public struct ForEachFrame: VDAnimationProtocol {
 			guard percent < 1 else {
 				self.update(options.isReversed == true ? 0 : 1)
 				stop()
+				completion(true)
 				return
 			}
 			let k = options.isReversed == true ? 1 - percent : percent
@@ -132,9 +158,13 @@ public struct ForEachFrame: VDAnimationProtocol {
 		}
 		
 		private func currentProgress(displayLink: CADisplayLink?) -> Double {
+			if let setted = settedProgress, displayLink?.isPaused != false {
+				return setted
+			}
 			guard let displayLink = displayLink else { return 0 }
 			let time = displayLink.timestamp - (startedAt ?? CACurrentMediaTime()) - pausedTime
 			let duration = options.duration?.absolute ?? 0
+			guard duration > 0 else { return 1 }
 		  return time / duration
 		}
 		
