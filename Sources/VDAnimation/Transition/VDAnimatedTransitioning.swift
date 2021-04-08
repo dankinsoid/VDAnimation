@@ -6,21 +6,23 @@
 //
 
 import UIKit
+import ConstraintsOperators
 
 open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioning {
 	
 	public var transitionType: TransitionType
-	public var duration: TimeInterval
-	public var curve: BezierCurve
-	public var animation: ((Context) -> VDAnimationProtocol)?
-	var animator: AnimationDelegateProtocol?
+	private(set) var animator: AnimationDelegateProtocol?
 	private var completion: ((Bool) -> Void)?
+	private weak var delegate: VDTransitioningDelegate?
 	
-	public init(_ transitionType: TransitionType, duration: TimeInterval, curve: BezierCurve, animation:  ((Context) -> VDAnimationProtocol)?) {
+	public var duration: TimeInterval { delegate?.duration ?? 0 }
+	public var curve: BezierCurve { delegate?.curve ?? .linear }
+	public var animation: ((Context) -> VDAnimationProtocol)? { delegate?.additional }
+	public var interactivity: TransitionInteractivity? { delegate?.interactivity }
+	
+	public init(_ transitionType: TransitionType, delegate: VDTransitioningDelegate) {
 		self.transitionType = transitionType
-		self.duration = duration
-		self.curve = curve
-		self.animation = animation
+		self.delegate = delegate
 		super.init()
 	}
 	
@@ -50,7 +52,7 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 		if let result = animator {
 			return result
 		}
-		guard let toVc = transitionContext.viewController(forKey: .to), let fromVc = transitionContext.viewController(forKey: .from) else {
+		guard let toVc = transitionContext.viewController(forKey: .to), let fromVc = transitionContext.viewController(forKey: .from), let delegate = self.delegate else {
 			return nil
 		}
 		let inView = transitionContext.containerView
@@ -70,6 +72,12 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 		changing.frame = inView.bounds
 		changing.layoutIfNeeded()
 		
+		delegate.inContainer?(inView, transitionType.show ? toVc : fromVc)
+		inView.layoutIfNeeded()
+		inView.backgroundColor = .clear
+		
+		prepareInteractive(context: transitionContext)
+		
 		let appearViews = [toView] + toView.allSubviews()
 		let disappearViews = [fromView] + fromView.allSubviews()
 		
@@ -87,22 +95,34 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 			)
 		}
 		
+		properties[inView] = delegate.containerModifier
+		
 		let forAppear = appearViews.compactMap { view in
 			properties[view].map { (view, $0.appear, $0.current(for: view, .present)) }
 		}
 		let forDisappear = disappearViews.compactMap { view in
 			properties[view].map { (view, $0.disappear, $0.current(for: view, .present)) }
 		}
+		
+		let containerCurrent: ((UIView) -> Void, (UIView) -> Void) = (
+			delegate.containerModifier.current(for: inView, .present),
+			delegate.containerModifier.current(for: inView, .dismiss)
+		)
+		let containerModifier = delegate.containerModifier
+			
 		var main: [VDAnimationProtocol] = []
 		
 		if !properties.isEmpty {
 			main.append(
-				Animate {
+				Animate {[transitionType, weak inView] in
 					forAppear.forEach {
 						$0.2($0.0)
 					}
 					forDisappear.forEach {
 						$0.1($0.0)
+					}
+					if let inView = inView {
+						(transitionType.show ? containerModifier.appear : containerCurrent.1)(inView)
 					}
 				}
 			)
@@ -131,6 +151,7 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 		forAppear.forEach {
 			$0.1($0.0)
 		}
+		(transitionType.show ? containerCurrent.0 : containerModifier.disappear)(inView)
 		
 		completion = {[transitionType] in
 			if $0 {
@@ -222,6 +243,24 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 				.scaledBy(x: 1 / (scale.width == 0 ? 1 : scale.width), y: 1 / (scale.height == 0 ? 1 : scale.height))
 				.added(.translate(-offset.x, -offset.y))
 		)
+	}
+	
+	private func prepareInteractive(context: UIViewControllerContextTransitioning) {
+		guard let interactive = interactivity, let delegate = self.delegate else { return }
+		switch transitionType {
+		case .present:
+			guard let vc = context.viewController(forKey: .to) else { return }
+			delegate.interactiveTransitioning = interactive.appear(context.containerView, vc, delegate, self)
+		case .dismiss:
+			guard let vc = context.viewController(forKey: .from) else { return }
+			delegate.interactiveTransitioning = interactive.disappear(context.containerView, vc, delegate, self)
+		case .pop:
+			break
+		case .push:
+			break
+		case .set:
+			break
+		}
 	}
 	
 	public typealias Properties = VDTransition<UIView>

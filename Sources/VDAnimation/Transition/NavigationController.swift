@@ -10,25 +10,12 @@ import UIKit
 extension VDTransitioningDelegate: UINavigationControllerDelegate {
 	
 	open func navigationController(_ navigationController: UINavigationController, interactionControllerFor animationController: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
-		guard let transitioninig = animationController as? VDAnimatedTransitioning else { return nil }
-		if panDriver == nil {
-			let pan = UIScreenEdgePanGestureRecognizer()
-			pan.edges = .left
-			navigationController.view.addGestureRecognizer(pan)
-			let transition = VDAnimationTransition(transitioning: transitioninig, delegate: self)
-			transition.vc = navigationController
-			transition.completion = {[weak self] in
-				if $0 {
-					pan.view?.removeGestureRecognizer(pan)
-					self?.panDriver = nil
-				}
-			}
-			panDriver = PanInteractiveTransitionDriver(recognizer: pan, edge: .leading, transition: transition) { pan in
-				pan.location(in: pan.view).x / (pan.view?.frame.width ?? 1)
-			}
+		if let interactive = interactivity, let transitioning = animationController as? VDAnimatedTransitioning {
+			interactiveTransitioning = interactive.disappear(navigationController.view, navigationController, self, transitioning)
+		} else {
+			interactiveTransitioning = nil
 		}
-		panDriver?.transition.transitioning = transitioninig
-		return isInteractive ? panDriver?.transition : nil
+		return isInteractive ? interactiveTransitioning : nil
 	}
 	
 	open func navigationController(_ navigationController: UINavigationController, animationControllerFor operation: UINavigationController.Operation, from fromVC: UIViewController, to toVC: UIViewController) -> UIViewControllerAnimatedTransitioning? {

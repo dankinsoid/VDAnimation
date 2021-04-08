@@ -185,7 +185,6 @@ extension VDTransition where Content: UIView {
 	
 	public static func edge(_ edge: Edges, offset: CGFloat = 0, in view: UIView? = nil) -> VDTransition {
 		.init(\.transform) {
-			print($1)
 			let frame = $0.convert($1 == $0.transform ? $0.bounds : $0.bounds.applying($1), to: view)
 			let windowSize = (view ?? $0.window)?.frame.size ?? UIScreen.main.bounds.size
 			switch edge {
@@ -254,6 +253,14 @@ extension VDTransition where Content: UIView {
 	
 	public func rotate(_ angle: CGFloat, x: CGFloat, y: CGFloat, z: CGFloat) -> VDTransition {
 		transform3D(.rotate(angle, x: x, y: y, z: z))
+	}
+	
+	public static func corner(radius: CGFloat) -> VDTransition {
+		.init(\.layer.cornerRadius, value: radius)
+	}
+	
+	public func corner(radius: CGFloat) -> VDTransition {
+		combined(with: .corner(radius: radius))
 	}
 }
 

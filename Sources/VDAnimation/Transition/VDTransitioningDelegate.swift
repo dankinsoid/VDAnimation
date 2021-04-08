@@ -14,8 +14,10 @@ open class VDTransitioningDelegate: NSObject, UIViewControllerTransitioningDeleg
 	open var curve: BezierCurve = .easeInOut
 	open var additional: ((VDAnimatedTransitioning.Context) -> VDAnimationProtocol)?
 	open var isInteractive = false
-	open var interactive: UIViewControllerInteractiveTransitioning?
-	open var panDriver: PanInteractiveTransitionDriver?
+	open var interactiveTransitioning: UIViewControllerInteractiveTransitioning?
+	open var interactivity: TransitionInteractivity?
+	open var containerModifier: VDTransition<UIView> = .identity
+	open var inContainer: ((UIView, UIViewController) -> Void)?
 	
 	weak var previousNavigationDelegate: UINavigationControllerDelegate?
 	weak var previousTabDelegate: UITabBarControllerDelegate?
@@ -33,14 +35,14 @@ open class VDTransitioningDelegate: NSObject, UIViewControllerTransitioningDeleg
 	}
 	
 	open func interactionControllerForPresentation(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
-		isInteractive ? interactive : panDriver?.transition
+		isInteractive ? interactiveTransitioning : nil
 	}
 	
 	open func interactionControllerForDismissal(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
-		isInteractive ? interactive : panDriver?.transition
+		isInteractive ? interactiveTransitioning : nil
 	}
 	
 	open func transitioning(for type: TransitionType) -> VDAnimatedTransitioning {
-		VDAnimatedTransitioning(type, duration: duration, curve: curve, animation: additional)
+		VDAnimatedTransitioning(type, delegate: self)
 	}
 }

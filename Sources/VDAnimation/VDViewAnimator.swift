@@ -115,7 +115,7 @@ open class VDViewAnimator: UIViewPropertyAnimator, AnimationDelegateProtocol {
 	}
 	
 	private func factor(for options: AnimationOptions) -> CGFloat {
-		switch options.duration {
+		switch options.duration ?? animationOptions.duration {
 		case .none:
 			return 1
 		case .absolute(let time):
