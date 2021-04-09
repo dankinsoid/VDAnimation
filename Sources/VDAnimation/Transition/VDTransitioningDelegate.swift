@@ -12,12 +12,14 @@ open class VDTransitioningDelegate: NSObject, UIViewControllerTransitioningDeleg
 	
 	open var duration: TimeInterval = 0.25
 	open var curve: BezierCurve = .easeInOut
-	open var additional: ((VDAnimatedTransitioning.Context) -> VDAnimationProtocol)?
+	open var additional: ((VDTransitionContext) -> VDAnimationProtocol)?
 	open var isInteractive = false
 	open var interactiveTransitioning: UIViewControllerInteractiveTransitioning?
 	open var interactivity: TransitionInteractivity?
 	open var containerModifier: VDTransition<UIView> = .identity
-	open var inContainer: ((UIView, UIViewController) -> Void)?
+	open var prepare: ((VDTransitionContext) -> Void)?
+	open var restoreDisappearedViews: Bool = true
+	var disappearStates: [UIView: (UIView) -> Void] = [:]
 	
 	weak var previousNavigationDelegate: UINavigationControllerDelegate?
 	weak var previousTabDelegate: UITabBarControllerDelegate?

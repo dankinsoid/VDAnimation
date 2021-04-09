@@ -9,6 +9,7 @@ import UIKit
 import ConstraintsOperators
 
 open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioning {
+	public typealias Context = VDTransitionContext
 	
 	public var transitionType: TransitionType
 	private(set) var animator: AnimationDelegateProtocol?
@@ -56,10 +57,13 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 			return nil
 		}
 		let inView = transitionContext.containerView
+		inView.backgroundColor = .clear
 		toVc.loadViewIfNeeded()
 		fromVc.loadViewIfNeeded()
 		let toView: UIView = toVc.view
 		let fromView: UIView = fromVc.view
+		
+		let context = Context(fromVC: fromVc, toVC: toVc, type: transitionType, container: inView)
 		
 		let changing = transitionType.show ? toView : fromView
 		let stable = transitionType.show ? fromView : toView
@@ -72,9 +76,8 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 		changing.frame = inView.bounds
 		changing.layoutIfNeeded()
 		
-		delegate.inContainer?(inView, transitionType.show ? toVc : fromVc)
+		delegate.prepare?(context)
 		inView.layoutIfNeeded()
-		inView.backgroundColor = .clear
 		
 		prepareInteractive(context: transitionContext)
 		
@@ -98,7 +101,7 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 		properties[inView] = delegate.containerModifier
 		
 		let forAppear = appearViews.compactMap { view in
-			properties[view].map { (view, $0.appear, $0.current(for: view, .present)) }
+			properties[view].map { (view, delegate.disappearStates[view] == nil ? $0.appear : $0.current(for: view, .present), $0.current(for: view, .present)) }
 		}
 		let forDisappear = disappearViews.compactMap { view in
 			properties[view].map { (view, $0.disappear, $0.current(for: view, .present)) }
@@ -114,9 +117,9 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 		
 		if !properties.isEmpty {
 			main.append(
-				Animate {[transitionType, weak inView] in
+				Animate {[transitionType, weak inView, weak self] in
 					forAppear.forEach {
-						$0.2($0.0)
+						self?.delegate?.disappearStates[$0.0]?($0.0) ?? $0.2($0.0)
 					}
 					forDisappear.forEach {
 						$0.1($0.0)
@@ -136,12 +139,10 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 		case (true, nil):
 			return nil
 		case (true, .some(let second)):
-			let context = Context(fromVC: fromVc, toVC: toVc, type: transitionType, container: inView)
 			animation = second(context)
 		case (false, nil):
 			animation = main.count == 1 ? main[0] : Parallel(main)
 		case (false, .some(let second)):
-			let context = Context(fromVC: fromVc, toVC: toVc, type: transitionType, container: inView)
 			let additional = second(context)
 			animation = Parallel(main + [additional])
 		}
@@ -153,13 +154,19 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 		}
 		(transitionType.show ? containerCurrent.0 : containerModifier.disappear)(inView)
 		
-		completion = {[transitionType] in
+		completion = {[weak self, transitionType] in
 			if $0 {
 				if transitionType.show {
-					forDisappear.forEach {
-						$0.2($0.0)
+					if self?.delegate?.restoreDisappearedViews == true {
+						self?.delegate?.disappearStates = [:]
+						forDisappear.forEach {
+							$0.2($0.0)
+						}
+					} else {
+						self?.delegate?.disappearStates = forDisappear.mapDictionary { ($0.0, $0.2) }
 					}
 				} else {
+					self?.delegate?.disappearStates = [:]
 					changing.removeFromSuperview()
 				}
 			} else {
@@ -264,11 +271,18 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 	}
 	
 	public typealias Properties = VDTransition<UIView>
-	
-	public struct Context {
-		public let fromVC: UIViewController
-		public let toVC: UIViewController
-		public let type: TransitionType
-		public let container: UIView
+
+}
+
+public struct VDTransitionContext {
+	public let fromVC: UIViewController
+	public let toVC: UIViewController
+	public let type: TransitionType
+	public let container: UIView
+	public var topVC: UIViewController {
+		type.show ? toVC : fromVC
+	}
+	public var bottomVC: UIViewController {
+		type.show ? fromVC : toVC
 	}
 }

@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import ConstraintsOperators
 
 extension CGAffineTransform {
 	
@@ -90,6 +91,70 @@ extension CALayer {
 	}
 }
 
+extension Edges {
+	public static var left: Edges { .leading }
+	public static var right: Edges { .trailing }
+	
+	public var axe: NSLayoutConstraint.Axis {
+		switch self {
+		case .bottom, .top: return .vertical
+		case .leading, .trailing: return .horizontal
+		}
+	}
+	
+	public var opposite: Edges {
+		switch self {
+		case .leading: return .trailing
+		case .bottom: return .top
+		case .top: return .bottom
+		case .trailing: return .leading
+		}
+	}
+}
+
+extension UIRectEdge {
+	public init(_ edge: Edges) {
+		switch edge {
+		case .leading: self = .left
+		case .bottom: self = .bottom
+		case .top: self = .top
+		case .trailing: self = .right
+		}
+	}
+}
+
+extension UIEdgeInsets {
+	public subscript(_ edge: Edges) -> CGFloat {
+		switch edge {
+		case .leading: 	return right
+		case .bottom: 	return top
+		case .top: 			return bottom
+		case .trailing: return left
+		}
+	}
+}
+
+extension CACornerMask {
+	public static func edge(_ edge: Edges) -> CACornerMask {
+		switch edge {
+		case .leading: 	return [.layerMinXMinYCorner, .layerMinXMaxYCorner]
+		case .bottom: 	return [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+		case .top: 			return [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+		case .trailing: return [.layerMaxXMinYCorner, .layerMaxXMaxYCorner]
+		}
+	}
+}
+
+extension UIScreen {
+	/// The corner radius of the display. Uses a private property of `UIScreen`,
+	/// and may report 0 if the API changes.
+	public var displayCornerRadius: CGFloat {
+		guard let cornerRadius = self.value(forKey: "_displayCornerRadius") as? CGFloat else {
+			return 0
+		}
+		return cornerRadius
+	}
+}
 //
 //extension CALayer {
 //

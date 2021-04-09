@@ -183,10 +183,10 @@ extension VDTransition where Content: UIView {
 		combined(with: .background(color))
 	}
 	
-	public static func edge(_ edge: Edges, offset: CGFloat = 0, in view: UIView? = nil) -> VDTransition {
+	public static func edge(_ edge: Edges, offset: CGFloat = 0) -> VDTransition {
 		.init(\.transform) {
-			let frame = $0.convert($1 == $0.transform ? $0.bounds : $0.bounds.applying($1), to: view)
-			let windowSize = (view ?? $0.window)?.frame.size ?? UIScreen.main.bounds.size
+			let frame = $0.convert($1 == $0.transform ? $0.bounds : $0.bounds.applying($1), to: nil)
+			let windowSize = $0.window?.frame.size ?? UIScreen.main.bounds.size
 			switch edge {
 			case .top:
 				return $0.offsetTransform(CGPoint(x: 0, y: -(frame.maxY - offset)), current: $1)
@@ -200,8 +200,8 @@ extension VDTransition where Content: UIView {
 		}
 	}
 	
-	public func edge(_ edge: Edges, offset: CGFloat = 0, in view: UIView? = nil) -> VDTransition {
-		combined(with: .edge(edge, offset: offset, in: view))
+	public func edge(_ edge: Edges, offset: CGFloat = 0) -> VDTransition {
+		combined(with: .edge(edge, offset: offset))
 	}
 	
 	public static func offset(_ point: CGPoint) -> VDTransition {
@@ -220,15 +220,15 @@ extension VDTransition where Content: UIView {
 		combined(with: .offset(x: x, y: y))
 	}
 	
-	public static func slide(from: Edges = .leading, to: Edges = .trailing, in view: UIView? = nil) -> VDTransition {
+	public static func slide(from: Edges = .leading, to: Edges = .trailing) -> VDTransition {
 		asymmetric(
-			appear: .edge(from, in: view),
-			disappear: .edge(to, in: view)
+			appear: .edge(from),
+			disappear: .edge(to)
 		)
 	}
 	
-	public func slide(from: Edges = .leading, to: Edges = .trailing, in view: UIView? = nil) -> VDTransition {
-		combined(with: .slide(from: from, to: to, in: view))
+	public func slide(from: Edges = .leading, to: Edges = .trailing) -> VDTransition {
+		combined(with: .slide(from: from, to: to))
 	}
 	
 	public static var slide: VDTransition {
