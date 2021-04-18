@@ -20,10 +20,6 @@ extension VDAnimationProtocol {
 	}
 }
 
-public protocol ClosureAnimation: VDAnimationProtocol {
-	init(_ closure: @escaping () -> Void)
-}
-
 extension VDAnimationProtocol {
 	public var options: AnimationOptions { modified.options }
 	public var modified: ModifiedAnimation { ModifiedAnimation(options: .empty, animation: self) }

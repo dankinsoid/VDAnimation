@@ -10,7 +10,7 @@ import UIKit
 import VDKit
 
 ///UIKit animation
-public struct Animate: ClosureAnimation {
+public struct Animate: VDAnimationProtocol {
 	let animation: VDAnimationProtocol
 	
 	public init(_ block: @escaping () -> Void) {

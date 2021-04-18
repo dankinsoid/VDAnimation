@@ -9,7 +9,7 @@ import UIKit
 import VDKit
 
 ///UIKit animation
-struct UIKitAnimation: ClosureAnimation {
+struct UIKitAnimation: VDAnimationProtocol {
 	
 	let block: () -> Void
 	let springTiming: UISpringTimingParameters?

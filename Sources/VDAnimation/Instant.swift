@@ -12,7 +12,7 @@ import VDKit
 @available(*, deprecated, message: "Renamed to 'Instant'")
 public typealias WithoutAnimation = Instant
 
-public struct Instant: ClosureAnimation {
+public struct Instant: VDAnimationProtocol {
 	
 	private let block: () -> Void
 	private let initial: (() -> Void)?
