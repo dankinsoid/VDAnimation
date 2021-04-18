@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 final class ValueObservable<Value: Equatable> {
 	private var observers: [UUID: (Value, Value) -> Void] = [:]
 	var value: Value {
@@ -31,6 +32,7 @@ final class ValueObservable<Value: Equatable> {
 	}
 }
 
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 final class ProgressObservable {
 	let id: UUID
 	let base: ValueObservable<AnimationModifier.AnimatableData>
@@ -57,6 +59,7 @@ final class ProgressObservable {
 	}
 }
 
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 final class ValueSubject<Value> {
 	private var observers: [UUID: (Value) -> Void] = [:]
 	
@@ -74,6 +77,7 @@ final class ValueSubject<Value> {
 	}
 }
 
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 extension View {
 	
 	func onReceive<T>(_ subject: ValueSubject<T>, observer: @escaping (T) -> Void) -> some View {

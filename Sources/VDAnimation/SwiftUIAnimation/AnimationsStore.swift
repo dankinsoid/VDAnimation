@@ -45,6 +45,7 @@ public struct AnimationsStore: AnimationDelegateProtocol {
 	}
 }
 
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 extension AnimationsStore {
 	final class Store {
 		var animation: VDAnimationProtocol?
@@ -72,6 +73,7 @@ extension AnimationsStore {
 	}
 }
 
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 extension AnimationsStore {
 	
 	struct Wrapper<Content: View>: View {
