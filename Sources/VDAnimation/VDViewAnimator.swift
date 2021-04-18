@@ -68,11 +68,19 @@ open class VDViewAnimator: UIViewPropertyAnimator, AnimationDelegateProtocol {
 	
 	override open func startAnimation() {
 		prepareStart()
+		if animationOptions.duration?.absolute == 0 {
+			zeroAnimation()
+			return
+		}
 		super.startAnimation()
 	}
 	
 	override open func continueAnimation(withTimingParameters parameters: UITimingCurveProvider?, durationFactor: CGFloat) {
 		prepareStart()
+		if durationFactor == 0 {
+			zeroAnimation()
+			return
+		}
 		super.continueAnimation(withTimingParameters: parameters, durationFactor: durationFactor)
 	}
 	
@@ -80,6 +88,15 @@ open class VDViewAnimator: UIViewPropertyAnimator, AnimationDelegateProtocol {
 		wasCompleted = false
 		if isReversed, fractionComplete == 0 {
 			fractionComplete = 0.01
+		}
+	}
+	
+	private func zeroAnimation() {
+		if pausesOnCompletion {
+			fractionComplete = 1
+			pauseAnimation()
+		} else {
+			finishAnimation(at: isReversed ? .start : .end)
 		}
 	}
 	
@@ -119,7 +136,7 @@ open class VDViewAnimator: UIViewPropertyAnimator, AnimationDelegateProtocol {
 		case .none:
 			return 1
 		case .absolute(let time):
-			return duration == 0 ? 1 : CGFloat(time / duration)
+			return duration == 0 ? 0 : CGFloat(time / duration)
 		case .relative(let value):
 			return CGFloat(value)
 		}

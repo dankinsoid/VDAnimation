@@ -13,7 +13,6 @@ public protocol AnimationDelegateProtocol {
 	var position: AnimationPosition { get nonmutating set }
 	var options: AnimationOptions { get }
 	var isInstant: Bool { get }
-//	var animationState: AnimationState { get }
 	
 	func play(with options: AnimationOptions)
 	func pause()

@@ -23,13 +23,13 @@ public struct Animate: ClosureAnimation {
 	
 	@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 	public init(_ store: AnimationsStore, _ block: @escaping (Double) -> Void) {
-		animation = SwiftUIAnimate(store, StateChanges(change: block))
+		animation = SwiftUIAnimate(store, StateChanges(block))
 	}
 	
 	@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 	public init(_ store: AnimationsStore, @ArrayBuilder<StateChanges> _ changes: () -> [StateChanges]) {
 		let change = changes()
-		animation = SwiftUIAnimate(store, StateChanges(change: { p in change.forEach { $0.change(p) }}))
+		animation = SwiftUIAnimate(store, StateChanges { p in change.forEach { $0.change(p) }})
 	}
 	
 	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {

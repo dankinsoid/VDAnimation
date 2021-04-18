@@ -19,7 +19,7 @@ extension ViewTransitable {
 		if let result = objc_getAssociatedObject(self, &transitionKey) as? ViewTransitionConfig {//<Self> {
 			return result
 		}
-		let result = ViewTransitionConfig()//<Self>()
+		let result = ViewTransitionConfig()//<Self>(
 		objc_setAssociatedObject(self, &transitionKey, result, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
 		return result
 	}
@@ -54,11 +54,10 @@ public final class ViewTransitionConfig {//<View: UIView> {
 public final class VСTransitionConfig {
 	public weak var vc: UIViewController? {
 		didSet {
-			vc?.view?.transition.modifier = modifier ?? vc?.view?.transition.modifier
 			if isEnabled { setEnabled() }
 		}
 	}
-	private lazy var delegate = VDTransitioningDelegate()
+	private lazy var delegate = VDTransitioningDelegate(vc)
 	private weak var previousTransitionDelegate: UIViewControllerTransitioningDelegate?
 	
 	public var duration: TimeInterval {
@@ -70,15 +69,14 @@ public final class VСTransitionConfig {
 		set { delegate.curve = newValue }
 	}
 	public var modifier: VDTransition<UIView>? {
-		didSet {
-			vc?.view?.transition.modifier = modifier ?? vc?.view?.transition.modifier
-		}
+		get { delegate.modifier }
+		set { delegate.modifier = newValue }
 	}
 	public var animation: ((VDAnimatedTransitioning.Context) -> VDAnimationProtocol)? {
 		get { delegate.additional }
 		set { delegate.additional = newValue }
 	}
-	public var interactive: TransitionInteractivity? {
+	public var interactive: TransitionInteractivity {
 		get { delegate.interactivity }
 		set { delegate.interactivity = newValue }
 	}
@@ -93,6 +91,10 @@ public final class VСTransitionConfig {
 	public var restoreDisappearedViews: Bool {
 		get { delegate.restoreDisappearedViews }
 		set { delegate.restoreDisappearedViews = newValue }
+	}
+	public var applyModifierOnBothVC: Bool {
+		get { delegate.applyModifierOnBothVC }
+		set { delegate.applyModifierOnBothVC = newValue }
 	}
 	
 	public var isEnabled = false {
@@ -114,14 +116,15 @@ public final class VСTransitionConfig {
 	
 	private func setEnabled() {
 		guard vc != nil else { return }
-		if interactive == nil, vc as? UINavigationController != nil {
-			interactive = .edges(.left)
+		delegate.owner = vc
+		
+		if interactive.isNone, vc as? UINavigationController != nil {
+			interactive.disappear = .swipe(to: .right)
 		}
 		
 		previousTransitionDelegate = vc?.transitioningDelegate
 		vc?.transitioningDelegate = delegate
 		vc?.modalPresentationStyle = .overCurrentContext
-		
 		delegate.previousNavigationDelegate = (vc as? UINavigationController)?.delegate
 		delegate.previousTabDelegate = (vc as? UITabBarController)?.delegate
 		(vc as? UINavigationController)?.delegate = delegate
@@ -140,10 +143,10 @@ extension UIViewController {
 	public func present(_ viewController: UIViewController, transition: VDTransition<UIView>, interactive: TransitionInteractivity?, animated: Bool = true, completion: (() -> Void)? = nil) {
 		viewController.transition.isEnabled = true
 		viewController.transition.modifier = transition
-		viewController.transition.interactive = interactive
+		viewController.transition.interactive = interactive ?? .none
 		let duration = viewController.transition.duration
 		if !animated {
-			viewController.transition.duration = 0.0001
+			viewController.transition.duration = 0
 		}
 		present(viewController, animated: true) {
 			if !animated {
@@ -159,10 +162,10 @@ extension UIViewController {
 		transitions.forEach {
 			$0.key.transition.id = $0.value.transition.id
 		}
-		viewController.transition.interactive = interactive
+		viewController.transition.interactive = interactive ?? .none
 		let duration = viewController.transition.duration
 		if !animated {
-			viewController.transition.duration = 0.0001
+			viewController.transition.duration = 0
 		}
 		present(viewController, animated: true) {
 			if !animated {
@@ -175,7 +178,7 @@ extension UIViewController {
 
 extension VСTransitionConfig {
 	
-	public static func pageSheet(from edge: Edges = .bottom, minOffset: CGFloat = 10, cornerRadius: CGFloat = 10, backScale: Double = 0.9, containerColor: UIColor = .black.withAlphaComponent(0.2)) -> VСTransitionConfig {
+	public static func pageSheet(from edge: Edges = .bottom, minOffset: CGFloat = 10, cornerRadius: CGFloat = 10, backScale: Double = 0.915, containerColor: UIColor = #colorLiteral(red: 0.21, green: 0.21, blue: 0.23, alpha: 0.37)) -> VСTransitionConfig {
 		
 		let result = VСTransitionConfig()
 		result.isEnabled = true
@@ -190,20 +193,27 @@ extension VСTransitionConfig {
 		
 		var constraint: Constraints<UIView>?
 		
-		result.prepare = {
+		result.prepare = {[weak result] in
 			guard $0.type.show else { return }
 			$0.bottomVC.transition.modifier = .scale(backScale).corner(radius: cornerRadius)
 			$0.bottomVC.view.clipsToBounds = true
-			$0.bottomVC.view.layer.cornerRadius = UIScreen.main.displayCornerRadius
+			$0.bottomVC.view.layer.cornerRadius = UIScreen.main.cornerRadius
 			$0.topVC.view.ignoreAutoresizingMask()
 			$0.topVC.view.edges(Edges.Set.all.subtracting(.init(edge.opposite))) =| 0
-			constraint = $0.topVC.view.edges(.init(edge.opposite)) =| offset
+			constraint = $0.topVC.view.edges(.init(edge.opposite)).priority(990) =| offset
 			$0.topVC.view.clipsToBounds = true
 			$0.topVC.view.layer.cornerRadius = cornerRadius
 			$0.topVC.view.layer.maskedCorners = .edge(edge.opposite)
+			if $0.type == .present {
+				let recognizer = TapRecognizer()
+				$0.container.addGestureRecognizer(recognizer)
+				recognizer.onTap = {
+					result?.vc?.dismiss(animated: true, completion: nil)
+				}
+			}
 		}
 		
-		result.interactive = .swipe(to: .init(edge)) {
+		result.interactive.disappear = .swipe(to: .init(edge)) {
 			let constant = (edge == .right || edge == .bottom ? 1 : -1) * (offset - ($0 > 0 ? 0 : 2 * dif * atan(-$0 / dif) / .pi))
 			if constant != constraint?.constant {
 				constraint?.constant = constant
@@ -216,15 +226,35 @@ extension VСTransitionConfig {
 		let result = VСTransitionConfig()
 		result.isEnabled = true
 		result.modifier = .edge(edge)
-		result.interactive = .edges(.init(edge.opposite))
+		result.interactive.disappear = .edges(.init(edge.opposite))
 		return result
 	}
 	
-	public static func fade(interactive: TransitionInteractivity? = nil) -> VСTransitionConfig {
+	public static func fade(interactive: TransitionInteractivity = .none) -> VСTransitionConfig {
 		let result = VСTransitionConfig()
 		result.isEnabled = true
 		result.modifier = .opacity
 		result.interactive = interactive
 		return result
+	}
+}
+
+fileprivate class TapRecognizer: UITapGestureRecognizer, UIGestureRecognizerDelegate {
+	var onTap: () -> Void = {}
+	
+	init() {
+		super.init(target: nil, action: nil)
+		delegate = self
+		addTarget(self, action: #selector(handle))
+	}
+	
+	func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+		gestureRecognizer.view === touch.view
+	}
+	
+	@objc private func handle(_ gestureRecognizer: UIGestureRecognizer) {
+		if gestureRecognizer.state == .recognized {
+			onTap()
+		}
 	}
 }

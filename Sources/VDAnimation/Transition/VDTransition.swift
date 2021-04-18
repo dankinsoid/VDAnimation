@@ -24,6 +24,10 @@ public struct VDTransition<Content> {
 		}
 	}
 	
+	public var inverted: VDTransition {
+		VDTransition(appear: disappearKps, disappear: appearKps)
+	}
+	
 	private init(appear: [KP], disappear: [KP]) {
 		self.appearKps = appear
 		self.disappearKps = disappear

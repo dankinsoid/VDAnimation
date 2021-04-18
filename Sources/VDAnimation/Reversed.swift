@@ -45,6 +45,7 @@ struct ReversedAnimation: VDAnimationProtocol {
 			inner.position = options.isReversed == true ? .end : .start
 			inner.play(with: options)
 		}
+		
 		func pause() {
 			inner.pause()
 		}

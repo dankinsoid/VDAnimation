@@ -16,3 +16,16 @@ public struct AnimationPare<L, R> {
 		_1 = r
 	}
 }
+
+
+
+protocol An {
+	associatedtype Delegate: AnimationDelegateProtocol
+	func delegate() -> Delegate
+}
+
+protocol WA: AnimationDelegateProtocol {}
+
+protocol AA: An {
+	override associatedtype Delegate: WA
+}

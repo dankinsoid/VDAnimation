@@ -26,8 +26,8 @@ struct UIKitAnimation: ClosureAnimation {
 	
 	func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
 		let provider = VDTimingProvider(bezier: options.curve, spring: springTiming)
-		let duration = options.duration?.absolute ?? 1
-		let animator = VDViewAnimator(duration: duration > 0 ? duration : 1, timingParameters: provider)
+		let duration = options.duration?.absolute ?? 0
+		let animator = VDViewAnimator(duration: duration, timingParameters: provider)
 		animator.animationOptions = options
 		animator.addAnimations(block)
 		

@@ -115,9 +115,9 @@ extension Edges {
 extension UIRectEdge {
 	public init(_ edge: Edges) {
 		switch edge {
-		case .leading: self = .left
-		case .bottom: self = .bottom
-		case .top: self = .top
+		case .leading: 	self = .left
+		case .bottom: 	self = .bottom
+		case .top: 			self = .top
 		case .trailing: self = .right
 		}
 	}
@@ -148,13 +148,14 @@ extension CACornerMask {
 extension UIScreen {
 	/// The corner radius of the display. Uses a private property of `UIScreen`,
 	/// and may report 0 if the API changes.
-	public var displayCornerRadius: CGFloat {
+	public var cornerRadius: CGFloat {
 		guard let cornerRadius = self.value(forKey: "_displayCornerRadius") as? CGFloat else {
 			return 0
 		}
 		return cornerRadius
 	}
 }
+
 //
 //extension CALayer {
 //

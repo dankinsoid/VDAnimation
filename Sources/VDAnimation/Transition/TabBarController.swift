@@ -10,11 +10,12 @@ import UIKit
 extension VDTransitioningDelegate: UITabBarControllerDelegate {
 	
 	open func tabBarController(_ tabBarController: UITabBarController, interactionControllerFor animationController: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
-		nil
+		transitioning(for: tabBarController, interactionControllerFor: animationController)
 	}
 	
 	open func tabBarController(_ tabBarController: UITabBarController, animationControllerForTransitionFrom fromVC: UIViewController, to toVC: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-		transitioning(for: .set)
+		guard let current = tabBarController.viewControllers?.firstIndex(of: fromVC), let next = tabBarController.viewControllers?.firstIndex(of: toVC), current != next else { return nil }
+		return transitioning(for: current < next ? .next : .previous, presenting: toVC)
 	}
 	
 	open func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {

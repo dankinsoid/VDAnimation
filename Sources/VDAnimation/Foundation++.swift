@@ -53,15 +53,15 @@ extension Gradient where Bound: Animatable {
 	}
 }
 
-//extension Gradient where Bound: VectorArithmetic {
-//	public func at(_ percent: Double) -> Bound {
-//		var result = from
-//		var dif = (to - from)
-//		dif.scale(by: percent)
-//		result = result + dif
-//		return result
-//	}
-//}
+extension Gradient where Bound: VectorArithmetic {
+	public func vectorAt(_ percent: Double) -> Bound {
+		var result = from
+		var dif = (to - from)
+		dif.scale(by: percent)
+		result = result + dif
+		return result
+	}
+}
 
 extension Gradient: Equatable where Bound: Equatable {}
 extension Gradient: Hashable where Bound: Hashable {}

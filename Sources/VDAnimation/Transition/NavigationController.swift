@@ -10,18 +10,13 @@ import UIKit
 extension VDTransitioningDelegate: UINavigationControllerDelegate {
 	
 	open func navigationController(_ navigationController: UINavigationController, interactionControllerFor animationController: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
-		if let interactive = interactivity, let transitioning = animationController as? VDAnimatedTransitioning {
-			interactiveTransitioning = interactive.disappear(navigationController.view, navigationController, self, transitioning)
-		} else {
-			interactiveTransitioning = nil
-		}
-		return isInteractive ? interactiveTransitioning : nil
+		transitioning(for: navigationController, interactionControllerFor: animationController)
 	}
 	
 	open func navigationController(_ navigationController: UINavigationController, animationControllerFor operation: UINavigationController.Operation, from fromVC: UIViewController, to toVC: UIViewController) -> UIViewControllerAnimatedTransitioning? {
 		switch operation {
-		case .push:	return transitioning(for: .push)
-		case .pop:	return transitioning(for: .pop)
+		case .push:	return transitioning(for: .push, presenting: toVC)
+		case .pop:	return transitioning(for: .pop, presenting: nil)
 		default:		return nil
 		}
 	}

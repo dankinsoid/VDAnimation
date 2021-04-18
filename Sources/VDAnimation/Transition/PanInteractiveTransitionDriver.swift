@@ -8,21 +8,34 @@
 import UIKit
 import ConstraintsOperators
 
-open class PanInteractiveTransitionDriver: VDPercentDrivenTransition {
+open class PanInteractiveTransitionDriver: InteractiveDriver {
 	public let recognizer: UIPanGestureRecognizer
 	public let edge: Edges
 	private var didStart = false
 	
-	public init(recognizer: UIPanGestureRecognizer, edge: Edges, transitioning: VDAnimatedTransitioning, delegate: VDTransitioningDelegate) {
+	public init(recognizer: UIPanGestureRecognizer, edge: Edges, delegate: VDTransitioningDelegate, startTransition: @escaping (UIViewController, Bool) -> Bool) {
 		self.recognizer = recognizer
 		self.edge = edge
-		super.init(transitioning: transitioning, delegate: delegate)
+		super.init(delegate: delegate, startTransition: startTransition)
 		prepare()
 	}
 	
 	private func prepare() {
 		recognizer.isEnabled = true
 		recognizer.addTarget(self, action: #selector(recognised))
+	}
+	
+	private var percent: CGFloat {
+		switch edge {
+		case .top:
+			return recognizer.location(in: recognizer.view).y / (recognizer.view?.frame.height ?? 1)
+		case .leading:
+			return recognizer.location(in: recognizer.view).x / (recognizer.view?.frame.width ?? 1)
+		case .bottom:
+			return 1 - recognizer.location(in: recognizer.view).y / (recognizer.view?.frame.height ?? 1)
+		case .trailing:
+			return 1 - recognizer.location(in: recognizer.view).x / (recognizer.view?.frame.width ?? 1)
+		}
 	}
 	
 	@objc
@@ -46,17 +59,6 @@ open class PanInteractiveTransitionDriver: VDPercentDrivenTransition {
 			didStart = true
 		case .changed:
 			guard didStart else { return }
-			let percent: CGFloat
-			switch edge {
-			case .top:
-				percent = sender.location(in: sender.view).y / (sender.view?.frame.height ?? 1)
-			case .leading:
-				percent = sender.location(in: sender.view).x / (sender.view?.frame.width ?? 1)
-			case .bottom:
-				percent = 1 - sender.location(in: sender.view).y / (sender.view?.frame.height ?? 1)
-			case .trailing:
-				percent = 1 - sender.location(in: sender.view).x / (sender.view?.frame.width ?? 1)
-			}
 			update(percent)
 		case .ended:
 			guard didStart else { return }
@@ -64,7 +66,7 @@ open class PanInteractiveTransitionDriver: VDPercentDrivenTransition {
 			let velocity = sender.velocity(in: sender.view).x
 			let finish = (velocity > 0) == (edge == .leading || edge == .top)
 			let final = finish ? (sender.view?.frame.width ?? 0) : 0
-			let maxTime = transitioning.duration * Double(finish ? 1 - percentComplete : percentComplete)
+			let maxTime = (transitioning?.duration ?? 0) * Double(finish ? 1 - percentComplete : percentComplete)
 			let time = velocity == 0 ? maxTime : Double(final / abs(velocity))
 			complete(duration: min(maxTime, time), finish: finish)
 		case .cancelled, .failed:

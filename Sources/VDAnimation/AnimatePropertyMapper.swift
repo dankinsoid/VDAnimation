@@ -7,170 +7,24 @@
 //
 
 import UIKit
-import SwiftUI
-
-@dynamicMemberLookup
-public struct AnimatePropertyMapper<R, T> {
-    fileprivate let object: () -> R?
-    private let keyPath: ReferenceWritableKeyPath<R, T>
-    private let animatable: PropertyAnimatable
-    
-    init(object: @escaping () -> R?, animatable: PropertyAnimatable, keyPath: ReferenceWritableKeyPath<R, T>) {
-        self.keyPath = keyPath
-        self.object = object
-        self.animatable = animatable
-    }
-    
-    public subscript<D>(dynamicMember keyPath: WritableKeyPath<T, D>) -> AnimatePropertyMapper<R, D> {
-        let kp = self.keyPath.appending(path: keyPath)
-        return AnimatePropertyMapper<R, D>(object: object, animatable: animatable, keyPath: kp)
-    }
-    
-}
-
-private struct AnimatedPropertySetter<R, T, A: ClosureAnimation> {
-    fileprivate let object: () -> R?
-    private let scale: (T, Double, T) -> T
-    private let keyPath: ReferenceWritableKeyPath<R, T>
-    private let animatable: PropertyAnimatable
-    
-    fileprivate init(object: @escaping () -> R?, keyPath: ReferenceWritableKeyPath<R, T>,  animatable: PropertyAnimatable, scale: @escaping (T, Double, T) -> T) {
-        self.keyPath = keyPath
-        self.object = object
-        self.scale = scale
-        self.animatable = animatable
-    }
-    
-    func set(_ value: T) -> PropertyAnimator<R, A> {
-        return _set(from: nil, value)
-    }
-    
-    func set(from initial: T, _ value: T) -> PropertyAnimator<R, A> {
-        return _set(from: initial, value)
-    }
-    
-     func _set(from initial: T?, _ value: T) -> PropertyAnimator<R, A> {
-        PropertyAnimator(
-            PropertyOwner(
-                from: initial,
-                getter: { self.object()?[keyPath: self.keyPath] },
-                setter: {
-                    guard let v = $0, let object = self.object() else { return }
-                    object[keyPath: self.keyPath] = v
-                    (object as? NSLayoutConstraint)?.didUpdate()
-                },
-                scale: scale,
-                value: value
-            ).asAnimatable.union(animatable),
-            get: object
-        )
-    }
-    
-    func set(_ a: T, _ b: T, _ values: [T]) -> VDAnimationProtocol {
-        set([a, b] + values)
-    }
-    
-    func set(_ values: [T]) -> VDAnimationProtocol {
-        guard values.count > 1 else {
-            return Sequential(values.map { set($0) })
-        }
-        var array = values
-        var animations = [set(values[0]) as VDAnimationProtocol]
-        array.removeFirst()
-        animations += sequential(from: values[0], array)
-        return Sequential(animations)
-    }
-    
-    func set(from initial: T, _ a: T, _ b: T, _ values: [T]) -> VDAnimationProtocol {
-        set(from: initial, [a, b] + values)
-    }
-    
-    func set(from initial: T, _ values: [T]) -> VDAnimationProtocol {
-        Sequential(sequential(from: initial, values))
-    }
-    
-    private func sequential(from initial: T, _ values: [T]) -> [VDAnimationProtocol] {
-        guard values.count > 0 else {
-            return [set(from: initial, initial)]
-        }
-        var array = values
-        var from = initial
-        var animations: [VDAnimationProtocol] = []
-        while !array.isEmpty {
-            let second = array.removeFirst()
-            animations.append(set(from: from, second))
-            from = second
-        }
-        return animations
-    }
-    
-    fileprivate func set(_ range: Gradient<T>) -> PropertyAnimator<R, A> {
-        set(from: range.from, range.to)
-    }
-    
-}
-
-@dynamicMemberLookup
-public struct AnimatedPropertyMaker<R> {
-    private var object: () -> R?
-    
-    fileprivate init(object: @escaping () -> R?) {
-        self.object = object
-    }
-    
-    public subscript<D>(dynamicMember keyPath: ReferenceWritableKeyPath<R, D>) -> AnimatePropertyMapper<R, D> {
-        AnimatePropertyMapper(object: object, animatable: .empty, keyPath: keyPath)
-    }
-    
-    public subscript<D: UIKitPropertySettable>(dynamicMember keyPath: KeyPath<R, D>) -> AnimatedPropertyMaker<D> {
-        AnimatedPropertyMaker<D>(object: { self.object()?[keyPath: keyPath] })
-    }
-    
-}
-
-extension AnimatePropertyMapper where R: UIKitPropertySettable, T: ScalableConvertable {
-    
-    private var setter: AnimatedPropertySetter<R, T, Animate> {
-        AnimatedPropertySetter(
-            object: object,
-            keyPath: keyPath,
-            animatable: animatable,
-            scale: { T.init(scaleData: $0.scaleData + ($2.scaleData - $0.scaleData).scaled(by: $1)) }
-        )
-    }
-    
-    public func set(_ value: T) -> PropertyAnimator<R, Animate> { setter.set(value) }
-    public func set(from initial: T, _ value: T) -> PropertyAnimator<R, Animate> { setter.set(from: initial, value) }
-    public func set(_ a: T, _ b: T, _ values: T...) -> VDAnimationProtocol { setter.set(a, b, values) }
-    public func set(_ values: [T]) -> VDAnimationProtocol { setter.set(values) }
-    public func set(from initial: T, _ a: T, _ b: T, _ values: T...) -> VDAnimationProtocol { setter.set(from: initial, a, b, values) }
-    public func set(from initial: T, _ values: [T]) -> VDAnimationProtocol { setter.set(from: initial, values) }
-    public subscript(_ range: Gradient<T>) -> PropertyAnimator<R, Animate> { setter.set(range) }
-}
+import VDKit
 
 public protocol UIKitPropertySettable: AnyObject {}
 
 extension UIKitPropertySettable {
-    public var ca: AnimatedPropertyMaker<Self> {
-        return AnimatedPropertyMaker(object: {[weak self] in self })
+    public var ca: ChainingProperty<UIKitChainingAnimation<Self>, Self> {
+			ChainingProperty(UIKitChainingAnimation(self, setInitial: { $0 }), getter: \.self)
     }
 }
 
 extension UIView: UIKitPropertySettable {}
 extension CALayer: UIKitPropertySettable {}
 
-extension NSLayoutConstraint: UIKitPropertySettable {
-    public var ca: AnimatedPropertyMaker<NSLayoutConstraint> {
-        return AnimatedPropertyMaker(object: { self })
-    }
-}
-
-@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension View {
-    public var ca: AnimatedPropertyMaker<Self> {
-        return AnimatedPropertyMaker(object: { self })
-    }
-}
+//extension NSLayoutConstraint: UIKitPropertySettable {
+//    public var ca: AnimatedPropertyMaker<NSLayoutConstraint> {
+//        return AnimatedPropertyMaker(object: { self })
+//    }
+//}
 
 extension NSLayoutConstraint {
 

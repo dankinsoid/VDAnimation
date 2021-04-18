@@ -10,6 +10,7 @@ import Foundation
 import VDKit
 
 public protocol VDAnimationProtocol {
+	
 	func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol
 }
 
