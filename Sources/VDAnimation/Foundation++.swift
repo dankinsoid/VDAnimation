@@ -36,12 +36,6 @@ public func ...<Bound>(_ lhs: Bound, _ rhs: Bound) -> Gradient<Bound> {
     Gradient(lhs, rhs)
 }
 
-extension Gradient where Bound: ScalableConvertable {
-    public func at(_ percent: Double) -> Bound {
-        Bound(scaleData: from.scaleData + (to.scaleData - from.scaleData).scaled(by: percent))
-    }
-}
-
 @available(iOS 13.0, *)
 extension Gradient where Bound: Animatable {
 	public func at(_ percent: Double) -> Bound {
@@ -53,8 +47,9 @@ extension Gradient where Bound: Animatable {
 	}
 }
 
+@available(iOS 13.0, *)
 extension Gradient where Bound: VectorArithmetic {
-	public func vectorAt(_ percent: Double) -> Bound {
+	public func at(_ percent: Double) -> Bound {
 		var result = from
 		var dif = (to - from)
 		dif.scale(by: percent)

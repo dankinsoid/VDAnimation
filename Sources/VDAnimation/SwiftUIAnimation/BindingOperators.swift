@@ -100,12 +100,12 @@ extension Binding where Value: VectorArithmetic {
 	public func to(_ value: Value) -> StateChanges {
 		let property = LazyProperty<Value> { self.wrappedValue }
 		return StateChanges {
-			wrappedValue = (property.wrappedValue...value).vectorAt($0)
+			wrappedValue = (property.wrappedValue...value).at($0)
 		}
 	}
 	
 	public func change(_ gradient: Gradient<Value>) -> StateChanges {
-		StateChanges { wrappedValue = gradient.vectorAt($0) }
+		StateChanges { wrappedValue = gradient.at($0) }
 	}
 }
 
