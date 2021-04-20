@@ -128,6 +128,7 @@ Instant {
 }
 ```
 ### `TimerAnimation`
+`CADisplayLink` wrapper
 ```swift 
 TimerAnimation { progress in
   ...
