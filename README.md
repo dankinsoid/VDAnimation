@@ -38,23 +38,95 @@ Sequential {
 .start()
 ```
 ## Usage
-#### Basic animations
-1. Animate - simple UIKit animation, it's initialized by closure
-2. SwiftUIAnimate (beta) - simple SwiftUI animation, it's initialized by closure
-3. Sequential - sequential animations running one after another
-4. Parallel - parallel animations running simultaneously
-5. Interval - time interval
-6. Instant - any block of code, always zero duration
-7. ForEachFrame
+### Basic animations
+#### Animate  - simple animation, it's initialized by closure
+UKit:
+```swift 
+	Animate {
+		...
+	}
+```
+SwiftUI:
+```swift 
+	struct SomeView: View {
+		let animations = AnimationsStore()
+		@State private var someValue: Value
+		
+		var body: some View {
+			VStack {
+				Button(Text("Tap")) {
+					Animate(animations) {
+						$someValue =~ newValue
+					}
+					.duration(0.3)
+					.start()
+				}
+			}
+			.with(animations)
+		}
+	}
+```
+#### Sequential - sequential animations running one after another
+```swift 
+	Sequential {
+		Animate { ... }.duration(relative: 0.5)
+		Interval(0.1)
+		Parallel { ... }
+		
+	}.duration(1)
+	.start()
+```
+#### Parallel - parallel animations running simultaneously
+```swift 
+	Parallel {
+		Animate { ... }.duration(relative: 0.5)
+		Sequential { ... }
+		
+	}.duration(1)
+	.start()
+```
+#### Interval - time interval
+```swift 
+	Interval(1)
+```
+#### Instant - any block of code, always zero duration
+```swift 
+	Instant {
+		...
+	}
+```
+#### TimerAnimation
+```swift 
+	TimerAnimation { progress in
+		...
+	}
+```
 
-#### Modifiers
+### Modifiers
 1. duration(TimeInterval) - sets the animation duration in seconds
 2. duration(relative: Double) - sets the animation duration relative to the parent animation in 0...1
 3. curve(BezierCurve) - sets the animation curve
 4. spring(dampingRatio: CGFloat = 0.3) - sets spring animation curve (UIViewAnimate)
-5. ca - UIView, CALayer and View extension to describe an animation of one property
+5. ca - UIView, CALayer and View, Binding extension to describe an animation of one property
 ```swift 
 	let animation = someView.ca.anyMutableViewProperty.set(newValue)
+```
+
+### Transitions
+```swift 
+	viewController.transition.isEnabled = true
+	viewController.transition.modifier = .edge(.bottom)
+	viewController.transition.interactive.disappear = .swipe(to: .bottom)
+	present(viewController)
+	...
+	fromVc.someView.transition.id = "source"
+	toVc.someView.transition.id = "source"
+	fromVc.someView2.transition.modifier = .scale.offset(10)
+	to.someView2.transition.modifier = .scale.offset(-10)
+	toVc.transition.isEnabled = true
+	viewController.transition.interactive.disappear = .swipe(to: .bottom)
+	present(toVc)
+	...
 ```
 
 ## Installation
