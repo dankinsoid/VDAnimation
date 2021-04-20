@@ -138,9 +138,9 @@ method `start()` or `delegate()` returns `AnimationDelegateProtocol` object
 5. `.repeat()`, `.repeat(Int)` - repeat animation
 5. `.autoreverse()`, `.autoreverse(repeat: Int)` - autoreverse animation
 5. `.reversed()` - reversed animation
-6. `.ca` - `UIView`, `CALayer` and `View`, `Binding` extension to describe an animation of one property
+6. `.ca` - `UIView`, `CALayer` and `View`, `Binding` extension to describe an animation of properties
 ```swift 
-	let animation = someView.ca.anyMutableViewProperty[newValue]
+	let animation = someView.ca.backgroundColor[.white].layer.cornerRadius[8]
 ```
 
 ### Transitions
