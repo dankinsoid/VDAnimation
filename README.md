@@ -135,7 +135,10 @@ method `start()` or `delegate()` returns `AnimationDelegateProtocol` object
 2. `.duration(relative: Double)` - sets the animation duration relative to the parent animation in 0...1
 3. `.curve(BezierCurve)` - sets the animation curve
 4. `.spring(dampingRatio: CGFloat = 0.3)` - sets spring animation curve (only for `Animate`)
-5. `.ca` - `UIView`, `CALayer` and `View`, `Binding` extension to describe an animation of one property
+5. `.repeat()`, `.repeat(Int)` - repeat animation
+5. `.autoreverse()`, `.autoreverse(repeat: Int)` - autoreverse animation
+5. `.reversed()` - reversed animation
+6. `.ca` - `UIView`, `CALayer` and `View`, `Binding` extension to describe an animation of one property
 ```swift 
 	let animation = someView.ca.anyMutableViewProperty[newValue]
 ```
