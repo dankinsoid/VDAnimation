@@ -24,6 +24,10 @@ public struct AnimationsStore: AnimationDelegateProtocol {
 		}
 	}
 	
+	public var progressBinding: Binding<Double> {
+		Binding(get: { self.progress }, set: { self.progress = $0 })
+	}
+	
 	public var options: AnimationOptions { store.delegate?.options ?? .empty }
 	
 	public init() {}
