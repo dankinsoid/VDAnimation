@@ -14,7 +14,7 @@ This repository provides a new declarative way to describe animations
 ```swift
 Sequential {
   Parallel {
-    someView.ca.frame.origin.y.set(100)
+    someView.ca.frame.origin.y[100]
     someView.ca.backgroundColor[.red].duration(relative: 0.2)
   }
   Parallel {
