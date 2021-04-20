@@ -29,7 +29,7 @@ Sequential {
     self.imageHeightConstraint.constant = 50
     self.view.layoutIfNeeded()
   }
-  ForEachFrame { progress in
+  TimerAnimation { progress in
   	someLabel.textColor = (UIColor.white...UIColor.red).at(progress)
   }
 }
