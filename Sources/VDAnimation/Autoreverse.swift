@@ -21,7 +21,7 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
 		let option = AnimationOptions(duration: self.duration(from: options.duration), complete: false, isReversed: false)
 		let delegate = animation.delegate(with: option)
 		let duration = self.fullDuration(from: delegate.options.duration)
-		return Delegate(inner: delegate, options: options.chain.duration[duration].apply())
+		return Delegate(inner: delegate, options: options.set(.duration(duration)))
 	}
 	
 	private func duration(from dur: AnimationDuration?) -> AnimationDuration? {

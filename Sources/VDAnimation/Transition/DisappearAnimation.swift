@@ -11,7 +11,7 @@ struct DisappearAnimation: VDAnimationProtocol {
 	let animation: VDAnimationProtocol
 	
 	func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
-		Delegate(animation.delegate(with: options.chain.complete[false].apply()), complete: options.complete ?? true)
+		Delegate(animation.delegate(with: options.set(.complete(false))), complete: options.complete ?? true)
 	}
 	
 	final class Delegate: AnimationDelegateWrapper {
@@ -28,7 +28,7 @@ struct DisappearAnimation: VDAnimationProtocol {
 		func play(with options: AnimationOptions) {
 			wasStopped = false
 			complete = options.complete ?? complete
-			inner.play(with: options.chain.complete[false].apply())
+			inner.play(with: options.set(.complete(false)))
 		}
 		
 		func add(completion: @escaping (Bool) -> Void) {

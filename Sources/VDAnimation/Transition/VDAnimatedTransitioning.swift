@@ -270,7 +270,7 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 			x: (appearFrame.midX - disappearFrame.midX),
 			y: (appearFrame.midY - disappearFrame.midY)
 		)
-		#warning("anchorPoint")
+		//#warning("anchorPoint")
 		return (
 			CGAffineTransform.identity
 				.scaledBy(x: scale.width, y: scale.height)

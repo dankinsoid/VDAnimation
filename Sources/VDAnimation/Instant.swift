@@ -47,7 +47,7 @@ public struct Instant: VDAnimationProtocol {
 		let usePerform: Bool
 		var isInstant: Bool { true }
 		var options: AnimationOptions {
-			AnimationOptions.empty.chain.duration[.absolute(0)].complete[true].apply()
+			[.duration(.absolute(0)), .complete(true)]
 		}
 		var position: AnimationPosition = .start
 		private var hasStopped = false

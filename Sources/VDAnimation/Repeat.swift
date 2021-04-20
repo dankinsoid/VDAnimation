@@ -42,7 +42,7 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
 			self.inner = inner
 			self.count = count
 			let duration = Delegate.duration(for: count, from: options.duration)
-			self.options = options.or(AnimationOptions.empty.chain.duration[duration].apply())
+			self.options = options.or(.duration(duration))
 			prepare()
 		}
 		

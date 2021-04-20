@@ -181,7 +181,7 @@ internal final class SequentialDelegate: AnimationDelegateProtocol {
 	private func setDuration() -> [AnimationOptions] {
 		let full = options.duration?.absolute ?? fullDuration?.absolute ?? 0
 		guard full > 0 else {
-			return [AnimationOptions](repeating: options.chain.duration[.absolute(0)].apply(), count: animations.count)
+			return [AnimationOptions](repeating: options.set(.duration(.absolute(0))), count: animations.count)
 		}
 		var ks: [Double?] = []
 		var childrenRelativeTime = 0.0
@@ -203,9 +203,12 @@ internal final class SequentialDelegate: AnimationDelegateProtocol {
 		}
 		var result: [AnimationOptions]
 		if relativeK == 0 {
-			result = [AnimationOptions](repeating: options.chain.duration[.absolute(full / Double(animations.count))].complete[false].apply(), count: animations.count)
+			result = [AnimationOptions](
+				repeating: options.set([.duration(.absolute(full / Double(animations.count))), .complete(false)]),
+				count: animations.count
+			)
 		} else {
-			result = ks.map({ options.chain.duration[.absolute(full * ($0 ?? add) / relativeK)].complete[false].apply() })
+			result = ks.map({ options.set([.duration(.absolute(full * ($0 ?? add) / relativeK)), .complete(false)]) })
 		}
 		setCurve(&result, duration: full, options: options)
 		return result

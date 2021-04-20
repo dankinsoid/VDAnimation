@@ -191,7 +191,7 @@ public struct Parallel: VDAnimationProtocol {
 				case .relative(let r):      return full * min(1, r)
 				}
 			}
-			var result = childrenDurations.map({ options.chain.duration[.absolute($0)].complete[false].apply() })
+			var result = childrenDurations.map({ options.set([.duration(.absolute($0)), .complete(false)]) })
 			setCurve(&result, duration: full)
 			return result
 		}
