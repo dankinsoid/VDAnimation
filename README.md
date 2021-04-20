@@ -136,7 +136,7 @@ TimerAnimation { progress in
 
 ### Interactive
 method `.start()` or `.delegate()` returns `AnimationDelegateProtocol` object
-####`AnimationDelegateProtocol`
+#### `AnimationDelegateProtocol`
 1. `.isRunning`: `Bool` { get }
 2. `.position`: `AnimationPosition` { get nonmutating set }
 3. `.options`: `AnimationOptions` { get }
