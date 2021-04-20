@@ -38,7 +38,8 @@ Sequential {
 .start()
 ```
 ## Usage
-### `Animate` - simple animation, it's initialized by closure
+### `Animate`
+simple animation, it's initialized by closure
 #### UKit
 ```swift 
 Animate {
@@ -93,7 +94,8 @@ struct SomeView: View {
   }
 }
 ```
-### `Sequential` - sequential animations running one after another
+### `Sequential`
+sequential animations running one after another
 ```swift 
 Sequential {
   Animate { ... }.duration(relative: 0.5)
@@ -103,7 +105,8 @@ Sequential {
 .duration(1)
 .start()
 ```
-### `Parallel` - parallel animations running simultaneously
+### `Parallel`
+parallel animations running simultaneously
 ```swift 
 Parallel {
   Animate { ... }.duration(relative: 0.5)
@@ -112,11 +115,13 @@ Parallel {
 .duration(1)
 .start()
 ```
-### `Interval` - time interval
+### `Interval`
+time interval
 ```swift 
 Interval(1)
 ```
-### `Instant` - any block of code, always zero duration
+### `Instant`
+any block of code, always zero duration
 ```swift 
 Instant {
   ...
