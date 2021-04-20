@@ -13,16 +13,20 @@ public typealias ForEachFrame = TimerAnimation
 
 public struct TimerAnimation: VDAnimationProtocol {
 	private let preferredFramesPerSecond: Int
-	private let update: (CGFloat) -> Void
+	private let update: (CGFloat, FrameInfo?) -> Void
 	private let curve: ((CGFloat) -> CGFloat)?
 	
-	init(fps: Int, curve: ((CGFloat) -> CGFloat)?, _ update: @escaping (CGFloat) -> Void) {
+	init(fps: Int, curve: ((CGFloat) -> CGFloat)?, _ update: @escaping (CGFloat, FrameInfo?) -> Void) {
 		self.preferredFramesPerSecond = fps
 		self.update = update
 		self.curve = curve
 	}
 	
 	public init(fps: Int = 0, _ update: @escaping (CGFloat) -> Void) {
+		self = TimerAnimation(fps: fps, curve: nil, { p, _ in update(p) })
+	}
+	
+	public init(fps: Int = 0, _ update: @escaping (CGFloat, FrameInfo?) -> Void) {
 		self = TimerAnimation(fps: fps, curve: nil, update)
 	}
 	
@@ -37,7 +41,7 @@ public struct TimerAnimation: VDAnimationProtocol {
 			set {
 				if displayLink?.isPaused != false {
 					settedProgress = newValue.complete
-					update(CGFloat(newValue.complete))
+					update(CGFloat(newValue.complete), displayLink?.info)
 				} else {
 					settedProgress = nil
 				}
@@ -46,7 +50,7 @@ public struct TimerAnimation: VDAnimationProtocol {
 		var options: AnimationOptions
 		var isInstant: Bool { false }
 		private let preferredFramesPerSecond: Int
-		private let update: (CGFloat) -> Void
+		private let update: (CGFloat, FrameInfo?) -> Void
 		private let curve: ((CGFloat) -> CGFloat)?
 		private var completions: [(Bool) -> Void] = []
 		private var settedProgress: Double?
@@ -59,7 +63,7 @@ public struct TimerAnimation: VDAnimationProtocol {
 		private var wasCompleted = false
 		private var wasPlayed = false
 		
-		init(fps: Int, curve: ((CGFloat) -> CGFloat)?, _ update: @escaping (CGFloat) -> Void, options: AnimationOptions) {
+		init(fps: Int, curve: ((CGFloat) -> CGFloat)?, _ update: @escaping (CGFloat, FrameInfo?) -> Void, options: AnimationOptions) {
 			self.preferredFramesPerSecond = fps
 			self.update = update
 			self.curve = curve
@@ -85,7 +89,7 @@ public struct TimerAnimation: VDAnimationProtocol {
 		func stop(at position: AnimationPosition?) {
 			stop()
 			if let progress = (position?.complete).map({ CGFloat($0) }) {
-				update(progress)
+				update(progress, displayLink?.info)
 				completion(progress == 1)
 			} else {
 				completion(false)
@@ -111,7 +115,7 @@ public struct TimerAnimation: VDAnimationProtocol {
 		func start() {
 			guard currentProgress(displayLink: displayLink) < 1 else {
 				stop()
-				update(options.isReversed == true ? 0 : 1)
+				update(options.isReversed == true ? 0 : 1, displayLink?.info)
 				completion(true)
 				return
 			}
@@ -148,13 +152,13 @@ public struct TimerAnimation: VDAnimationProtocol {
 		@objc private func handler(displayLink: CADisplayLink) {
 			let percent = CGFloat(currentProgress(displayLink: displayLink))
 			guard percent < 1 else {
-				self.update(options.isReversed == true ? 0 : 1)
+				self.update(options.isReversed == true ? 0 : 1, displayLink.info)
 				stop()
 				completion(true)
 				return
 			}
 			let k = options.isReversed == true ? 1 - percent : percent
-			self.update(block?(k) ?? k)
+			self.update(block?(k) ?? k, displayLink.info)
 		}
 		
 		private func currentProgress(displayLink: CADisplayLink?) -> Double {
@@ -175,9 +179,23 @@ public struct TimerAnimation: VDAnimationProtocol {
 			}
 		}
 	}
+	
+	public struct FrameInfo {
+		///The time value associated with the next frame that was displayed.
+		///You can use the target timestamp to cancel or pause long running processes
+		///that may overrun the available time between frames in order to maintain a consistent frame rate.
+		public var targetTimestamp: CFTimeInterval { displayLink.targetTimestamp }
+		///The time value associated with the last frame that was displayed.
+		public var timestamp: CFTimeInterval { displayLink.timestamp }
+		///The time interval between screen refresh updates.
+		public var duration: CFTimeInterval { displayLink.duration }
+		public var isOverrun: Bool { CACurrentMediaTime() >= displayLink.targetTimestamp }
+		public var actualFps: CFTimeInterval { 1 / (displayLink.targetTimestamp - displayLink.timestamp) }
+		
+		var displayLink: CADisplayLink
+	}
 }
 
-public struct FrameInfo {
-	public let progress: Double
-	public let remains: CFTimeInterval
+extension CADisplayLink {
+	var info: TimerAnimation.FrameInfo { .init(displayLink: self) }
 }
