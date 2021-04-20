@@ -55,14 +55,39 @@ SwiftUI:
 		var body: some View {
 			VStack {
 				Button(Text("Tap")) {
-					Animate(animations) {
-						$someValue =~ newValue
+					Sequential {
+						Animate(animations) {
+							$someValue =~ newValue
+						}
+						.duration(0.3)
+						Animate(animations) { progress in
+							someValue = (from...to).at(progress)
+							//progress may be 0 or 1
+							//or any value in 0...1 if animation is interactive
+						}
+						.duration(0.3)
 					}
-					.duration(0.3)
 					.start()
 				}
 			}
 			.with(animations)
+		}
+		
+		var example2: some View {
+			VStack {
+				Slider(value: animations.progressBinding, in: 0...1)
+				Button("Play") {
+					animations.play()
+				}
+				Button("Pause") {
+					animations.pause()
+				}
+			}
+			.with(animations) {
+				Animate(animations) {
+					$someValue =~ newValue
+				}.duration(2)
+			}
 		}
 	}
 ```
