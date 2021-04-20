@@ -136,6 +136,15 @@ TimerAnimation { progress in
 
 ### Interactive
 method `.start()` or `.delegate()` returns `AnimationDelegateProtocol` object
+####`AnimationDelegateProtocol`
+1. `.isRunning`: Bool { get }
+2. `.position`: AnimationPosition { get nonmutating set }
+3. `.options`: AnimationOptions { get }
+4. `.play(with options: AnimationOptions)`
+5. `.pause()`
+6. `.stop(at position: AnimationPosition?)`
+7. `.add(completion: @escaping (Bool) -> Void)`
+8. `.cancel()`
 
 ### Modifiers
 1. `.duration(TimeInterval)` - sets the animation duration in seconds
