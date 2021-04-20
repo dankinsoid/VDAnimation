@@ -127,6 +127,9 @@ SwiftUI:
 	}
 ```
 
+### Interactive
+method `start()` or `delegate()` returns `AnimationDelegateProtocol` object
+
 ### Modifiers
 1. duration(TimeInterval) - sets the animation duration in seconds
 2. duration(relative: Double) - sets the animation duration relative to the parent animation in 0...1
@@ -134,7 +137,7 @@ SwiftUI:
 4. spring(dampingRatio: CGFloat = 0.3) - sets spring animation curve (UIViewAnimate)
 5. ca - UIView, CALayer and View, Binding extension to describe an animation of one property
 ```swift 
-	let animation = someView.ca.anyMutableViewProperty.set(newValue)
+	let animation = someView.ca.anyMutableViewProperty[newValue]
 ```
 
 ### Transitions
