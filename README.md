@@ -156,7 +156,7 @@ method `.start()` or `.delegate()` returns `AnimationDelegateProtocol` object
 5. `.reversed()` - reversed animation
 6. `.ca` - `UIView`, `CALayer` and `View`, `Binding` extension to describe an animation of properties
 ```swift 
-	let animation = someView.ca.backgroundColor[.white].layer.cornerRadius[8]
+someView.ca.backgroundColor[.white].layer.cornerRadius[8].tinColor[.red].duration(0.3).start()
 ```
 
 ### Transitions
