@@ -42,89 +42,92 @@ Sequential {
 #### Animate  - simple animation, it's initialized by closure
 UKit:
 ```swift 
-	Animate {
-		...
-	}
+Animate {
+  ...
+}
+.duration(0.3)
+.start()
 ```
 SwiftUI:
 ```swift 
-	struct SomeView: View {
-		let animations = AnimationsStore()
-		@State private var someValue: Value
+struct SomeView: View {
+  let animations = AnimationsStore()
+  @State private var someValue: Value
 		
-		var body: some View {
-			VStack {
-				Button(Text("Tap")) {
-					Sequential {
-						Animate(animations) {
-							$someValue =~ newValue
-						}
-						.duration(0.3)
-						Animate(animations) { progress in
-							someValue = (from...to).at(progress)
-							//progress may be 0 or 1
-							//or any value in 0...1 if animation is interactive
-						}
-						.duration(0.3)
-					}
-					.start()
-				}
-			}
-			.with(animations)
-		}
+  var body: some View {
+    VStack {
+      Button(Text("Tap")) {
+        Sequential {
+	  Animate(animations) {
+	    $someValue =~ newValue
+	  }
+	  .duration(0.3)
+	  Animate(animations) { progress in
+	    someValue = (from...to).at(progress)
+	    //progress may be 0 or 1
+	    //or any value in 0...1 if animation is interactive
+	  }
+	  .duration(0.3)
+        }
+        .start()
+      }
+    }
+    .with(animations)
+  }
 		
-		var example2: some View {
-			VStack {
-				Slider(value: animations.progressBinding, in: 0...1)
-				Button("Play") {
-					animations.play()
-				}
-				Button("Pause") {
-					animations.pause()
-				}
-			}
-			.with(animations) {
-				Animate(animations) {
-					$someValue =~ newValue
-				}.duration(2)
-			}
-		}
-	}
+  var example2: some View {
+    VStack {
+      Slider(value: animations.progressBinding, in: 0...1)
+      Button("Play") {
+	animations.play()
+      }
+      Button("Pause") {
+	animations.pause()
+      }
+    }
+    .with(animations) {
+      Animate(animations) {
+	$someValue =~ newValue
+      }
+      .duration(2)
+    }
+  }
+}
 ```
 #### Sequential - sequential animations running one after another
 ```swift 
-	Sequential {
-		Animate { ... }.duration(relative: 0.5)
-		Interval(0.1)
-		Parallel { ... }
-		
-	}.duration(1)
-	.start()
+Sequential {
+  Animate { ... }.duration(relative: 0.5)
+  Interval(0.1)
+  Parallel { ... }
+}
+.duration(1)
+.start()
 ```
 #### Parallel - parallel animations running simultaneously
 ```swift 
-	Parallel {
-		Animate { ... }.duration(relative: 0.5)
-		Sequential { ... }
-		
-	}.duration(1)
-	.start()
+Parallel {
+  Animate { ... }.duration(relative: 0.5)
+  Sequential { ... }	
+}
+.duration(1)
+.start()
 ```
 #### Interval - time interval
 ```swift 
-	Interval(1)
+Interval(1)
 ```
 #### Instant - any block of code, always zero duration
 ```swift 
-	Instant {
-		...
-	}
+Instant {
+  ...
+}
 ```
 #### TimerAnimation
 ```swift 
-	TimerAnimation { progress in
-		...
-	}
+TimerAnimation { progress in
+  ...
+}
 ```
 
 ### Interactive
@@ -147,22 +150,24 @@ method `start()` or `delegate()` returns `AnimationDelegateProtocol` object
 VDAnimation provides easy way to describe `UIViewController` transitions.
 VDAnimation also supports transitions like Keynote's `Magic Move` or `Hero`. It checks the `.transition.id` property on all source and destination views. Every matched view pair is then automatically transitioned from its old state to its new state.
 ```swift 
-	viewController.transition.isEnabled = true
-	viewController.transition.duration = 0.4
-	viewController.transition.curve = .easeIn
-	viewController.transition.modifier = .edge(.bottom)
-	viewController.transition.interactive.disappear = .swipe(to: .bottom)
-	present(viewController)
-	...
-	fromVc.someView.transition.id = "source"
-	toVc.someView.transition.id = "source"
-	fromVc.someView2.transition.modifier = .scale.offset(10)
-	to.someView2.transition.modifier = .scale.offset(-10)
-	toVc.transition.isEnabled = true
-	viewController.transition.interactive.disappear = .swipe(to: .bottom)
-	present(toVc)
-	...
-	toVc.someView.transition = .pageSheet(from: .bottom)
+viewController.transition.isEnabled = true
+viewController.transition.duration = 0.4
+viewController.transition.curve = .easeIn
+viewController.transition.modifier = .edge(.bottom)
+viewController.transition.interactive.disappear = .swipe(to: .bottom)
+present(viewController)
+```
+```swift 
+fromVc.someView.transition.id = "source"
+toVc.someView.transition.id = "source"
+fromVc.someView2.transition.modifier = .scale.offset(10)
+to.someView2.transition.modifier = .scale.offset(-10)
+toVc.transition.isEnabled = true
+viewController.transition.interactive.disappear = .swipe(to: .bottom)
+present(toVc)
+```
+```swift 
+toVc.someView.transition = .pageSheet(from: .bottom)
 ```
 
 ## Installation
