@@ -162,6 +162,7 @@ VDAnimation also supports transitions like Keynote's `Magic Move` or `Hero`. It 
 	viewController.transition.interactive.disappear = .swipe(to: .bottom)
 	present(toVc)
 	...
+	toVc.someView.transition = .pageSheet(from: .bottom)
 ```
 
 ## Installation
