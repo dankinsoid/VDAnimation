@@ -145,7 +145,7 @@ method `start()` or `delegate()` returns `AnimationDelegateProtocol` object
 
 ### Transitions
 VDAnimation provides easy way to describe `UIViewController` transitions.
-VDAnimation also supports transitions like Keynote's `Magic Move` or `Hero`. It checks the transition.id property on all source and destination views. Every matched view pair is then automatically transitioned from its old state to its new state.
+VDAnimation also supports transitions like Keynote's `Magic Move` or `Hero`. It checks the `.transition.id` property on all source and destination views. Every matched view pair is then automatically transitioned from its old state to its new state.
 ```swift 
 	viewController.transition.isEnabled = true
 	viewController.transition.duration = 0.4
