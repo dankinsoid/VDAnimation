@@ -181,7 +181,8 @@ viewController.transition.interactive.disappear = .swipe(to: .bottom)
 present(toVc, animated: true)
 ```
 ```swift 
-toVc.transition = .pageSheet(from: .bottom, animated: true)
+toVc.transition = .pageSheet(from: .bottom)
+present(toVc, animated: true)
 ```
 
 ## Installation
