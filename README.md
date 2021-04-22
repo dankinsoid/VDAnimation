@@ -169,7 +169,7 @@ viewController.transition.duration = 0.4
 viewController.transition.curve = .easeIn
 viewController.transition.modifier = .edge(.bottom)
 viewController.transition.interactive.disappear = .swipe(to: .bottom)
-present(viewController)
+present(viewController, animated: true)
 ```
 ```swift 
 fromVc.someView.transition.id = "source"
@@ -178,10 +178,10 @@ fromVc.someView2.transition.modifier = .scale.offset(10)
 to.someView2.transition.modifier = .scale.offset(-10)
 toVc.transition.isEnabled = true
 viewController.transition.interactive.disappear = .swipe(to: .bottom)
-present(toVc)
+present(toVc, animated: true)
 ```
 ```swift 
-toVc.transition = .pageSheet(from: .bottom)
+toVc.transition = .pageSheet(from: .bottom, animated: true)
 ```
 
 ## Installation
