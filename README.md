@@ -162,14 +162,14 @@ someView.ca.backgroundColor[.white].layer.cornerRadius[8].tintColor[.red].durati
 
 ### Transitions
 VDAnimation provides easy way to describe `UIViewController` transitions.
-VDAnimation also supports transitions like Keynote's `Magic Move` or `Hero`. It checks the `.transition.id` property on all source and destination views. Every matched view pair is then automatically transitioned from its old state to its new state.
+VDAnimation also supports transitions like Keynote's `Magic Move` or [`Hero`](https://github.com/HeroTransitions/Hero). It checks the `.transition.id` property on all source and destination views. Every matched view pair is then automatically transitioned from its old state to its new state.
 ```swift 
 viewController.transition.isEnabled = true
 viewController.transition.duration = 0.4
 viewController.transition.curve = .easeIn
 viewController.transition.modifier = .edge(.bottom)
 viewController.transition.interactive.disappear = .swipe(to: .bottom)
-present(viewController)
+present(viewController, animated: true)
 ```
 ```swift 
 fromVc.someView.transition.id = "source"
@@ -178,10 +178,11 @@ fromVc.someView2.transition.modifier = .scale.offset(10)
 to.someView2.transition.modifier = .scale.offset(-10)
 toVc.transition.isEnabled = true
 viewController.transition.interactive.disappear = .swipe(to: .bottom)
-present(toVc)
+present(toVc, animated: true)
 ```
 ```swift 
-toVc.someView.transition = .pageSheet(from: .bottom)
+toVc.transition = .pageSheet(from: .bottom)
+present(toVc, animated: true)
 ```
 
 ## Installation
