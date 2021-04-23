@@ -72,9 +72,9 @@ public final class VСTransitionConfig {
 		get { delegate.modifier }
 		set { delegate.modifier = newValue }
 	}
-	public var animation: ((VDAnimatedTransitioning.Context) -> VDAnimationProtocol)? {
-		get { delegate.additional }
-		set { delegate.additional = newValue }
+	public var parallelAnimation: TransitionParallelAnimation? {
+		get { delegate.parallelAnimation }
+		set { delegate.parallelAnimation = newValue }
 	}
 	public var interactive: TransitionInteractivity {
 		get { delegate.interactivity }
@@ -87,6 +87,14 @@ public final class VСTransitionConfig {
 	public var prepare: ((VDTransitionContext) -> Void)? {
 		get { delegate.prepare }
 		set { delegate.prepare = newValue }
+	}
+	public var inAnimation: ((VDTransitionContext) -> Void)? {
+		get { delegate.inAnimation }
+		set { delegate.inAnimation = newValue }
+	}
+	public var completion: ((VDTransitionContext, Bool) -> Void)? {
+		get { delegate.completion }
+		set { delegate.completion = newValue }
 	}
 	public var restoreDisappearedViews: Bool {
 		get { delegate.restoreDisappearedViews }
@@ -195,7 +203,7 @@ extension VСTransitionConfig {
 		
 		result.prepare = {[weak result] in
 			guard $0.type.show else { return }
-			$0.bottomVC.transition.modifier = .scale(backScale).corner(radius: cornerRadius)
+			$0.bottomVC.transition.modifier = VDTransition.scale(backScale).corner(radius: cornerRadius)
 			$0.bottomVC.view.clipsToBounds = true
 			$0.bottomVC.view.layer.cornerRadius = UIScreen.main.cornerRadius
 			$0.topVC.view.ignoreAutoresizingMask()
@@ -236,6 +244,42 @@ extension VСTransitionConfig {
 		result.modifier = .opacity
 		result.interactive = interactive
 		return result
+	}
+	
+	public static func push(from edge: Edges = .right, swipeFromEdge: Bool = false, swipeToShow: Bool = false, containerColor: UIColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 0.1), backViewControllerOffset offset: RelationValue<CGFloat> = .relative(0.7)) -> VСTransitionConfig {
+		let transition = VСTransitionConfig()
+		transition.applyModifierOnBothVC = true
+		transition.modifier = .asymmetric(appear: .edge(edge.opposite, offset: offset), disappear: .edge(edge))
+		transition.containerModifier = .background(containerColor)
+		transition.interactive.disappear = .swipe(to: UIRectEdge(edge), fromEdges: swipeFromEdge, in: nil, observe: nil)
+		if swipeToShow {
+			transition.interactive.appear = .swipe(to: UIRectEdge(edge.opposite), fromEdges: swipeFromEdge, in: nil, observe: nil)
+		}
+		let id = UUID().uuidString
+		transition.prepare = {
+			guard containerColor != .clear else { return }
+			let view = $0.container.subviews.first(where: { $0.accessibilityIdentifier == id }) ?? UIView()
+			view.accessibilityIdentifier = id
+			view.isUserInteractionEnabled = false
+			view.backgroundColor = .clear
+			view.transition.modifier = .background(containerColor)
+			if view.superview == nil {
+				view.frame = $0.container.bounds
+				$0.container.addSubview(view)
+			}
+			if let i = $0.container.subviews.firstIndex(of: $0.topView),
+				 let j = $0.container.subviews.firstIndex(of: view),
+				 i <  j {
+				$0.container.exchangeSubview(at: i, withSubviewAt: j)
+			}
+		}
+		transition.completion = { context, _ in
+			context.container.subviews
+				.filter { $0.accessibilityIdentifier == id }
+				.forEach { $0.removeFromSuperview() }
+		}
+		transition.isEnabled = true
+		return transition
 	}
 }
 

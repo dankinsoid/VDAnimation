@@ -114,7 +114,7 @@ extension TransitionInteractivity.Single {
 	
 	static func swipe(to edges: UIRectEdge, fromEdges: Bool, in container: UIView?, observe: ((CGFloat) -> Void)?) -> TransitionInteractivity.Single {
 		TransitionInteractivity.Single {[weak container] view, vc, delegate in
-			let id = "\(ObjectIdentifier(container ?? view))Swipe"
+			let id = "\(ObjectIdentifier(container ?? view).hashValue)Swipe"
 			let scroll = (view.subviews.first(where: { $0.accessibilityIdentifier == id }) as? SwipeView) ?? SwipeView()
 			scroll.accessibilityIdentifier = id
 			let key = SwipeView.Instance.Key(edge: edges, startFromEdges: fromEdges)
@@ -158,7 +158,7 @@ extension TransitionInteractivity.Single {
 			transition.delegate = delegate
 			return transition
 		} remove: {[weak container] view, _, _ in
-			let id = "\(ObjectIdentifier(container ?? view).debugDescription)\(edges.rawValue)Swipe"
+			let id = "\(ObjectIdentifier(container ?? view).hashValue)Swipe"
 			if let scroll = view.subviews.first(where: { $0.accessibilityIdentifier == id }) {
 				scroll.removeFromSuperview()
 			}

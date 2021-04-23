@@ -8,24 +8,27 @@
 
 import Foundation
 
-public enum AnimationDuration: Equatable {
-    case absolute(TimeInterval), relative(Double)
-    
-    public var absolute: TimeInterval? {
-        if case .absolute(let value) = self { return value }
-        return nil
-    }
-    
-    public var relative: Double? {
-        if case .relative(let value) = self { return value }
-        return nil
-    }
-    
-}
-
-extension AnimationDuration {
+public enum RelationValue<Value> {
+	case absolute(Value), relative(Value)
 	
-	public var value: Double {
+	public var absolute: Value? {
+		if case .absolute(let value) = self { return value }
+		return nil
+	}
+	
+	public var relative: Value? {
+		if case .relative(let value) = self { return value }
+		return nil
+	}
+	
+	public var type: RelationType {
+		switch self {
+		case .absolute: return .absolute
+		case .relative: return .relative
+		}
+	}
+	
+	public var value: Value {
 		get {
 			switch self {
 			case .absolute(let value): return value
@@ -41,20 +44,29 @@ extension AnimationDuration {
 	}
 }
 
-public func /<F: BinaryFloatingPoint>(_ lhs: AnimationDuration, _ rhs: F) -> AnimationDuration {
+public enum RelationType: String, Hashable {
+	case absolute, relative
+}
+
+extension RelationValue: Equatable where Value: Equatable {}
+extension RelationValue: Hashable where Value: Hashable {}
+
+public typealias AnimationDuration = RelationValue<TimeInterval>
+
+public func /<F: BinaryFloatingPoint>(_ lhs: RelationValue<F>, _ rhs: F) -> RelationValue<F> {
     switch lhs {
-    case .absolute(let value): return .absolute(value / Double(rhs))
-    case .relative(let value): return .relative(value / Double(rhs))
+    case .absolute(let value): return .absolute(value / rhs)
+    case .relative(let value): return .relative(value / rhs)
     }
 }
 
-public func *<F: BinaryFloatingPoint>(_ lhs: AnimationDuration, _ rhs: F) -> AnimationDuration {
+public func *<F: BinaryFloatingPoint>(_ lhs: RelationValue<F>, _ rhs: F) -> RelationValue<F> {
     switch lhs {
-    case .absolute(let value): return .absolute(value * Double(rhs))
-    case .relative(let value): return .relative(value * Double(rhs))
+    case .absolute(let value): return .absolute(value * rhs)
+    case .relative(let value): return .relative(value * rhs)
     }
 }
 
-public func *<F: BinaryFloatingPoint>(_ lhs: F, _ rhs: AnimationDuration) -> AnimationDuration {
+public func *<F: BinaryFloatingPoint>(_ lhs: F, _ rhs: RelationValue<F>) -> RelationValue<F> {
     rhs * lhs
 }

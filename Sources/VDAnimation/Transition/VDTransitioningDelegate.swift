@@ -11,16 +11,18 @@ import UIKit
 open class VDTransitioningDelegate: NSObject, UIViewControllerTransitioningDelegate {
 	
 	open weak var owner: UIViewController? {
-		didSet { configureInteractive(old: nil) }
+		didSet { configureInteractive(old: interactivity) }
 	}
 	
 	open var duration: TimeInterval = 0.25
 	open var curve: BezierCurve = .easeInOut
-	open var additional: ((VDTransitionContext) -> VDAnimationProtocol)?
+	open var parallelAnimation: TransitionParallelAnimation?
 	open var modifier: VDTransition<UIView>?
 	open var applyModifierOnBothVC = false
 	open var containerModifier: VDTransition<UIView> = .identity
 	open var prepare: ((VDTransitionContext) -> Void)?
+	open var inAnimation: ((VDTransitionContext) -> Void)?
+	open var completion: ((VDTransitionContext, Bool) -> Void)?
 	open var currentTransitioning: VDAnimatedTransitioning?
 	open var restoreDisappearedViews: Bool = true
 	
@@ -78,14 +80,14 @@ open class VDTransitioningDelegate: NSObject, UIViewControllerTransitioningDeleg
 		return transitioning.transitionType.show ? appearInteractiveTransition : disappearInteractiveTransition
 	}
 	
-	private func configureInteractive(old: TransitionInteractivity?) {
+	private func configureInteractive(old: TransitionInteractivity) {
 		if let nav = owner as? UINavigationController {
 			nav.loadViewIfNeeded()
-			old?.remove(container: nav.view, vc: nav, delegate: self)
+			old.remove(container: nav.view, vc: nav, delegate: self)
 			configureInteractive(in: nav.view)
 		} else if let tab = owner as? UITabBarController {
 			tab.loadViewIfNeeded()
-			old?.remove(container: tab.view, vc: tab, delegate: self)
+			old.remove(container: tab.view, vc: tab, delegate: self)
 			configureInteractive(in: tab.view)
 		}
 	}

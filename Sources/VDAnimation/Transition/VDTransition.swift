@@ -187,21 +187,33 @@ extension VDTransition where Content: UIView {
 		combined(with: .background(color))
 	}
 	
-	public static func edge(_ edge: Edges, offset: CGFloat = 0) -> VDTransition {
+	public static func edge(_ edge: Edges, offset: RelationValue<CGFloat>) -> VDTransition {
 		.init(\.transform) {
 			let frame = $0.convert($1 == $0.transform ? $0.bounds : $0.bounds.applying($1), to: nil)
 			let windowSize = $0.window?.frame.size ?? UIScreen.main.bounds.size
 			switch edge {
 			case .top:
-				return $0.offsetTransform(CGPoint(x: 0, y: -(frame.maxY - offset)), current: $1)
+				let add = offset.type == .absolute ? offset.value : frame.height * offset.value
+				return $0.offsetTransform(CGPoint(x: 0, y: -(frame.maxY - add)), current: $1)
 			case .leading:
-				return $0.offsetTransform(CGPoint(x: -(frame.maxX - offset), y: 0), current: $1)
+				let add = offset.type == .absolute ? offset.value : frame.width * offset.value
+				return $0.offsetTransform(CGPoint(x: -(frame.maxX - add), y: 0), current: $1)
 			case .bottom:
-				return $0.offsetTransform(CGPoint(x: 0, y: windowSize.height - frame.minY - offset), current: $1)
+				let add = offset.type == .absolute ? offset.value : frame.height * offset.value
+				return $0.offsetTransform(CGPoint(x: 0, y: windowSize.height - frame.minY - add), current: $1)
 			case .trailing:
-				return $0.offsetTransform(CGPoint(x: windowSize.width - frame.minX - offset, y: 0), current: $1)
+				let add = offset.type == .absolute ? offset.value : frame.width * offset.value
+				return $0.offsetTransform(CGPoint(x: windowSize.width - frame.minX - add, y: 0), current: $1)
 			}
 		}
+	}
+	
+	public static func edge(_ edge: Edges, offset: CGFloat = 0) -> VDTransition {
+		.edge(edge, offset: .absolute(offset))
+	}
+	
+	public func edge(_ edge: Edges, offset: RelationValue<CGFloat>) -> VDTransition {
+		combined(with: .edge(edge, offset: offset))
 	}
 	
 	public func edge(_ edge: Edges, offset: CGFloat = 0) -> VDTransition {

@@ -203,7 +203,7 @@ import PackageDescription
 let package = Package(
   name: "SomeProject",
   dependencies: [
-    .package(url: "https://github.com/dankinsoid/VDAnimation.git", from: "1.9.0")
+    .package(url: "https://github.com/dankinsoid/VDAnimation.git", from: "1.10.0")
   ],
   targets: [
     .target(name: "SomeProject", dependencies: ["VDAnimation"])

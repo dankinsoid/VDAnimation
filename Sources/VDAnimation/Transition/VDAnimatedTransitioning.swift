@@ -19,7 +19,7 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 	
 	public var duration: TimeInterval { delegate?.duration ?? 0 }
 	public var curve: BezierCurve { delegate?.curve ?? .linear }
-	public var animation: ((Context) -> VDAnimationProtocol)? { delegate?.additional }
+	public var parallelAnimation: TransitionParallelAnimation? { delegate?.parallelAnimation }
 	public var interactivity: TransitionInteractivity? { delegate?.interactivity }
 	
 	public init(_ transitionType: TransitionType, delegate: VDTransitioningDelegate, presenting: UIViewController?) {
@@ -83,12 +83,17 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 		
 		prepareInteractive(context: transitionContext)
 		
-		let appearViews = [toView] + toView.allSubviews()
-		let disappearViews = [fromView] + fromView.allSubviews()
+		let containerViews: [UIView] = [inView] + inView.subviews
+			.filter({ $0 != toView && $0 != fromView })
+			.map { [$0] + $0.allSubviews() }
+			.joined()
+		let appearViews = [toView] + toView.allSubviews() + (transitionType.show ? [] : containerViews)
+		let disappearViews = [fromView] + fromView.allSubviews() + (transitionType.show ? containerViews : [])
 		
 		let appearIds = appearViews.mapDictionary { ($0.transition.id, $0) }
 		let pares = disappearViews.mapDictionary { ($0, $0.transition.id) }.compactMapValues { appearIds[$0] }
-	
+		inView.transition.modifier = delegate.containerModifier
+		
 		var properties: [UIView: Properties] = (appearViews + disappearViews).compactMapDictionary { view in
 			view.transition.modifier.map { (view, $0) }
 		}
@@ -99,14 +104,14 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 			properties[changing, default: .identity].combine(with: modifier)
 		}
 		if delegate.applyModifierOnBothVC {
-			if let modifier = delegate.modifier, delegate.owner !== toVc {
+			if let modifier = delegate.modifier {
 				properties[toView, default: .identity].combine(with: transitionType.show ? modifier.inverted : modifier)
 			}
-			if let modifier = delegate.modifier, delegate.owner !== fromVc {
+			if let modifier = delegate.modifier {
 				properties[fromView, default: .identity].combine(with: transitionType.show ? modifier.inverted : modifier)
 			}
 		} else {
-			if let modifier = delegate.modifier, delegate.owner !== changingVc {
+			if let modifier = delegate.modifier {
 				properties[changing, default: .identity].combine(with: modifier)
 			}
 		}
@@ -124,35 +129,25 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 			)
 		}
 		
-		properties[inView] = delegate.containerModifier
-		
 		let forAppear = appearViews.compactMap { view in
 			properties[view].map { (view, delegate.disappearStates[view] == nil ? $0.appear : $0.current(for: view, .present), $0.current(for: view, .present)) }
 		}
 		let forDisappear = disappearViews.compactMap { view in
 			properties[view].map { (view, $0.disappear, $0.current(for: view, .present)) }
 		}
-		
-		let containerCurrent: ((UIView) -> Void, (UIView) -> Void) = (
-			delegate.containerModifier.current(for: inView, .present),
-			delegate.containerModifier.current(for: inView, .dismiss)
-		)
-		let containerModifier = delegate.containerModifier
 			
 		var main: [VDAnimationProtocol] = []
 		
-		if !properties.isEmpty {
+		if !properties.isEmpty || delegate.inAnimation != nil {
 			main.append(
-				Animate {[transitionType, weak inView, weak self] in
+				Animate {[weak self] in
 					forAppear.forEach {
 						self?.delegate?.disappearStates[$0.0]?($0.0) ?? $0.2($0.0)
 					}
 					forDisappear.forEach {
 						$0.1($0.0)
 					}
-					if let inView = inView {
-						(transitionType.show ? containerModifier.appear : containerCurrent.1)(inView)
-					}
+					self?.delegate?.inAnimation?(context)
 				}
 			)
 		}
@@ -161,15 +156,15 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 		
 		let animation: VDAnimationProtocol
 		
-		switch (main.isEmpty, self.animation) {
+		switch (main.isEmpty, self.parallelAnimation) {
 		case (true, nil):
 			return nil
 		case (true, .some(let second)):
-			animation = second(context)
+			animation = second.animation(context)
 		case (false, nil):
 			animation = main.count == 1 ? main[0] : Parallel(main)
 		case (false, .some(let second)):
-			let additional = second(context)
+			let additional = second.animation(context)
 			animation = Parallel(main + [additional])
 		}
 		
@@ -178,7 +173,6 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 		forAppear.forEach {
 			$0.1($0.0)
 		}
-		(transitionType.show ? containerCurrent.0 : containerModifier.disappear)(inView)
 		
 		completion = {[weak self, transitionType] in
 			if $0 {
@@ -200,6 +194,7 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 					$0.2($0.0)
 				}
 			}
+			self?.delegate?.completion?(context, $0)
 			transitionContext.completeTransition($0)
 		}
 		
@@ -221,7 +216,7 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 			}
 		}
 		
-		if !properties.isEmpty || self.animation == nil {
+		if !properties.isEmpty || self.parallelAnimation == nil {
 			let changing = transitionType.show ? appear : disappear
 			properties[changing, default: .identity].combine(with: .opacity)
 		}
@@ -311,4 +306,8 @@ public struct VDTransitionContext {
 	public var bottomVC: UIViewController {
 		type.show ? fromVC : toVC
 	}
+	public var fromView: UIView { fromVC.view }
+	public var toView: UIView { toVC.view }
+	public var topView: UIView { topVC.view }
+	public var bottomView: UIView { bottomVC.view }
 }

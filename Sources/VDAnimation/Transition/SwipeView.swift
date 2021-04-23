@@ -74,8 +74,8 @@ final class SwipeView: UIScrollView, UIScrollViewDelegate {
 		alwaysBounceVertical = edges.contains(.top) || edges.contains(.bottom)
 		alwaysBounceHorizontal = edges.contains(.right) || edges.contains(.left)
 		let k = CGSize(
-			width: edges.contains(.right) && edges.contains(.left) ? 3 : 2,
-			height: edges.contains(.top) && edges.contains(.bottom) ? 3 : 2
+			width: edges.contains(.horizontal) ? 3 : edges.intersection(.horizontal).isEmpty ? 1 : 2,
+			height: edges.contains(.vertical) ? 3 : edges.intersection(.vertical).isEmpty ? 1 : 2
 		)
 		content.width =| width * k.width
 		content.height =| height * k.height
@@ -213,6 +213,10 @@ extension SwipeView {
 }
 
 extension UIRectEdge: Hashable {
+	
+	public static var vertical: UIRectEdge { [.top, .bottom] }
+	public static var horizontal: UIRectEdge { [.left, .right] }
+	
 	var inverted: UIRectEdge {
 		var result: UIRectEdge = []
 		if contains(.left) { result.insert(.right) }
