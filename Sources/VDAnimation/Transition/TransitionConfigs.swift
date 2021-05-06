@@ -57,7 +57,7 @@ public final class VСTransitionConfig {
 			if isEnabled { setEnabled() }
 		}
 	}
-	private lazy var delegate = VDTransitioningDelegate(vc)
+	public private(set) lazy var delegate = VDTransitioningDelegate(vc)
 	private weak var previousTransitionDelegate: UIViewControllerTransitioningDelegate?
 	
 	public var duration: TimeInterval {
