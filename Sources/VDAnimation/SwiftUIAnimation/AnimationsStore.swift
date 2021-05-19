@@ -9,71 +9,67 @@ import SwiftUI
 import Combine
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-public struct AnimationsStore: AnimationDelegateProtocol {
-	let store = Store()
+public final class AnimationsStore: AnimationDelegateProtocol, ObservableObject {
 	
-	public var isRunning: Bool { store.delegate?.isRunning ?? false }
-	public var isInstant: Bool { store.delegate?.isInstant ?? false }
+	var animation: VDAnimationProtocol? {
+		didSet { if oldValue == nil { _delegate.reset() } }
+	}
+	
+	@LazyProperty var delegate: AnimationDelegateProtocol?
+	
+	public var isRunning: Bool {
+		get { delegate?.isRunning ?? false }
+		set { newValue ? delegate?.play() : delegate?.pause() }
+	}
+	public var isInstant: Bool { delegate?.isInstant ?? false }
 	
 	public var position: AnimationPosition {
-		get {
-			store.delegate?.position ?? .start
-		}
-		nonmutating set {
-			store.delegate?.position = newValue
+		get { delegate?.position ?? .start }
+		set { delegate?.position = newValue }
+	}
+	
+	public var options: AnimationOptions { delegate?.options ?? .empty }
+	
+	public init() {
+		_delegate = .init {[weak self] in
+			self?.animation?.delegate()
 		}
 	}
 	
-	public var progressBinding: Binding<Double> {
-		Binding(get: { self.progress }, set: { self.progress = $0 })
-	}
-	
-	public var options: AnimationOptions { store.delegate?.options ?? .empty }
-	
-	public init() {}
+	let valueSubject = ValueObservable<AnimationModifier.AnimatableData>(.zero)
+	let valueBinder = ValueSubject<((Animation?, () -> Void), AnimationModifier.AnimatableData)>()
 	
 	public func pause() {
-		store.delegate?.pause()
+		delegate?.pause()
 	}
 	
 	public func play(with options: AnimationOptions) {
-		store.delegate?.play(with: options)
+		delegate?.play(with: options)
 	}
 	
 	public func add(completion: @escaping (Bool) -> Void) {
-		store.delegate?.add(completion: completion)
+		delegate?.add(completion: completion)
 	}
 	
 	public func stop(at position: AnimationPosition?) {
-		store.delegate?.stop(at: position)
+		delegate?.stop(at: position)
 	}
-}
-
-@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension AnimationsStore {
-	final class Store {
-		var animation: VDAnimationProtocol?
-		lazy var delegate: AnimationDelegateProtocol? = animation?.delegate()
-		
-		let valueSubject = ValueObservable<AnimationModifier.AnimatableData>(.zero)
-		let valueBinder = ValueSubject<((Animation?, () -> Void), AnimationModifier.AnimatableData)>()
-		
-		func animation(for id: UUID) -> (Binding<((Animation?, () -> Void), Double)>, ProgressObservable) {
-			let binder = Binding<((Animation?, () -> Void), Double)>(
-				get: {[valueSubject] in
-					((nil, {}), valueSubject.value.values[id] ?? 0)
-				},
-				set: {[valueSubject, valueBinder] in
-					var new = valueSubject.value
-					new.values[id] = $0.1
-					valueBinder.send(($0.0, new))
-				}
-			)
-			return (
-				binder,
-				ProgressObservable(id: id, value: valueSubject)
-			)
-		}
+	
+	func animation(for id: UUID) -> (Bind<((Animation?, () -> Void), Double)>, ProgressObservable) {
+		let binder = Bind<((Animation?, () -> Void), Double)>(
+			get: {[weak self] in
+				((nil, {}), self?.valueSubject.value.values[id] ?? 0)
+			},
+			set: {[weak self] in
+				var new = self?.valueSubject.value ?? .init()
+				new.values[id] = $0.1
+				self?.valueBinder.send(($0.0, new))
+			}
+		)
+		return (
+			binder,
+			ProgressObservable(id: id, value: valueSubject)
+		)
 	}
 }
 
@@ -81,11 +77,11 @@ extension AnimationsStore {
 extension AnimationsStore {
 	
 	struct Wrapper<Content: View>: View {
-		let store: Store
+		let store: AnimationsStore
 		let content: Content
 		@State private var progress: AnimationModifier.AnimatableData
 		
-		init(store: Store, content: Content) {
+		init(store: AnimationsStore, content: Content) {
 			self.store = store
 			self.content = content
 			self._progress = .init(initialValue: store.valueSubject.value)
@@ -95,6 +91,7 @@ extension AnimationsStore {
 			content
 				.onReceive(store.valueBinder) { args in
 					if let animation = args.0.0 {
+						guard progress != args.1 else { return }
 						withAnimation(animation) {
 							progress = args.1
 							args.0.1()
@@ -115,7 +112,7 @@ extension AnimationsStore {
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 extension View {
 	public func with(_ store: AnimationsStore) -> some View {
-		AnimationsStore.Wrapper(store: store.store, content: self)
+		AnimationsStore.Wrapper(store: store, content: self)
 	}
 	
 	public func with(_ store: AnimationsStore, animation: VDAnimationProtocol) -> some View {
@@ -123,7 +120,7 @@ extension View {
 	}
 	
 	public func with(_ store: AnimationsStore, animation: () -> VDAnimationProtocol) -> some View {
-		store.store.animation = animation()
-		return AnimationsStore.Wrapper(store: store.store, content: self)
+		store.animation = animation()
+		return AnimationsStore.Wrapper(store: store, content: self)
 	}
 }

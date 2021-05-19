@@ -28,8 +28,8 @@ public final class LazyProperty<T> {
 		self.get = get
 	}
 	
-	public init(_ get: @escaping @autoclosure () -> T) {
-		self.get = get
+	public init(wrappedValue: @escaping @autoclosure () -> T) {
+		self.get = wrappedValue
 	}
 	
 	public func reset() {

@@ -11,6 +11,7 @@ import SwiftUI
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 final class ValueObservable<Value: Equatable> {
 	private var observers: [UUID: (Value, Value) -> Void] = [:]
+	
 	var value: Value {
 		didSet {
 			observers.forEach { $0.value(oldValue, value) }
@@ -81,17 +82,28 @@ final class ValueSubject<Value> {
 extension View {
 	
 	func onReceive<T>(_ subject: ValueSubject<T>, observer: @escaping (T) -> Void) -> some View {
-		let wrapper = Wrapper<T>()
-		return onAppear {
-			wrapper.observer = subject.observe(observer)
-		}
-		.onDisappear {
-			wrapper.observer?()
-			wrapper.observer = nil
-		}
+		ValueSubjectView(content: self, subject: subject, observer: observer)
 	}
 }
 
-private final class Wrapper<T> {
+private struct ValueSubjectView<Content: View, T>: View {
+	let content: Content
+	let subject: ValueSubject<T>
+	let observer: (T) -> Void
+	@StateObject var wrapper = Wrapper<T>()
+	
+	var body: some View {
+		content
+			.onAppear {
+				wrapper.observer = subject.observe(observer)
+			}
+			.onDisappear {
+				wrapper.observer?()
+				wrapper.observer = nil
+			}
+	}
+}
+
+private final class Wrapper<T>: ObservableObject {
 	var observer: (() -> Void)?
 }
