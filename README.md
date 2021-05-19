@@ -51,7 +51,7 @@ Animate {
 #### SwiftUI
 ```swift 
 struct ExampleView {
-  let animations = AnimationsStore()
+  @StateObject var animations = AnimationsStore()
   @State private var someValue: Value
 		
   var example1: some View {
@@ -77,7 +77,7 @@ struct ExampleView {
 		
   var example2: some View {
     VStack {
-      Slider(value: animations.progressBinding, in: 0...1)
+      Slider(value: $animations.progress, in: 0...1)
       Button("Play") {
 	animations.play()
       }
