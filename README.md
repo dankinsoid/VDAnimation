@@ -25,7 +25,7 @@ Sequential {
       someView.ca.backgroundColor[.green]
     }
   }
-  Animate {
+  UIViewAnimate {
     self.imageHeightConstraint.constant = 50
     self.view.layoutIfNeeded()
   }
@@ -38,17 +38,17 @@ Sequential {
 .start()
 ```
 ## Usage
-### `Animate`
-simple animation, it's initialized by closure
-#### UKit
+### `UIViewAnimate`
+simple UIKit animation, it's initialized by closure
 ```swift 
-Animate {
+UIViewAnimate {
   ...
 }
 .duration(0.3)
 .start()
 ```
-#### SwiftUI
+### Animate
+simple SwiftUI animation, it's initialized by closure
 ```swift 
 struct ExampleView {
   @StateObject var animations = AnimationsStore()
