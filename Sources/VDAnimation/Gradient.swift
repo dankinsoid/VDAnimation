@@ -9,18 +9,6 @@
 import Foundation
 import SwiftUI
 
-extension Sequence {
-    
-	func reduce<Result>(while condition: (Result) -> Bool, _ initialValue: Result, _ reducing: (Result, Element) -> Result) -> Result {
-		var result = initialValue
-		for element in self {
-			guard condition(result) else { return result }
-			result = reducing(result, element)
-		}
-		return result
-	}
-}
-
 public struct Gradient<Bound> {
 	public var from: Bound
 	public var to: Bound

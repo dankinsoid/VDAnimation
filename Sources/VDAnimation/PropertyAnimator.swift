@@ -105,7 +105,7 @@ extension ChainingProperty where C: UIKitChainingType {
 			wrapped[keyPath: kp] = value
 			return wrapped
 		}
-		let property = LazyProperty<B?> { from ?? result.wrappedValue?[keyPath: kp] }
+		let property = Lazy<B?> { from ?? result.wrappedValue?[keyPath: kp] }
 		result.setInitial = {
 			guard let new = property.wrappedValue else { return $0 }
 			var wrapped = current($0)

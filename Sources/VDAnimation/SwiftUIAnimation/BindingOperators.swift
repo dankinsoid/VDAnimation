@@ -5,6 +5,7 @@
 //  Created by Данил Войдилов on 15.04.2021.
 //
 
+import VDKit
 import Foundation
 import SwiftUI
 
@@ -71,7 +72,7 @@ public func =~<V>(_ lhs: Binding<V>, _ rhs: Gradient<V>) -> StateChanges {
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 public func =~<V>(_ lhs: Binding<V>, _ rhs: @escaping (V) -> V) -> StateChanges {
-	let property = LazyProperty<V> { lhs.wrappedValue }
+	let property = Lazy<V> { lhs.wrappedValue }
 	return StateChanges {
 		lhs.wrappedValue = $0 > 0.5 ? rhs(lhs.wrappedValue) : property.wrappedValue
 	}
@@ -79,7 +80,7 @@ public func =~<V>(_ lhs: Binding<V>, _ rhs: @escaping (V) -> V) -> StateChanges 
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 public func =~<V>(_ lhs: Binding<V>, _ rhs: V) -> StateChanges {
-	let property = LazyProperty<V> { lhs.wrappedValue }
+	let property = Lazy<V> { lhs.wrappedValue }
 	return StateChanges {
 		lhs.wrappedValue = $0 > 0.5 ? rhs : property.wrappedValue
 	}
@@ -93,14 +94,14 @@ extension Binding where Value: Animatable {
 	}
 	
 	public func to(_ value: Value) -> StateChanges {
-		let property = LazyProperty<Value> { self.wrappedValue }
+		let property = Lazy<Value> { self.wrappedValue }
 		return StateChanges {
 			wrappedValue = (property.wrappedValue...value).at($0)
 		}
 	}
 	
 	public func to(_ value: @escaping (Value) -> Value) -> StateChanges {
-		let property = LazyProperty<Value> { self.wrappedValue }
+		let property = Lazy<Value> { self.wrappedValue }
 		return StateChanges {
 			wrappedValue = (property.wrappedValue...value(wrappedValue)).at($0)
 		}
@@ -123,14 +124,14 @@ extension Binding where Value: VectorArithmetic {
 	}
 	
 	public func to(_ value: Value) -> StateChanges {
-		let property = LazyProperty<Value> { self.wrappedValue }
+		let property = Lazy<Value> { self.wrappedValue }
 		return StateChanges {
 			wrappedValue = (property.wrappedValue...value).at($0)
 		}
 	}
 	
 	public func to(_ value: @escaping (Value) -> Value) -> StateChanges {
-		let property = LazyProperty<Value> { self.wrappedValue }
+		let property = Lazy<Value> { self.wrappedValue }
 		return StateChanges {
 			wrappedValue = (property.wrappedValue...value(wrappedValue)).at($0)
 		}

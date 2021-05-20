@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import VDKit
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 public final class AnimationsStore: AnimationDelegateProtocol, ObservableObject {
@@ -17,7 +18,7 @@ public final class AnimationsStore: AnimationDelegateProtocol, ObservableObject 
 		didSet { if oldValue == nil { _delegate.reset() } }
 	}
 	
-	@LazyProperty var delegate: AnimationDelegateProtocol?
+	@Lazy var delegate: AnimationDelegateProtocol?
 	
 	public var isRunning: Bool {
 		get { delegate?.isRunning ?? false }
