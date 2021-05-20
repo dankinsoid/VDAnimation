@@ -47,7 +47,7 @@ UIViewAnimate {
 .duration(0.3)
 .start()
 ```
-### Animate
+### `Animate`
 simple SwiftUI animation, it's initialized by closure
 ```swift 
 struct ExampleView {
