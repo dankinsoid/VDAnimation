@@ -86,6 +86,7 @@ extension View {
 	}
 }
 
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 private struct ValueSubjectView<Content: View, T>: View {
 	let content: Content
 	let subject: ValueSubject<T>
@@ -104,6 +105,7 @@ private struct ValueSubjectView<Content: View, T>: View {
 	}
 }
 
+@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 private final class Wrapper<T>: ObservableObject {
 	var observer: (() -> Void)?
 }

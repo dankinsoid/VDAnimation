@@ -16,7 +16,7 @@ let package = Package(
             targets: ["VDAnimation"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/dankinsoid/ConstraintsOperators.git", from: "2.3.20"),
+        .package(url: "https://github.com/dankinsoid/ConstraintsOperators.git", from: "2.24.0"),
 		.package(url: "https://github.com/dankinsoid/VDKit.git", from: "1.22.0")
     ],
     targets: [
@@ -27,6 +27,7 @@ let package = Package(
             dependencies: ["ConstraintsOperators", "VDKit"]),
 			.testTarget(
 				name: "VDAnimationTests",
-				dependencies: ["VDAnimation"]),
+				dependencies: ["VDAnimation"]
+			),
     ]
 )
