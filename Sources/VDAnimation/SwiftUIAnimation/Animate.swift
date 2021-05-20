@@ -33,7 +33,7 @@ public struct Animate: VDAnimationProtocol {
 	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
 		guard let store = store ?? AnimationsStore.current else {
 			debugPrint("❗️ SwiftUI animations requires `AnimationsStore`, use `.store(store)` modifier or Animate(store) {...")
-			return EmptyAnimationDelegate()
+			return PrimitiveDelegate(options: options, block: block.change)
 		}
 		let args = store.animation(for: id)
 		return Delegate(
@@ -156,5 +156,36 @@ extension Animate {
 				self.complete(newValue == finalValue)
 			}
 		}
+	}
+	
+	final class PrimitiveDelegate: AnimationDelegateProtocol {
+		var isRunning = false
+		var position: AnimationPosition {
+			get { .end }
+			set { block(newValue.complete) }
+		}
+		var options: AnimationOptions
+		var isInstant: Bool { false }
+		private let block: (Double) -> Void
+		
+		init(options: AnimationOptions, block: @escaping (Double) -> Void) {
+			self.options = options
+			self.block = block
+		}
+		
+		func play(with options: AnimationOptions) {
+			isRunning = true
+			self.options = options.or(self.options)
+			withAnimation(.bezier(self.options.curve ?? .linear, duration: self.options.duration?.absolute ?? 0)) {
+				self.options.isReversed == true ? block(0) : block(1)
+			}
+		}
+		
+		func pause() {}
+		func stop(at position: AnimationPosition?) {
+			isRunning = false
+			block(position?.complete ?? 1)
+		}
+		func add(completion: @escaping (Bool) -> Void) {}
 	}
 }
