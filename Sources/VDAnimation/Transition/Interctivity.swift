@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import ConstraintsOperators
+import VDKit
 
 public struct TransitionInteractivity {
 	

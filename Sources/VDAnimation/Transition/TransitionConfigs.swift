@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import ConstraintsOperators
+import VDKit
 
 public protocol ViewTransitable: UIView {}
 public protocol ViewControllerTransitable: UIViewController {}
@@ -199,16 +199,26 @@ extension VСTransitionConfig {
 		let offset = max(size, insets) + minOffset
 		let dif = offset - insets
 		
-		var constraint: Constraints<UIView>?
+		var constraint: NSLayoutConstraint?
 		
 		result.prepare = {[weak result] in
 			guard $0.type.show else { return }
 			$0.bottomVC.transition.modifier = VDTransition.scale(backScale).corner(radius: cornerRadius)
 			$0.bottomVC.view.clipsToBounds = true
 			$0.bottomVC.view.layer.cornerRadius = UIScreen.main.cornerRadius
-			$0.topVC.view.ignoreAutoresizingMask()
-			$0.topVC.view.edges(Edges.Set.all.subtracting(.init(edge.opposite))) =| 0
-			constraint = $0.topVC.view.edges(.init(edge.opposite)).priority(990) =| offset
+			$0.topVC.view.translatesAutoresizingMaskIntoConstraints = false
+			
+			if let topView = $0.topVC.view, let superView = topView.superview {
+				var edges = Edges.allCases
+				if let i = edges.firstIndex(of: edge.opposite) {
+					edges.remove(at: i)
+				}
+				edges.forEach { edge in
+					topView.edge(edge, to: superView)
+				}
+				constraint = topView.edge(edge.opposite, to: superView, priority: .init(990))
+			}
+			
 			$0.topVC.view.clipsToBounds = true
 			$0.topVC.view.layer.cornerRadius = cornerRadius
 			$0.topVC.view.layer.maskedCorners = .edge(edge.opposite)
@@ -300,5 +310,22 @@ fileprivate class TapRecognizer: UITapGestureRecognizer, UIGestureRecognizerDele
 		if gestureRecognizer.state == .recognized {
 			onTap()
 		}
+	}
+}
+
+extension UIView {
+	
+	@discardableResult
+	func edge(_ edge: Edges, to view: UIView, offset: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint {
+		let result: NSLayoutConstraint
+		switch edge {
+		case .top:			result = topAnchor.constraint(equalTo: view.topAnchor, constant: offset)
+		case .leading:	result = leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: offset)
+		case .bottom:		result = bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -offset)
+		case .trailing: result = trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -offset)
+		}
+		result.priority = priority
+		result.isActive = true
+		return result
 	}
 }

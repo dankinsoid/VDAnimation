@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import ConstraintsOperators
+import VDKit
 
 open class PanInteractiveTransitionDriver: InteractiveDriver {
 	public let recognizer: UIPanGestureRecognizer

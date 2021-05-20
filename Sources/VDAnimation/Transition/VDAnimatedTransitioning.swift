@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import ConstraintsOperators
+import VDKit
 
 open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransitioning, UIViewControllerInteractiveTransitioning {
 	public typealias Context = VDTransitionContext

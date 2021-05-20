@@ -6,11 +6,12 @@
 //
 
 import UIKit
-import ConstraintsOperators
+import VDKit
 
 final class SwipeView: UIScrollView, UIScrollViewDelegate {
 	
 	private let content = UIView()
+	private var contentConstraints: [NSLayoutConstraint] = []
 	
 	var instances: [Instance.Key: Instance] = [:]
 	var edges: UIRectEdge {
@@ -51,8 +52,11 @@ final class SwipeView: UIScrollView, UIScrollViewDelegate {
 		
 		addSubview(content)
 		content.frame.size = CGSize(width: frame.width * 2, height: frame.height)
-		content.ignoreAutoresizingMask()
-		content.edges() =| self
+		content.translatesAutoresizingMaskIntoConstraints = false
+		content.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+		content.topAnchor.constraint(equalTo: topAnchor).isActive = true
+		content.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+		content.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
 	}
 	
 	func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -77,8 +81,13 @@ final class SwipeView: UIScrollView, UIScrollViewDelegate {
 			width: edges.contains(.horizontal) ? 3 : edges.intersection(.horizontal).isEmpty ? 1 : 2,
 			height: edges.contains(.vertical) ? 3 : edges.intersection(.vertical).isEmpty ? 1 : 2
 		)
-		content.width =| width * k.width
-		content.height =| height * k.height
+		contentConstraints.forEach { $0.isActive = false }
+		contentConstraints = [
+			content.widthAnchor.constraint(equalTo: widthAnchor, multiplier: k.width),
+			content.heightAnchor.constraint(equalTo: heightAnchor, multiplier: k.height)
+		]
+		contentConstraints.forEach { $0.isActive = true }
+		
 		content.frame.size = CGSize(width: frame.width * k.width, height: frame.height * k.height)
 		contentOffset = initialOffset
 		delegate = self
