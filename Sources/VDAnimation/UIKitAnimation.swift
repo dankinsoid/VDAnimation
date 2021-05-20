@@ -9,22 +9,22 @@ import UIKit
 import VDKit
 
 ///UIKit animation
-struct UIKitAnimation: VDAnimationProtocol {
+public struct UIViewAnimate: VDAnimationProtocol {
 	
 	let block: () -> Void
 	let springTiming: UISpringTimingParameters?
 	
-	init(_ block: @escaping () -> Void, spring: UISpringTimingParameters?) {
+	public init(_ block: @escaping () -> Void, spring: UISpringTimingParameters?) {
 		self.block = block
 		springTiming = spring
 	}
 	
-	init(_ closure: @escaping () -> Void) {
+	public init(_ closure: @escaping () -> Void) {
 		block = closure
 		springTiming = nil
 	}
 	
-	func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
+	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
 		let provider = VDTimingProvider(bezier: options.curve, spring: springTiming)
 		let duration = options.duration?.absolute ?? 0
 		let animator = VDViewAnimator(duration: duration, timingParameters: provider)

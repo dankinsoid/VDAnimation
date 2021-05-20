@@ -41,7 +41,7 @@ public struct ConstraintsAnimation<T>: VDAnimationProtocol {
 		let scale: (Double) -> [NSLayoutConstraint]
 		
 		init(options: AnimationOptions, from: @escaping () -> [NSLayoutConstraint], to: @escaping () -> [NSLayoutConstraint], scale: @escaping (Double) -> [NSLayoutConstraint]) {
-			self.inner = Animate {
+			self.inner = UIViewAnimate {
 				let constraint = options.isReversed == true ? from() : to()
 				constraint.forEach { $0.didUpdate() }
 			}.delegate(with: options)

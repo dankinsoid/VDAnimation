@@ -7,23 +7,34 @@
 //
 
 import SwiftUI
-import Combine
+import VDKit
 
 ///SwiftUI animation
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-struct SwiftUIAnimate: VDAnimationProtocol {
-	
+public struct Animate: VDAnimationProtocol {
 	var block: StateChanges
 	private weak var store: AnimationsStore?
 	private let id = UUID()
-    
-	init(_ store: AnimationsStore, _ block: StateChanges) {
+	
+	public init(_ store: AnimationsStore? = nil, _ block: @escaping (Double) -> Void) {
+		self.init(store, StateChanges(block))
+	}
+	
+	public init(_ store: AnimationsStore? = nil, @ArrayBuilder<StateChanges> _ changes: () -> [StateChanges]) {
+		let change = changes()
+		self.init(store, StateChanges { p in change.forEach { $0.change(p) }})
+	}
+	
+	init(_ store: AnimationsStore?, _ block: StateChanges) {
 		self.store = store
 		self.block = block
 	}
-    
-	func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
-		guard let store = store else { return EmptyAnimationDelegate() }
+	
+	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
+		guard let store = store ?? AnimationsStore.current else {
+			debugPrint("❗️ SwiftUI animations requires `AnimationsStore`, use `.store(store)` modifier or Animate(store) {...")
+			return EmptyAnimationDelegate()
+		}
 		let args = store.animation(for: id)
 		return Delegate(
 			value: args.0,
@@ -35,7 +46,7 @@ struct SwiftUIAnimate: VDAnimationProtocol {
 }
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension SwiftUIAnimate {
+extension Animate {
 	
 	final class Delegate: AnimationDelegateProtocol {
 		var isRunning: Bool = false
@@ -92,8 +103,8 @@ extension SwiftUIAnimate {
 			isRunning = true
 			let current = value.1
 			if options.duration?.absolute ?? 0 == 0 ||
-				current == 1 && options.isReversed != true ||
-				current == 0 && options.isReversed == true {
+					current == 1 && options.isReversed != true ||
+					current == 0 && options.isReversed == true {
 				zeroPlay()
 				return
 			}

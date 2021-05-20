@@ -24,6 +24,14 @@ extension Animation {
 extension Binding where Value: VectorArithmetic {
 	
 	public func ca(_ store: AnimationsStore) -> ChainingProperty<SwiftUIChainingAnimation<Value>, Value> {
+		ca(store: store)
+	}
+	
+	public var ca: ChainingProperty<SwiftUIChainingAnimation<Value>, Value> {
+		ca(store: nil)
+	}
+	
+	private func ca(store: AnimationsStore?) -> ChainingProperty<SwiftUIChainingAnimation<Value>, Value> {
 		ChainingProperty(SwiftUIChainingAnimation(store: store, changes: .identity, binding: self), getter: \.self)
 	}
 }
@@ -32,6 +40,14 @@ extension Binding where Value: VectorArithmetic {
 extension Binding where Value: Animatable {
 	
 	public func ca(_ store: AnimationsStore) -> ChainingProperty<SwiftUIChainingAnimation<Value>, Value> {
+		ca(store: store)
+	}
+	
+	public var ca: ChainingProperty<SwiftUIChainingAnimation<Value>, Value> {
+		ca(store: nil)
+	}
+	
+	private func ca(store: AnimationsStore?) -> ChainingProperty<SwiftUIChainingAnimation<Value>, Value> {
 		ChainingProperty(SwiftUIChainingAnimation(store: store, changes: .identity, binding: self), getter: \.self)
 	}
 }
@@ -40,6 +56,14 @@ extension Binding where Value: Animatable {
 extension View {
 	
 	public func ca(_ store: AnimationsStore) -> ChainingProperty<SwiftUIChainingAnimation<Self>, Self> {
+		ca(store: store)
+	}
+	
+	public var ca: ChainingProperty<SwiftUIChainingAnimation<Self>, Self> {
+		ca(store: nil)
+	}
+	
+	private func ca(store: AnimationsStore?) -> ChainingProperty<SwiftUIChainingAnimation<Self>, Self> {
 		ChainingProperty(SwiftUIChainingAnimation(store: store, changes: .identity, binding: .var(self)), getter: \.self)
 	}
 }
@@ -55,11 +79,11 @@ public protocol SwiftUIChainingType: Chaining {
 public struct SwiftUIChainingAnimation<W>: SwiftUIChainingType, VDAnimationProtocol {
 	
 	public private(set) var action: (W) -> W = { $0 }
-	let store: AnimationsStore
+	let store: AnimationsStore?
 	public var changes: StateChanges
 	public var binding: Binding<W>
 	
-	public init(store: AnimationsStore, changes: StateChanges, binding: Binding<W>) {
+	public init(store: AnimationsStore?, changes: StateChanges, binding: Binding<W>) {
 		self.store = store
 		self.changes = changes
 		self.binding = binding
@@ -76,7 +100,7 @@ public struct SwiftUIChainingAnimation<W>: SwiftUIChainingType, VDAnimationProto
 	}
 	
 	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
-		SwiftUIAnimate(store, changes).delegate(with: options)
+		Animate(store, changes).delegate(with: options)
 	}
 }
 

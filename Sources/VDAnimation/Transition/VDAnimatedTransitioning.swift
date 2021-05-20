@@ -140,7 +140,7 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 		
 		if !properties.isEmpty || delegate.inAnimation != nil {
 			main.append(
-				Animate {[weak self] in
+				UIViewAnimate {[weak self] in
 					forAppear.forEach {
 						self?.delegate?.disappearStates[$0.0]?($0.0) ?? $0.2($0.0)
 					}

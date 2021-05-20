@@ -1,41 +1,11 @@
 //
-//  SwiftUIAnimate.swift
-//  CA
+//  VDTimingProvider.swift
+//  VDTransition
 //
-//  Created by crypto_user on 16.01.2020.
-//  Copyright © 2020 Voidilov. All rights reserved.
+//  Created by Данил Войдилов on 20.05.2021.
 //
 
 import UIKit
-import VDKit
-
-///UIKit animation
-public struct Animate: VDAnimationProtocol {
-	let animation: VDAnimationProtocol
-	
-	public init(_ block: @escaping () -> Void) {
-		animation = UIKitAnimation(block)
-	}
-	
-	public init(spring: UISpringTimingParameters, _ block: @escaping () -> Void) {
-		animation = UIKitAnimation(block, spring: spring)
-	}
-	
-	@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-	public init(_ store: AnimationsStore, _ block: @escaping (Double) -> Void) {
-		animation = SwiftUIAnimate(store, StateChanges(block))
-	}
-	
-	@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-	public init(_ store: AnimationsStore, @ArrayBuilder<StateChanges> _ changes: () -> [StateChanges]) {
-		let change = changes()
-		animation = SwiftUIAnimate(store, StateChanges { p in change.forEach { $0.change(p) }})
-	}
-	
-	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
-		animation.delegate(with: options)
-	}
-}
 
 @objc(_TtC15SuperAnimationsVDTimingProvider)
 class VDTimingProvider: NSObject, UITimingCurveProvider {

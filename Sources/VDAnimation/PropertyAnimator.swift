@@ -53,7 +53,7 @@ public struct UIKitChainingAnimation<W: AnyObject>: UIKitChainingType, VDAnimati
 		
 		init(apply: @escaping () -> Void, setInitial: @escaping () -> Void, options: AnimationOptions) {
 			self.setInitial = setInitial
-			self.inner = UIKitAnimation(apply).delegate(with: options)
+			self.inner = UIViewAnimate(apply).delegate(with: options)
 		}
 		
 		func play(with options: AnimationOptions) {

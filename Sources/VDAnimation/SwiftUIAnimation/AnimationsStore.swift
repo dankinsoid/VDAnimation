@@ -11,6 +11,8 @@ import Combine
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 public final class AnimationsStore: AnimationDelegateProtocol, ObservableObject {
 	
+	static var current: AnimationsStore?
+	
 	var animation: VDAnimationProtocol? {
 		didSet { if oldValue == nil { _delegate.reset() } }
 	}
@@ -32,7 +34,11 @@ public final class AnimationsStore: AnimationDelegateProtocol, ObservableObject 
 	
 	public init() {
 		_delegate = .init {[weak self] in
-			self?.animation?.delegate()
+			let result = self?.animation?.delegate()
+			result?.add { _ in
+				self?._delegate.reset()
+			}
+			return result
 		}
 	}
 	
@@ -116,11 +122,11 @@ extension View {
 	}
 	
 	public func with(_ store: AnimationsStore, animation: VDAnimationProtocol) -> some View {
-		with(store) { animation }
+		with(store) { animation.store(store) }
 	}
 	
 	public func with(_ store: AnimationsStore, animation: () -> VDAnimationProtocol) -> some View {
-		store.animation = animation()
+		store.animation = animation().store(store)
 		return AnimationsStore.Wrapper(store: store, content: self)
 	}
 }
