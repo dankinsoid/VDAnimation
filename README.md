@@ -58,17 +58,18 @@ struct ExampleView {
     VStack {
       Button(Text("Tap")) {
         Sequential {
-	  Animate(animations) {
+	  Animate {
 	    $someValue =~ newValue
 	  }
 	  .duration(0.3)
-	  Animate(animations) { progress in
+	  Animate { progress in
 	    someValue = (from...to).at(progress)
 	    //progress may be 0 or 1
 	    //or any value in 0...1 if animation is interactive
 	  }
 	  .duration(0.3)
         }
+	.store(animations)
         .start()
       }
     }
@@ -86,7 +87,7 @@ struct ExampleView {
       }
     }
     .with(animations) {
-      Animate(animations) {
+      Animate {
 	$someValue =~ newValue
       }
       .duration(2)
