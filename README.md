@@ -50,11 +50,11 @@ Animate {
 ```
 #### SwiftUI
 ```swift 
-struct SomeView: View {
-  let animations = AnimationsStore()
+struct ExampleView {
+  @StateObject var animations = AnimationsStore()
   @State private var someValue: Value
 		
-  var body: some View {
+  var example1: some View {
     VStack {
       Button(Text("Tap")) {
         Sequential {
@@ -77,7 +77,7 @@ struct SomeView: View {
 		
   var example2: some View {
     VStack {
-      Slider(value: animations.progressBinding, in: 0...1)
+      Slider(value: $animations.progress, in: 0...1)
       Button("Play") {
 	animations.play()
       }
@@ -128,7 +128,7 @@ Instant {
 }
 ```
 ### `TimerAnimation`
-`CADisplayLink` wrapper
+[`CADisplayLink`](https://developer.apple.com/documentation/quartzcore/cadisplaylink) wrapper
 ```swift 
 TimerAnimation { progress in
   ...
