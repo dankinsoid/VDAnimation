@@ -58,16 +58,13 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
 				}
 			}
 			set {
-				switch newValue {
-				case .start, .end:
-					inner.position = .start
-				case .progress(let newValue):
-					inner.position = .progress(1 - abs(newValue - 0.5) * 2)
-				}
+				let (newStep, newPosition) = targetPosition(for: newValue)
+				step = newStep
+				inner.position = newPosition
 			}
 		}
 		private var inner: AnimationDelegateProtocol
-		private var step: AutoreverseStep
+		private var step: AutoreverseStep = .forward
 		private var completions: [(Bool) -> Void] = []
 		private var count = 0
 		private var isStopped = false
@@ -76,7 +73,6 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
 		init(inner: AnimationDelegateProtocol, options: AnimationOptions) {
 			self.inner = inner
 			self.options = options
-			self.step = options.isReversed == true ? .back : .forward
 			prepare()
 		}
 		
@@ -98,7 +94,13 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
 		
 		func stop(at position: AnimationPosition?) {
 			isStopped = true
-			inner.stop(at: targetPosition(for: position))
+			guard let position = position else {
+				inner.stop(at: nil)
+				return
+			}
+			let (newStep, newPosition) = targetPosition(for: position)
+			step = newStep
+			inner.stop(at: newPosition)
 		}
 		
 		func add(completion: @escaping (Bool) -> Void) {
@@ -118,11 +120,19 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
 			}
 		}
 		
-		private func targetPosition(for position: AnimationPosition?) -> AnimationPosition? {
+		private func targetPosition(for position: AnimationPosition) -> (AutoreverseStep, AnimationPosition) {
 			switch position {
-			case .start, .end:      return .start
-			case .progress(let k):  return .progress(1 - abs(k - 0.5) * 2)
-			case .none:							return .none
+			case .start:
+				return (.forward, .start)
+			case .end:
+				return (.back, .start)
+			case .progress(let k):
+				switch k {
+				case 0..<0.5:
+					return (.forward, .progress(2 * k))
+				default:
+					return (.back, .progress((1 - k) * 2))
+				}
 			}
 		}
 		

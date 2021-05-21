@@ -12,12 +12,12 @@ struct ReversedAnimation: VDAnimationProtocol {
 	let animation: VDAnimationProtocol
 	
 	func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
-		Delegate(inner: animation.delegate(with: options))
+		Delegate(inner: animation.delegate(with: options.reversed))
 	}
 	
-	struct Delegate: AnimationDelegateProtocol {
+	final class Delegate: AnimationDelegateProtocol {
 		var isRunning: Bool { inner.isRunning }
-		var options: AnimationOptions { inner.options }
+		var options: AnimationOptions { inner.options.reversed }
 		var isInstant: Bool { inner.isInstant }
 		var position: AnimationPosition {
 			get {
@@ -28,7 +28,8 @@ struct ReversedAnimation: VDAnimationProtocol {
 					return .progress(1 - progress)
 				}
 			}
-			nonmutating set {
+			set {
+				firstStart = false
 				switch newValue {
 				case .end:		inner.position = .start
 				case .start:	inner.position = .end
@@ -38,11 +39,18 @@ struct ReversedAnimation: VDAnimationProtocol {
 			}
 		}
 		let inner: AnimationDelegateProtocol
+		private var firstStart = true
+		
+		init(inner: AnimationDelegateProtocol) {
+			self.inner = inner
+		}
 		
 		func play(with options: AnimationOptions) {
-			var options = options
-			options.isReversed = !(options.isReversed ?? false)
-			inner.position = options.isReversed == true ? .end : .start
+			let options = options.or(inner.options.reversed).reversed
+			if firstStart {
+				inner.position = options.isReversed == true ? .end : .start
+				firstStart = false
+			}
 			inner.play(with: options)
 		}
 		
@@ -70,5 +78,14 @@ struct ReversedAnimation: VDAnimationProtocol {
 		func cancel() {
 			inner.cancel()
 		}
+	}
+}
+
+private extension AnimationOptions {
+	
+	var reversed: AnimationOptions {
+		var result = self
+		result.isReversed = !(result.isReversed ?? false)
+		return result
 	}
 }
