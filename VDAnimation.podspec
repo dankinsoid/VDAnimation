@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'VDAnimation'
-  s.version          = '1.18.0'
+  s.version          = '1.19.0'
   s.summary          = 'A short description of VDAnimation.'
   s.description      = <<-DESC
 TODO: Add long description of the pod here.
@@ -20,9 +20,9 @@ TODO: Add long description of the pod here.
   s.source           = { :git => 'https://github.com/dankinsoid/VDAnimation.git', :tag => s.version.to_s }
 
   s.ios.deployment_target = '11.0'
-  s.swift_versions = '5.1'
+  s.swift_versions = '5.4'
   s.source_files = 'Sources/VDAnimation/**/*'
   s.frameworks = 'UIKit'
   s.dependency 'ConstraintsOperators'
-  s.dependency 'VD', '~> 1.0.51'
+  s.dependency 'VD', '~> 1.53.0'
 end
