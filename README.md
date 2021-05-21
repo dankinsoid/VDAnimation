@@ -152,7 +152,7 @@ method `.start()` or `.delegate()` returns `AnimationDelegateProtocol` object
 1. `.duration(TimeInterval)` - sets the animation duration in seconds
 2. `.duration(relative: Double)` - sets the animation duration relative to the parent animation in 0...1
 3. `.curve(BezierCurve)` - sets the animation curve
-4. `.spring(dampingRatio: CGFloat = 0.3)` - sets spring animation curve (only for `Animate`)
+4. `.spring(dampingRatio: CGFloat = 0.3)` - sets spring animation curve (only for `UIViewAnimate`)
 5. `.repeat()`, `.repeat(Int)` - repeat animation
 5. `.autoreverse()`, `.autoreverse(repeat: Int)` - autoreverse animation
 5. `.reversed()` - reversed animation
