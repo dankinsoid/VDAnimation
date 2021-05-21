@@ -37,6 +37,9 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
 		private let count: Int?
 		private var current = 0
 		private var hasStopped = false
+		private var finalCount: Int? {
+			options.isReversed == true ? count.map { _ in 0 } : count
+		}
 		
 		init(inner: AnimationDelegateProtocol, count: Int?, options: AnimationOptions) {
 			self.inner = inner
@@ -82,16 +85,16 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
 		}
 		
 		private func completeOne(_ completed: Bool) {
-			if current == count || hasStopped {
+			if current == finalCount || hasStopped {
 				completions.forEach {
 					$0(completed && (current == count || count == nil))
 				}
 			} else {
-				if current > 0 {
+				if current != 0 {
 					inner.position = options.isReversed == true ? .end : .start
 				}
 				let option = getOptions()
-				current = current &+ 1
+				current = options.isReversed == true ? current &- 1 : current &+ 1
 				inner.play(with: option)
 			}
 		}
@@ -103,7 +106,9 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
 				inner.set(position: position, stop: stop)
 			case .progress(let k):
 				if count != nil {
-					inner.set(position: .progress(getProgress(for: k)), stop: stop)
+					let (i, k) = getProgress(for: k)
+					current = i
+					inner.set(position: .progress(k), stop: stop)
 				} else {
 					inner.set(position: position, stop: stop)
 				}
@@ -111,15 +116,15 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
 		}
 		
 		func getPosition() -> AnimationPosition {
-			guard let cnt = count else { return inner.position }
+			guard let cnt = count, current > 0 else { return inner.position }
 			guard cnt > 0 else { return .end }
-			return .progress(inner.position.complete / Double(cnt))
+			return .progress((inner.position.complete + Double(current - 1)) / Double(cnt))
 		}
 		
-		private func getProgress(for progress: Double) -> Double {
-			guard let cnt = count, cnt > 0, progress != 1 else { return progress }
-			let k = (progress * Double(cnt))
-			return k.truncatingRemainder(dividingBy: 1)
+		private func getProgress(for progress: Double) -> (Int, Double) {
+			guard let cnt = count, cnt > 0, progress != 1 else { return (current, progress) }
+			let k = progress * Double(cnt)
+			return (Int(k) + 1, k.truncatingRemainder(dividingBy: 1))
 		}
 		
 		private static func duration(for count: Int?, from dur: AnimationDuration?) -> AnimationDuration? {

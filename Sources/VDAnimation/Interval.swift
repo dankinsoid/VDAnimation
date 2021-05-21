@@ -36,7 +36,7 @@ public struct Interval: VDAnimationProtocol {
 		var position: AnimationPosition {
 			get {
 				guard duration > 0 else { return .end }
-				return settedPosition ?? completed.map { .progress($0) } ?? .start
+				return settedPosition ?? completed.map { .progress(startedFrom + (options.isReversed == true ? -$0 : $0)) } ?? .start
 			}
 			set {
 				let wasRunning = isRunning
@@ -53,6 +53,7 @@ public struct Interval: VDAnimationProtocol {
 		private var completions: [(Bool) -> Void] = []
 		private var current: UUID?
 		private var startedAt: CFTimeInterval?
+		private var startedFrom = 0.0
 		private var pausedAt: CFTimeInterval?
 		private var stoppedAt: CFTimeInterval?
 		var duration: TimeInterval = 0
@@ -70,9 +71,11 @@ public struct Interval: VDAnimationProtocol {
 		}
 		
 		func play(with options: AnimationOptions) {
+			self.options = options.or(self.options)
 			guard !isRunning, stoppedAt == nil else { return }
-			duration = options.duration?.absolute ?? self.options.duration?.absolute ?? 0
-			let seconds = (settedPosition?.complete ?? completed).map { duration * (1 - $0) } ?? duration
+			duration = self.options.duration?.absolute ?? 0
+			let seconds = (settedPosition?.complete ?? completed).map { duration * (options.isReversed == true ? $0 : 1 - $0) } ?? duration
+			startedFrom = settedPosition?.complete ?? completed ?? 0
 			settedPosition = nil
 			pausedAt = nil
 			guard seconds > 0 else {
@@ -97,10 +100,15 @@ public struct Interval: VDAnimationProtocol {
 		}
 		
 		func stop(at position: AnimationPosition?) {
-			pausedAt = nil
 			current = nil
 			settedPosition = nil
-			stoppedAt = CACurrentMediaTime()
+			if options.complete != false {
+				stoppedAt = CACurrentMediaTime()
+				pausedAt = nil
+			} else {
+				stoppedAt = nil
+				pausedAt = CACurrentMediaTime()
+			}
 			complete(complete: position == .end)
 		}
 		
@@ -126,7 +134,6 @@ enum DispatchTimer {
 			timer = nil
 		}
 		timer?.activate()
-		
 	}
 	
 	static func execute(seconds: TimeInterval, on queue: DispatchQueue = .main, _ handler: @escaping () -> Void) {

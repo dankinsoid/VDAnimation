@@ -21,9 +21,7 @@ extension VDAnimationProtocol {
 }
 
 extension VDAnimationProtocol {
-	public var options: AnimationOptions { modified.options }
-	public var modified: ModifiedAnimation { ModifiedAnimation(options: .empty, animation: self) }
-	var chain: ValueChaining<Self> { ValueChaining(self) }
+	var modified: ModifiedAnimation { ModifiedAnimation(options: .empty, animation: self) }
 	
 	@discardableResult
 	public func start(with options: AnimationOptions, _ completion: @escaping (Bool) -> Void) -> AnimationDelegateProtocol {
