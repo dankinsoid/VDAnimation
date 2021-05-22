@@ -35,33 +35,48 @@ public struct TimerAnimation: VDAnimationProtocol {
 	}
 	
 	final class Delegate: AnimationDelegateProtocol {
-		var isRunning: Bool { displayLink?.isPaused == false }
+		var isInstant: Bool { false }
+		var isRunning: Bool {
+			displayLink?.isPaused == false
+		}
 		var position: AnimationPosition {
-			get { .progress(currentProgress(displayLink: displayLink)) }
+			get {
+				guard duration > 0 else { return settedPosition ?? .start }
+				return settedPosition ?? completed.map {
+					.progress(min(1, max(0, startedFrom + (options.isReversed == true ? -$0 : $0))))
+				} ?? .start
+			}
 			set {
-				if displayLink?.isPaused != false {
-					settedProgress = newValue.complete
-					update(CGFloat(newValue.complete), displayLink.info(fps))
-				} else {
-					settedProgress = nil
+				let wasRunning = isRunning
+				if wasRunning {
+					pause()
+				}
+				settedPosition = newValue
+				if wasRunning {
+					play(with: .empty)
 				}
 			}
 		}
 		var options: AnimationOptions
-		var isInstant: Bool { false }
-		private let fps: Int
-		private let update: (CGFloat, FrameInfo) -> Void
-		private let curve: ((CGFloat) -> CGFloat)?
 		private var completions: [(Bool) -> Void] = []
-		private var settedProgress: Double?
-		
 		private var startedAt: CFTimeInterval?
+		private var startedFrom = 0.0
 		private var pausedAt: CFTimeInterval?
-		private var pausedTime: CFTimeInterval = 0
+		private var stoppedAt: CFTimeInterval?
 		private var displayLink: CADisplayLink?
 		private var block: ((CGFloat) -> CGFloat)?
-		private var wasCompleted = false
-		private var wasPlayed = false
+		private var curve: ((CGFloat) -> CGFloat)?
+		private let update: (CGFloat, FrameInfo) -> Void
+		private let fps: Int
+		private var duration: Double { options.duration?.absolute ?? 0 }
+		
+		private var settedPosition: AnimationPosition?
+		private var completed: Double? {
+			guard duration > 0 else { return startedAt == nil ? nil : 1 }
+			return startedAt.flatMap { started in
+				min(1, max(0, ((pausedAt ?? stoppedAt ?? CACurrentMediaTime()) - started) / duration))
+			}
+		}
 		
 		init(fps: Int, curve: ((CGFloat) -> CGFloat)?, _ update: @escaping (CGFloat, FrameInfo) -> Void, options: AnimationOptions) {
 			self.fps = fps
@@ -70,106 +85,73 @@ public struct TimerAnimation: VDAnimationProtocol {
 			self.options = options
 		}
 		
-		func add(completion: @escaping (Bool) -> Void) {
-			completions.append(completion)
-		}
-		
 		func play(with options: AnimationOptions) {
+			guard !isRunning, stoppedAt == nil else { return }
+			let currentProgress = progress
 			self.options = options.or(self.options)
-			wasPlayed = true
-			start()
-		}
-		
-		func pause() {
-			guard displayLink?.isPaused == false else { return }
-			displayLink?.isPaused = true
-			pausedAt = CACurrentMediaTime()
-		}
-		
-		func stop(at position: AnimationPosition?) {
-			stop()
-			if let progress = (position?.complete).map({ CGFloat($0) }) {
-				update(progress, displayLink.info(fps))
-				completion(progress == 1)
-			} else {
-				completion(false)
-			}
-		}
-		
-		func stop() {
-			displayLink?.isPaused = true
-			displayLink?.invalidate()
-			displayLink = nil
-			startedAt = nil
+			let seconds = duration * (self.options.isReversed ?? false ? currentProgress : 1 - currentProgress)
+			startedFrom = settedPosition?.complete ?? completed ?? 0
+			settedPosition = nil
 			pausedAt = nil
-		}
-		
-		private func completion(_ completed: Bool) {
-			guard wasPlayed, !wasCompleted else { return }
-			wasCompleted = true
-			completions.forEach {
-				$0(completed)
-			}
-		}
-		
-		func start() {
-			guard currentProgress(displayLink: displayLink) < 1 else {
-				stop()
-				update(options.isReversed == true ? 0 : 1, displayLink.info(fps))
-				completion(true)
+			guard seconds > 0 else {
+				startedAt = startedAt ?? CACurrentMediaTime()
+				stop(at: .end, complete: self.options.complete != false)
 				return
 			}
-			wasPlayed = true
-			wasCompleted = false
+			startedAt = startedAt ?? CACurrentMediaTime()
+			
 			block = transform()
-			createAndStart()
-		}
-		
-		func createAndStart() {
 			if displayLink == nil {
-				if let setted = settedProgress, let dur = options.duration?.absolute, dur > 0 {
-					pausedTime = setted / dur
-				} else {
-					pausedTime = 0
-				}
-				pausedAt = nil
-				displayLink = displayLink ?? CADisplayLink(target: self, selector: #selector(handler))
+				displayLink = CADisplayLink(target: self, selector: #selector(handler))
 				displayLink?.preferredFramesPerSecond = fps
-				startedAt = CACurrentMediaTime()
 				displayLink?.add(to: .main, forMode: .default)
-			} else if displayLink?.isPaused == true {
-				if let setted = settedProgress, let dur = options.duration?.absolute, dur > 0 {
-					pausedTime = setted / dur
-				} else {
-					pausedTime += pausedAt.map { CACurrentMediaTime() - $0 } ?? 0
-				}
-				pausedAt = nil
+			} else {
 				displayLink?.isPaused = false
 			}
-			settedProgress = nil
 		}
 		
 		@objc private func handler(displayLink: CADisplayLink) {
-			let percent = CGFloat(currentProgress(displayLink: displayLink))
-			guard percent < 1 else {
-				self.update(options.isReversed == true ? 0 : 1, displayLink.info)
-				stop()
-				completion(true)
-				return
+			let k = CGFloat(progress)
+			update(block?(k) ?? k, displayLink.info)
+			if k == (options.isReversed == true ? 0 : 1) {
+				stop(at: nil, complete: options.complete != false)
 			}
-			let k = options.isReversed == true ? 1 - percent : percent
-			self.update(block?(k) ?? k, displayLink.info)
 		}
 		
-		private func currentProgress(displayLink: CADisplayLink?) -> Double {
-			if let setted = settedProgress, displayLink?.isPaused != false {
-				return setted
+		func pause() {
+			displayLink?.isPaused = true
+			if startedAt != nil {
+				pausedAt = CACurrentMediaTime()
 			}
-			guard let displayLink = displayLink else { return 0 }
-			let time = displayLink.timestamp - (startedAt ?? CACurrentMediaTime()) - pausedTime
-			let duration = options.duration?.absolute ?? 0
-			guard duration > 0 else { return 1 }
-		  return time / duration
+		}
+		
+		func stop(at position: AnimationPosition?) {
+			stop(at: position, complete: true)
+		}
+		
+		private func stop(at position: AnimationPosition?, complete: Bool) {
+			displayLink?.isPaused = true
+			displayLink?.invalidate()
+			displayLink = nil
+			settedPosition = nil
+			if complete {
+				stoppedAt = CACurrentMediaTime()
+				pausedAt = nil
+			} else {
+				stoppedAt = nil
+				pausedAt = CACurrentMediaTime()
+			}
+			self.complete(complete: position == .end)
+		}
+		
+		private func complete(complete: Bool) {
+			completions.forEach {
+				$0(complete)
+			}
+		}
+		
+		func add(completion: @escaping (Bool) -> Void) {
+			completions.append(completion)
 		}
 		
 		private func transform() -> ((CGFloat) -> CGFloat)? {
