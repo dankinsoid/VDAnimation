@@ -14,7 +14,7 @@ final class VDTests: XCTestCase {
 	
 	var animations: [VDAnimationProtocol] {
 		[
-			animation, animation.repeat(5), animation.reversed(), animation.autoreverse(), Instant {},
+			animation, animation.repeat(3), animation.reversed(), animation.autoreverse(), Instant {},
 			Sequential([animation, animation, animation]), Parallel([animation, animation, animation]),
 			TimerAnimation { _ in }
 		]
@@ -72,18 +72,25 @@ final class VDTests: XCTestCase {
 		let delegate = animation.duration(0.25).delegate()
 		delegate.play()
 		delegate.pause()
-		for _ in 0..<10 {
+		for _ in 0..<5 {
 			let position = Double.random(in: 0...1)
 			delegate.progress = position
 			XCTAssert(delegate.progress, position, "progress", animation)
 		}
 		delegate.stop()
+		
+		let delegate1 = animation.duration(0.25).delegate(with: .isReversed(true))
+		for _ in 0..<5 {
+			let position = Double.random(in: 0...1)
+			delegate1.progress = position
+			XCTAssert(delegate1.progress, position, "progress", animation)
+		}
 	}
 	
 	func durationTest(animation: VDAnimationProtocol) {
 		let delegate = animation.duration(0.1).delegate()
 		let expectedDuration = delegate.options.duration?.absolute ?? 0
-		let exp = expectation(description: "completion \(#line)")
+		let exp = expectation(description: "completion \(#line) \(type(of: animation))")
 		delegate.add { _ in
 			exp.fulfill()
 		}

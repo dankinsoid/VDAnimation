@@ -100,10 +100,9 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
 		}
 		
 		func set(position: AnimationPosition, needStop stop: Bool) {
-			let position = options.isReversed == true ? position.reversed : position
 			switch position {
 			case .start, .end:
-				inner.set(position: position, stop: stop)
+				inner.set(position: .start, stop: stop)
 			case .progress(let k):
 				if count != nil {
 					let (i, k) = getProgress(for: k)
