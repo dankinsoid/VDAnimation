@@ -52,6 +52,8 @@ public struct Parallel: VDAnimationProtocol {
 		private let initOptions: [AnimationOptions]
 		private var prevProgress: Double = 0
 		private var wasStopped = false
+		private var stopped = 0
+		private var completedCount = 0
 		
 		init(animations: [AnimationDelegateProtocol], options: AnimationOptions) {
 			self.maxDuration = Delegate.maxDuration(for: animations)
@@ -63,26 +65,32 @@ public struct Parallel: VDAnimationProtocol {
 		
 		private func prepare() {
 			updateOptions()
-			let count = animations.count
-			var completed = 0
-			var finished = true
 			animations.forEach {
 				$0.add {[weak self] in
-					guard let `self` = self else { return }
-					completed += 1
-					finished = finished && $0
-					if completed >= count || !$0 {
-						self.prevProgress = self.progress
-						completed = 0
-						if !self.wasStopped && self.options.complete != false {
-							self.wasStopped = true
-							self.animations.forEach {
-								$0.stop(at: .current)
-							}
-						}
-						self.complete(finished)
-						finished = true
+					self?.completed(completed: $0)
+				}
+			}
+		}
+		
+		private func completed(completed: Bool) {
+			guard !wasStopped else {
+				stopped += 1
+				if stopped == animations.count {
+					stopped = 0
+					completions.forEach { $0(completed) }
+				}
+				return
+			}
+			completedCount += 1
+			let finished = completedCount >= animations.count
+			if finished || !completed {
+				if options.complete != false {
+					wasStopped = true
+					animations.forEach {
+						$0.stop(at: .current)
 					}
+				} else {
+					completions.forEach { $0(completed) }
 				}
 			}
 		}
@@ -148,15 +156,19 @@ public struct Parallel: VDAnimationProtocol {
 			case .start:
 				animations.forEach { $0.set(position: .start, stop: stop) }
 				prevProgress = 0
+				completedCount = 0
 			case .end:
 				animations.forEach { $0.set(position: .end, stop: stop) }
 				prevProgress = 1
+				completedCount = animations.count
 			case .progress(let k):
 				guard !animations.isEmpty else { return }
+				completedCount = 0
 				for i in 0..<progresses.count {
 					if progresses[i].upperBound <= k || progresses[i].upperBound == 0 {
 						guard progresses[i].upperBound > prevProgress else { continue }
 						animations[i].set(position: .end, stop: stop)
+						completedCount += 1
 					} else if progresses[i].lowerBound >= k {
 						guard progresses[i].lowerBound < prevProgress else { continue }
 						animations[i].set(position: .start, stop: stop)

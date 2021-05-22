@@ -67,14 +67,15 @@ extension Optional: VDAnimationProtocol where Wrapped: VDAnimationProtocol {
 
 public final class EmptyAnimationDelegate: AnimationDelegateProtocol {
 	public var isInstant: Bool { true }
-	public var options: AnimationOptions = .empty
+	public var options: AnimationOptions {
+		.init(duration: .absolute(0), complete: true)
+	}
 	public var isRunning: Bool { false }
 	public var position: AnimationPosition = .start
 	private var completions: [(Bool) -> Void] = []
 	public var infinity = false
 	
 	public func play(with options: AnimationOptions) {
-		self.options = options.or(self.options)
 		stop(at: .end)
 	}
 	public func pause() {}

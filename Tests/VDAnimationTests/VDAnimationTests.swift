@@ -13,7 +13,10 @@ final class VDTests: XCTestCase {
 	let animation = Interval()
 	
 	var animations: [VDAnimationProtocol] {
-		[animation, animation.repeat(5), animation.reversed(), animation.autoreverse(), Instant {}]
+		[
+			animation, animation.repeat(5), animation.reversed(), animation.autoreverse(), Instant {},
+			Sequential([animation, animation, animation]), Parallel([animation, animation, animation])
+		]
 	}
 	
 	func testIsRunning() {
@@ -148,7 +151,7 @@ final class VDTests: XCTestCase {
 		let delegate2 = animation.delegate(with: options2)
 		XCTAssert(delegate2.options.duration, delegate2.isInstant ? .absolute(0) : .relative(0.5), "relative duration", animation)
 		XCTAssert(delegate2.options.curve, delegate2.isInstant ? nil : .ease, "curve", animation)
-		XCTAssert(delegate2.options.complete, delegate2.isInstant ? true : false, "complete", animation)
+		XCTAssert(delegate2.options.complete, delegate2.isInstant, "complete", animation)
 		XCTAssert(delegate2.options.isReversed, delegate2.isInstant ? nil : false, "isReversed", animation)
 	}
 	
