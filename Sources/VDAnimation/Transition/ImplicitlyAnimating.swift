@@ -12,7 +12,10 @@ final class ImplicitlyAnimating: NSObject, UIViewImplicitlyAnimating {
 		isRunning ? .active : .inactive
 	}
 	var isRunning: Bool { delegate.isRunning }
-	var isReversed: Bool
+	var isReversed: Bool {
+		get { delegate.options.isReversed == true }
+		set { if isReversed != newValue { delegate.play(with: delegate.options.set(.isReversed(newValue))) } }
+	}
 	var fractionComplete: CGFloat {
 		get { CGFloat(delegate.progress) }
 		set {
@@ -24,11 +27,10 @@ final class ImplicitlyAnimating: NSObject, UIViewImplicitlyAnimating {
 	
 	init(_ delegate: AnimationDelegateProtocol) {
 		self.delegate = delegate
-		isReversed = delegate.options.isReversed == true
 	}
 	
 	func startAnimation() {
-		delegate.play(with: AnimationOptions(isReversed: isReversed))
+		delegate.play()
 	}
 	
 	func startAnimation(afterDelay delay: TimeInterval) {

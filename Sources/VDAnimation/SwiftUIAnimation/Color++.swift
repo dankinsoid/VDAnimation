@@ -76,7 +76,6 @@ extension UIColor {
 		public static func -=(lhs: inout AnimatableData, rhs: AnimatableData) {
 			lhs = lhs - rhs
 		}
-		
 	}
 	
 	public var rgba: AnimatableData {

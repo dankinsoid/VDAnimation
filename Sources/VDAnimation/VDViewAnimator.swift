@@ -40,10 +40,6 @@ open class VDViewAnimator: UIViewPropertyAnimator, AnimationDelegateProtocol {
 		}
 	}
 	
-	open func cancel() {
-		finishAnimation(at: .start)
-	}
-	
 	override open func stopAnimation(_ withoutFinishing: Bool) {
 		if !withoutFinishing {
 			guard state != .stopped else {

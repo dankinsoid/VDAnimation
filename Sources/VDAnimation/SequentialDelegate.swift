@@ -9,37 +9,32 @@ import Foundation
 import VDKit
 
 internal final class SequentialDelegate: AnimationDelegateProtocol {
+	
+	// MARK: protocol properties
 	internal var isRunning: Bool { current?.isRunning ?? false }
-	internal var position: AnimationPosition {
-		get {
-			guard !progresses.isEmpty else { return .end }
-			if currentStep == 0, current?.position == .start {
-				return .start
-			}
-			if currentStep == animations.count - 1, current?.position == .end {
-				return .end
-			}
-			return .progress((progresses[currentStep].upperBound - progresses[currentStep].lowerBound) * animations[currentStep].position.complete + progresses[currentStep].lowerBound)
-		}
-		set {
-			set(position: newValue)
-		}
-	}
-	private var currentStep: Int
 	internal let animations: [AnimationDelegateProtocol]
-	internal var current: AnimationDelegateProtocol? {
-		animations[safe: currentStep % animations.count]
-	}
-	private var completions: [(Bool) -> Void] = []
 	internal var options: AnimationOptions
+	var isInstant: Bool { !animations.contains(where: { !$0.isInstant }) }
+	internal var position: AnimationPosition {
+		get { getPosition() }
+		set { set(position: newValue) }
+	}
+	
+	// MARK: private properties
+	private var completions: [(Bool) -> Void] = []
 	private var allOptions: [AnimationOptions] = []
 	private let initOptions: [AnimationOptions]
 	private var progresses: [ClosedRange<Double>] = []
 	private var wasPlaying = false
-	var isInstant: Bool { !animations.contains(where: { !$0.isInstant }) }
 	private var fullDuration: AnimationDuration?
 	private var wasStopped = false
 	private var stopped = 0
+	private var currentStep: Int
+	private var current: AnimationDelegateProtocol? {
+		animations[safe: currentStep % animations.count]
+	}
+	
+	// MARK: init
 	
 	internal init(animations: [AnimationDelegateProtocol], options: AnimationOptions) {
 		self.animations = animations
@@ -49,6 +44,39 @@ internal final class SequentialDelegate: AnimationDelegateProtocol {
 		currentStep = 0
 		prepare()
 	}
+	
+	// MARK: protocol methods
+	
+	internal func play(with options: AnimationOptions) {
+		if options != .empty {
+			self.options = options.or(self.options)
+			updateOptions()
+		}
+		guard !animations.isEmpty else {
+			completions.forEach {
+				$0(true)
+			}
+			return
+		}
+		wasPlaying = true
+		wasStopped = false
+		current?.play(with: allOptions[currentStep])
+	}
+	
+	internal func pause() {
+		current?.pause()
+	}
+	
+	internal func stop(at position: AnimationPosition?) {
+		wasStopped = true
+		set(progress: position?.complete, complete: options.complete ?? true)
+	}
+	
+	internal func add(completion: @escaping (Bool) -> Void) {
+		completions.append(completion)
+	}
+	
+	// MARK: private methods
 	
 	private func prepare() {
 		updateOptions()
@@ -87,95 +115,11 @@ internal final class SequentialDelegate: AnimationDelegateProtocol {
 		}
 	}
 	
-	internal func play(with options: AnimationOptions) {
-		if options != .empty {
-			self.options = options.or(self.options)
-			updateOptions()
-		}
-		guard !animations.isEmpty else {
-			completions.forEach {
-				$0(true)
-			}
-			return
-		}
-		wasPlaying = true
-		wasStopped = false
-		current?.play(with: allOptions[currentStep])
-	}
-	
-	internal func pause() {
-		current?.pause()
-	}
-	
-	internal func stop(at position: AnimationPosition?) {
-		wasStopped = true
-		set(progress: position?.complete, complete: options.complete ?? true)
-	}
-	
-	internal func add(completion: @escaping (Bool) -> Void) {
-		completions.append(completion)
-	}
+	// MARK: options methods
 	
 	private func updateOptions() {
 		progresses = getProgresses()
 		allOptions = setDuration()
-	}
-	
-	private func set(position: AnimationPosition) {
-		guard !animations.isEmpty else { return }
-		switch position {
-		case .start:
-			animations.reversed().forEach { $0.position = .start }
-			currentStep = 0
-			wasPlaying = true
-		case .end:
-			animations.forEach { $0.position = .end }
-			currentStep = max(0, animations.count - 1)
-			wasPlaying = true
-		case .progress(let k):
-			set(progress: k, complete: false)
-		}
-	}
-	
-	private func set(progress k: Double?, complete: Bool) {
-		let i = k.map { k in progresses.firstIndex(where: { k >= $0.lowerBound && k <= $0.upperBound }) ?? 0 } ?? currentStep
-		if k != nil {
-			let finished = currentStep
-			let toFinish = i > finished || !wasPlaying ? animations.dropFirst(finished).prefix(i - finished) : []
-			let p = wasPlaying ? currentStep : animations.count - 1
-			let started = animations.count - p - 1
-			let toStart = i < finished || !wasPlaying ? animations.dropLast(started).suffix((wasPlaying ? currentStep : p) - i) : []
-			toFinish.forEach {
-				$0.set(position: .end, stop: complete)
-			}
-			toStart.reversed().forEach {
-				$0.set(position: .start, stop: complete)
-			}
-		}
-		if progresses[i].upperBound == progresses[i].lowerBound {
-			animations[i].set(position: .end, stop: complete)
-		} else if let k = k {
-			let progress = AnimationPosition.progress((k - progresses[i].lowerBound) / (progresses[i].upperBound - progresses[i].lowerBound))
-			animations[i].set(position: progress, stop: complete)
-		} else if complete {
-			animations[i].stop(at: .current)
-		}
-		wasPlaying = true
-		currentStep = i
-	}
-	
-	private static func fullDuration(for array: [AnimationDelegateProtocol]) -> AnimationDuration? {
-		guard array.contains(where: {
-			$0.options.duration?.absolute != nil && !$0.isInstant
-		}) else { return nil }
-		let dur = array.reduce(0, { $0 + ($1.options.duration?.absolute ?? 0) })
-		var rel = min(1, array.reduce(0, { $0 + ($1.options.duration?.relative ?? 0) }))
-		if rel == 0 {
-			rel = Double(array.filter({ $0.options.duration == nil }).count) / Double(array.count)
-		}
-		rel = rel == 1 ? 0 : rel
-		let full = dur / (1 - rel)
-		return .absolute(full)
 	}
 	
 	private func setDuration() -> [AnimationOptions] {
@@ -224,6 +168,62 @@ internal final class SequentialDelegate: AnimationDelegateProtocol {
 			array[i].duration = .absolute(duration * newDuration)
 			array[i].curve = curve1
 		}
+	}
+	
+	// MARK: position methods
+	
+	private func getPosition() -> AnimationPosition {
+		guard !progresses.isEmpty else { return .end }
+		if currentStep == 0, current?.position == .start {
+			return .start
+		}
+		if currentStep == animations.count - 1, current?.position == .end {
+			return .end
+		}
+		return .progress((progresses[currentStep].upperBound - progresses[currentStep].lowerBound) * animations[currentStep].position.complete + progresses[currentStep].lowerBound)
+	}
+	
+	private func set(position: AnimationPosition) {
+		guard !animations.isEmpty else { return }
+		switch position {
+		case .start:
+			animations.reversed().forEach { $0.position = .start }
+			currentStep = 0
+			wasPlaying = true
+		case .end:
+			animations.forEach { $0.position = .end }
+			currentStep = max(0, animations.count - 1)
+			wasPlaying = true
+		case .progress(let k):
+			set(progress: k, complete: false)
+		}
+	}
+	
+	private func set(progress k: Double?, complete: Bool) {
+		let i = k.map { k in progresses.firstIndex(where: { k >= $0.lowerBound && k <= $0.upperBound }) ?? 0 } ?? currentStep
+		if k != nil {
+			let finished = currentStep
+			let toFinish = i > finished || !wasPlaying ? animations.dropFirst(finished).prefix(i - finished) : []
+			let p = wasPlaying ? currentStep : animations.count - 1
+			let started = animations.count - p - 1
+			let toStart = i < finished || !wasPlaying ? animations.dropLast(started).suffix((wasPlaying ? currentStep : p) - i) : []
+			toFinish.forEach {
+				$0.set(position: .end, stop: complete)
+			}
+			toStart.reversed().forEach {
+				$0.set(position: .start, stop: complete)
+			}
+		}
+		if progresses[i].upperBound == progresses[i].lowerBound {
+			animations[i].set(position: .end, stop: complete)
+		} else if let k = k {
+			let progress = AnimationPosition.progress((k - progresses[i].lowerBound) / (progresses[i].upperBound - progresses[i].lowerBound))
+			animations[i].set(position: progress, stop: complete)
+		} else if complete {
+			animations[i].stop(at: .current)
+		}
+		wasPlaying = true
+		currentStep = i
 	}
 	
 	private func getProgresses() -> [ClosedRange<Double>] {
@@ -276,5 +276,21 @@ internal final class SequentialDelegate: AnimationDelegateProtocol {
 		}
 		progresses[progresses.count - 1] = progresses[progresses.count - 1].lowerBound...1
 		return progresses
+	}
+	
+	// MARK: static methods
+	
+	private static func fullDuration(for array: [AnimationDelegateProtocol]) -> AnimationDuration? {
+		guard array.contains(where: {
+			$0.options.duration?.absolute != nil && !$0.isInstant
+		}) else { return nil }
+		let dur = array.reduce(0, { $0 + ($1.options.duration?.absolute ?? 0) })
+		var rel = min(1, array.reduce(0, { $0 + ($1.options.duration?.relative ?? 0) }))
+		if rel == 0 {
+			rel = Double(array.filter({ $0.options.duration == nil }).count) / Double(array.count)
+		}
+		rel = rel == 1 ? 0 : rel
+		let full = dur / (1 - rel)
+		return .absolute(full)
 	}
 }

@@ -8,182 +8,6 @@
 import UIKit
 import VDKit
 
-public protocol ViewTransitable: UIView {}
-public protocol ViewControllerTransitable: UIViewController {}
-
-extension UIView: ViewTransitable {}
-extension UIViewController: ViewControllerTransitable {}
-
-extension ViewTransitable {
-	public var transition: ViewTransitionConfig {//<Self> {
-		if let result = objc_getAssociatedObject(self, &transitionKey) as? ViewTransitionConfig {//<Self> {
-			return result
-		}
-		let result = ViewTransitionConfig()//<Self>(
-		objc_setAssociatedObject(self, &transitionKey, result, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-		return result
-	}
-}
-
-extension ViewControllerTransitable {
-	public var transition: VСTransitionConfig {
-		get {
-			if let result = objc_getAssociatedObject(self, &transitionVCKey) as? VСTransitionConfig {//<Self> {
-				return result
-			}
-			let result = VСTransitionConfig(self)
-			objc_setAssociatedObject(self, &transitionVCKey, result, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-			return result
-		}
-		set {
-			newValue.vc = self
-			objc_setAssociatedObject(self, &transitionVCKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-		}
-	}
-}
-
-private var transitionKey = "transitionKey"
-private var transitionVCKey = "transitionVCKey"
-
-public final class ViewTransitionConfig {//<View: UIView> {
-	public var id: String = UUID().uuidString
-	public var modifier: VDTransition<UIView>?
-	init() {}
-}
-
-public final class VСTransitionConfig {
-	public weak var vc: UIViewController? {
-		didSet {
-			if isEnabled { setEnabled() }
-		}
-	}
-	public private(set) lazy var delegate = VDTransitioningDelegate(vc)
-	private weak var previousTransitionDelegate: UIViewControllerTransitioningDelegate?
-	
-	public var duration: TimeInterval {
-		get { delegate.duration }
-		set { delegate.duration = newValue }
-	}
-	public var curve: BezierCurve {
-		get { delegate.curve }
-		set { delegate.curve = newValue }
-	}
-	public var modifier: VDTransition<UIView>? {
-		get { delegate.modifier }
-		set { delegate.modifier = newValue }
-	}
-	public var parallelAnimation: TransitionParallelAnimation? {
-		get { delegate.parallelAnimation }
-		set { delegate.parallelAnimation = newValue }
-	}
-	public var interactive: TransitionInteractivity {
-		get { delegate.interactivity }
-		set { delegate.interactivity = newValue }
-	}
-	public var containerModifier: VDTransition<UIView> {
-		get { delegate.containerModifier }
-		set { delegate.containerModifier = newValue }
-	}
-	public var prepare: ((VDTransitionContext) -> Void)? {
-		get { delegate.prepare }
-		set { delegate.prepare = newValue }
-	}
-	public var inAnimation: ((VDTransitionContext) -> Void)? {
-		get { delegate.inAnimation }
-		set { delegate.inAnimation = newValue }
-	}
-	public var completion: ((VDTransitionContext, Bool) -> Void)? {
-		get { delegate.completion }
-		set { delegate.completion = newValue }
-	}
-	public var restoreDisappearedViews: Bool {
-		get { delegate.restoreDisappearedViews }
-		set { delegate.restoreDisappearedViews = newValue }
-	}
-	public var applyModifierOnBothVC: Bool {
-		get { delegate.applyModifierOnBothVC }
-		set { delegate.applyModifierOnBothVC = newValue }
-	}
-	
-	public var isEnabled = false {
-		didSet {
-			guard isEnabled != oldValue else { return }
-			if isEnabled {
-				setEnabled()
-			} else {
-				vc?.transitioningDelegate = previousTransitionDelegate
-				if delegate.previousNavigationDelegate != nil {
-					(vc as? UINavigationController)?.delegate = delegate.previousNavigationDelegate
-				}
-				if delegate.previousTabDelegate != nil {
-					(vc as? UITabBarController)?.delegate = delegate.previousTabDelegate
-				}
-			}
-		}
-	}
-	
-	private func setEnabled() {
-		guard vc != nil else { return }
-		delegate.owner = vc
-		
-		if interactive.isNone, vc as? UINavigationController != nil {
-			interactive.disappear = .swipe(to: .right)
-		}
-		
-		previousTransitionDelegate = vc?.transitioningDelegate
-		vc?.transitioningDelegate = delegate
-		vc?.modalPresentationStyle = .overCurrentContext
-		delegate.previousNavigationDelegate = (vc as? UINavigationController)?.delegate
-		delegate.previousTabDelegate = (vc as? UITabBarController)?.delegate
-		(vc as? UINavigationController)?.delegate = delegate
-		(vc as? UITabBarController)?.delegate = delegate
-	}
-	
-	public init(_ vc: UIViewController) {
-		self.vc = vc
-	}
-	
-	public init() {}
-}
-
-extension UIViewController {
-	
-	public func present(_ viewController: UIViewController, transition: VDTransition<UIView>, interactive: TransitionInteractivity?, animated: Bool = true, completion: (() -> Void)? = nil) {
-		viewController.transition.isEnabled = true
-		viewController.transition.modifier = transition
-		viewController.transition.interactive = interactive ?? .none
-		let duration = viewController.transition.duration
-		if !animated {
-			viewController.transition.duration = 0
-		}
-		present(viewController, animated: true) {
-			if !animated {
-				viewController.transition.duration = duration
-			}
-			completion?()
-		}
-	}
-	
-	public func present(_ viewController: UIViewController, transitions: [UIView: UIView], interactive: TransitionInteractivity?, animated: Bool = true, completion: (() -> Void)? = nil) {
-		viewController.loadViewIfNeeded()
-		viewController.transition.isEnabled = true
-		transitions.forEach {
-			$0.key.transition.id = $0.value.transition.id
-		}
-		viewController.transition.interactive = interactive ?? .none
-		let duration = viewController.transition.duration
-		if !animated {
-			viewController.transition.duration = 0
-		}
-		present(viewController, animated: true) {
-			if !animated {
-				viewController.transition.duration = duration
-			}
-			completion?()
-		}
-	}
-}
-
 extension VСTransitionConfig {
 	
 	public static func pageSheet(from edge: Edges = .bottom, minOffset: CGFloat = 10, cornerRadius: CGFloat = 10, backScale: Double = 0.915, containerColor: UIColor = #colorLiteral(red: 0.21, green: 0.21, blue: 0.23, alpha: 0.37)) -> VСTransitionConfig {
@@ -293,6 +117,44 @@ extension VСTransitionConfig {
 	}
 }
 
+extension UIViewController {
+	
+	public func present(_ viewController: UIViewController, transition: VDTransition<UIView>, interactive: TransitionInteractivity?, animated: Bool = true, completion: (() -> Void)? = nil) {
+		viewController.transition.isEnabled = true
+		viewController.transition.modifier = transition
+		viewController.transition.interactive = interactive ?? .none
+		let duration = viewController.transition.duration
+		if !animated {
+			viewController.transition.duration = 0
+		}
+		present(viewController, animated: true) {
+			if !animated {
+				viewController.transition.duration = duration
+			}
+			completion?()
+		}
+	}
+	
+	public func present(_ viewController: UIViewController, transitions: [UIView: UIView], interactive: TransitionInteractivity?, animated: Bool = true, completion: (() -> Void)? = nil) {
+		viewController.loadViewIfNeeded()
+		viewController.transition.isEnabled = true
+		transitions.forEach {
+			$0.key.transition.id = $0.value.transition.id
+		}
+		viewController.transition.interactive = interactive ?? .none
+		let duration = viewController.transition.duration
+		if !animated {
+			viewController.transition.duration = 0
+		}
+		present(viewController, animated: true) {
+			if !animated {
+				viewController.transition.duration = duration
+			}
+			completion?()
+		}
+	}
+}
+
 fileprivate class TapRecognizer: UITapGestureRecognizer, UIGestureRecognizerDelegate {
 	var onTap: () -> Void = {}
 	
@@ -310,22 +172,5 @@ fileprivate class TapRecognizer: UITapGestureRecognizer, UIGestureRecognizerDele
 		if gestureRecognizer.state == .recognized {
 			onTap()
 		}
-	}
-}
-
-extension UIView {
-	
-	@discardableResult
-	func edge(_ edge: Edges, to view: UIView, offset: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint {
-		let result: NSLayoutConstraint
-		switch edge {
-		case .top:			result = topAnchor.constraint(equalTo: view.topAnchor, constant: offset)
-		case .leading:	result = leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: offset)
-		case .bottom:		result = bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -offset)
-		case .trailing: result = trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -offset)
-		}
-		result.priority = priority
-		result.isActive = true
-		return result
 	}
 }

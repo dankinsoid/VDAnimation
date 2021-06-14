@@ -30,6 +30,61 @@ open class InteractiveDriver: UIPercentDrivenInteractiveTransition {
 		super.init()
 	}
 	
+	open func begin() {
+		guard !wasBegun, let vc = self.vc, !isReversed else { return }
+		wasBegun = true
+		delegate?.isInteractive = true
+		if transitioning != nil {
+			transitioning?.animator?.pause()
+			return
+		}
+		let isStarted = startTransition(vc, show)
+		wasBegun = isStarted
+		delegate?.isInteractive = isStarted
+	}
+	
+	override open func cancel() {
+		guard wasBegun else { return }
+		super.cancel()
+		wasBegun = false
+		transitioning?.animator?.stop(at: .start)
+		delegate?.isInteractive = false
+	}
+	
+	override open func finish() {
+		guard wasBegun else { return }
+		super.finish()
+		wasBegun = false
+		transitioning?.animator?.stop(at: isReversed ? .start : .end)
+		delegate?.isInteractive = false
+	}
+	
+	open func complete(duration: Double?, finish: Bool) {
+		guard transitioning?.animator != nil else {
+			finish ? self.finish() : self.cancel()
+			return
+		}
+		transitioning?.animator?.add {[weak self] in
+			finish && $0 ? self?.finish() : self?.cancel()
+		}
+		if !finish {
+			transitioning?.animator?.play(with: .init(duration: duration.map { .absolute($0) }, isReversed: true))
+		} else {
+			transitioning?.animator?.play(with: .init(duration: duration.map { .absolute($0) }))
+		}
+	}
+	
+	override open func update(_ percentComplete: CGFloat) {
+		super.update(percentComplete)
+		if transitioning?.animator?.isRunning == true {
+			transitioning?.animator?.pause()
+		}
+		transitioning?.animator?.progress = Double(percentComplete)
+	}
+}
+
+extension InteractiveDriver {
+	
 	public static func dismiss(delegate: VDTransitioningDelegate) -> InteractiveDriver {
 		present(delegate: delegate, viewController: nil)
 	}
@@ -80,57 +135,5 @@ open class InteractiveDriver: UIPercentDrivenInteractiveTransition {
 				return true
 			}
 		}
-	}
-	
-	open func begin() {
-		guard !wasBegun, let vc = self.vc, !isReversed else { return }
-		wasBegun = true
-		delegate?.isInteractive = true
-		if transitioning != nil {
-			transitioning?.animator?.pause()
-			return
-		}
-		let isStarted = startTransition(vc, show)
-		wasBegun = isStarted
-		delegate?.isInteractive = isStarted
-	}
-	
-	override open func cancel() {
-		guard wasBegun else { return }
-		super.cancel()
-		wasBegun = false
-		transitioning?.animator?.cancel()
-		delegate?.isInteractive = false
-	}
-	
-	override open func finish() {
-		guard wasBegun else { return }
-		super.finish()
-		wasBegun = false
-		transitioning?.animator?.stop(at: isReversed ? .start : .end)
-		delegate?.isInteractive = false
-	}
-	
-	open func complete(duration: Double?, finish: Bool) {
-		guard transitioning?.animator != nil else {
-			finish ? self.finish() : self.cancel()
-			return
-		}
-		transitioning?.animator?.add {[weak self] in
-			finish && $0 ? self?.finish() : self?.cancel()
-		}
-		if !finish {
-			transitioning?.animator?.play(with: .init(duration: duration.map { .absolute($0) }, isReversed: true))
-		} else {
-			transitioning?.animator?.play(with: .init(duration: duration.map { .absolute($0) }))
-		}
-	}
-	
-	override open func update(_ percentComplete: CGFloat) {
-		super.update(percentComplete)
-		if transitioning?.animator?.isRunning == true {
-			transitioning?.animator?.pause()
-		}
-		transitioning?.animator?.progress = Double(percentComplete)
 	}
 }

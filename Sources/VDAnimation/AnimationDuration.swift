@@ -8,6 +8,8 @@
 
 import Foundation
 
+public typealias AnimationDuration = RelationValue<TimeInterval>
+
 public enum RelationValue<Value> {
 	case absolute(Value), relative(Value)
 	
@@ -50,8 +52,6 @@ public enum RelationType: String, Hashable {
 
 extension RelationValue: Equatable where Value: Equatable {}
 extension RelationValue: Hashable where Value: Hashable {}
-
-public typealias AnimationDuration = RelationValue<TimeInterval>
 
 public func /<F: BinaryFloatingPoint>(_ lhs: RelationValue<F>, _ rhs: F) -> RelationValue<F> {
     switch lhs {

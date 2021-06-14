@@ -45,29 +45,27 @@ public struct Animate: VDAnimationProtocol {
 	}
 }
 
+// MARK: Delegates
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 extension Animate {
 	
 	final class Delegate: AnimationDelegateProtocol {
+		
+		// MARK: protocol properties
 		var isRunning: Bool = false
 		var position: AnimationPosition {
 			get { .progress(value.1) }
-			set {
-				set(progress: newValue.complete, complete: false, animate: false)
-			}
+			set { set(progress: newValue.complete, complete: false, animate: false) }
 		}
 		var options: AnimationOptions
 		var isInstant: Bool { false }
+		
+		// MARK: inner properties
 		@Bind var value: ((Animation?, () -> Void), Double)
 		private let block: (Double) -> Void
 		var completions: [(Bool) -> Void] = []
 		var bag: [() -> Void] = []
 		private var finalValue: Double { options.isReversed == true ? 0 : 1 }
-		
-		deinit {
-			pause()
-			bag.forEach { $0() }
-		}
 		
 		init(value: Bind<((Animation?, () -> Void), Double)>, block: @escaping (Double) -> Void, options: AnimationOptions, publisher: ProgressObservable) {
 			self._value = value
@@ -80,13 +78,7 @@ extension Animate {
 			)
 		}
 		
-		private func observe(_ value: Double) {
-			guard isRunning, value == finalValue else { return }
-			isRunning = false
-			DispatchQueue.main.async {
-				self.complete(true)
-			}
-		}
+		// MARK: protocol methods
 		
 		func play(with options: AnimationOptions) {
 			if isRunning {
@@ -97,6 +89,28 @@ extension Animate {
 			}
 			self.options = options.or(self.options)
 			play()
+		}
+		
+		func pause() {
+			set(progress: nil, complete: false, animate: true)
+		}
+		
+		func stop(at position: AnimationPosition?) {
+			set(progress: position?.complete, complete: true, animate: true)
+		}
+		
+		func add(completion: @escaping (Bool) -> Void) {
+			completions.append(completion)
+		}
+		
+		// MARK: private methods
+		
+		private func observe(_ value: Double) {
+			guard isRunning, value == finalValue else { return }
+			isRunning = false
+			DispatchQueue.main.async {
+				self.complete(true)
+			}
 		}
 		
 		private func play() {
@@ -136,18 +150,6 @@ extension Animate {
 			}
 		}
 		
-		func pause() {
-			set(progress: nil, complete: false, animate: true)
-		}
-		
-		func stop(at position: AnimationPosition?) {
-			set(progress: position?.complete, complete: true, animate: true)
-		}
-		
-		func add(completion: @escaping (Bool) -> Void) {
-			completions.append(completion)
-		}
-		
 		private func set(progress: Double?, complete: Bool, animate: Bool) {
 			let newValue = progress ?? position.complete
 			isRunning = false
@@ -156,7 +158,14 @@ extension Animate {
 				self.complete(newValue == finalValue)
 			}
 		}
+		
+		deinit {
+			pause()
+			bag.forEach { $0() }
+		}
 	}
+	
+	// MARK: PrimitiveDelegate
 	
 	final class PrimitiveDelegate: AnimationDelegateProtocol {
 		var isRunning = false

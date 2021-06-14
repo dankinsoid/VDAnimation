@@ -184,7 +184,9 @@ public struct TimerAnimation: VDAnimationProtocol {
 }
 
 extension CADisplayLink {
-	var info: TimerAnimation.FrameInfo { .init(displayLink: self, fps: CFTimeInterval(preferredFramesPerSecond)) }
+	var info: TimerAnimation.FrameInfo {
+		.init(displayLink: self, fps: CFTimeInterval(preferredFramesPerSecond))
+	}
 }
 
 extension Optional where Wrapped == CADisplayLink {

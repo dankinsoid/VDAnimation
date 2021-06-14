@@ -9,16 +9,20 @@ import Foundation
 
 public enum TransitionType {
 	case present, dismiss, pop, push, next, previous
+	
 	public var show: Bool {
 		self == .present || self == .push || self == .next
 	}
+	
 	public var isNavigation: Bool {
 		self == .pop || self == .push
 	}
+	
 	public var isTabs: Bool {
 		self == .next || self == .previous
 	}
-	var inverted: TransitionType {
+	
+	public var inverted: TransitionType {
 		switch self {
 		case .dismiss: return .present
 		case .present: return .dismiss

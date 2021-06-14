@@ -18,7 +18,6 @@ public protocol AnimationDelegateProtocol {
 	func pause()
 	func stop(at position: AnimationPosition?)
 	func add(completion: @escaping (Bool) -> Void)
-	func cancel()
 }
 
 public protocol AnimationDelegateWrapper: AnimationDelegateProtocol {
@@ -34,29 +33,24 @@ extension AnimationDelegateWrapper {
 	public func pause() { inner.pause() }
 	public func stop(at position: AnimationPosition?) { inner.stop(at: position) }
 	public func add(completion: @escaping (Bool) -> Void) { inner.add(completion: completion) }
-	public func cancel() { inner.cancel() }
-}
-
-public enum AnimationState: Equatable {
-	case inactive, running, paused, stopped
 }
 
 extension AnimationDelegateProtocol {
+	
 	public func stop() {
 		stop(at: .current)
 	}
+	
 	public func play() { play(with: .empty) }
+	
 	public func pause(at position: AnimationPosition) {
 		pause()
 		self.position = position
 	}
+	
 	public var progress: Double {
 		get { position.complete }
 		nonmutating set { position = .progress(newValue) }
-	}
-	
-	public func cancel() {
-		stop(at: .start)
 	}
 	
 	func set(position: AnimationPosition?, stop: Bool) {

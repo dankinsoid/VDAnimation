@@ -59,18 +59,6 @@ public struct AnimationOptions: Equatable, ExpressibleByArrayLiteral {
 	}
 }
 
-public enum AnimationStopPosition: ExpressibleByFloatLiteral, Equatable {
-	case start, progress(Double), end, current
-	
-	public init(floatLiteral value: Double) {
-		switch value {
-		case 0: self = .start
-		case 1: self = .end
-		default: self = .progress(value)
-		}
-	}
-}
-
 public enum AnimationPosition: ExpressibleByFloatLiteral, Equatable {
 	case start, progress(Double), end
 	

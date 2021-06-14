@@ -74,10 +74,6 @@ struct ReversedAnimation: VDAnimationProtocol {
 		func add(completion: @escaping (Bool) -> Void) {
 			inner.add(completion: completion)
 		}
-		
-		func cancel() {
-			inner.cancel()
-		}
 	}
 }
 
