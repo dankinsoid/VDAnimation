@@ -10,108 +10,106 @@ import UIKit
 import VDKit
 
 public protocol UIKitChainingType: Chaining {
-	var wrappedValue: W? { get set }
-	var setInitial: (W) -> W { get set }
+	mutating func onGetProperty<P>(_ keyPath: WritableKeyPath<Value, P>, _ value: P, from: P?)
 }
 
 @dynamicMemberLookup
-public struct UIKitChainingAnimation<W: AnyObject>: UIKitChainingType, VDAnimationProtocol {
-	public private(set) var action: (W) -> W = { $0 }
-	public weak var wrappedValue: W?
-	public var setInitial: (W) -> W
+public struct UIKitChainingAnimation<Value: AnyObject>: UIKitChainingType, VDAnimationProtocol {
 	
-	public init(_ wrappedValue: W?, setInitial: @escaping (W) -> W) {
+	private weak var wrappedValue: Value?
+	private var setInitial: (Value) -> Value
+	public var apply: (Value) -> Value = { $0 }
+	
+	public init(_ wrappedValue: Value?, setInitial: @escaping (Value) -> Value) {
 		self.wrappedValue = wrappedValue
 		self.setInitial = setInitial
 	}
 	
-	public subscript<A>(dynamicMember keyPath: KeyPath<W, A>) -> ChainingProperty<Self, A> {
-		ChainingProperty<Self, A>(self, getter: keyPath)
+	public subscript<A>(dynamicMember keyPath: KeyPath<Value, A>) -> ChainProperty<Self, A> {
+		ChainProperty<Self, A>(self, getter: keyPath)
 	}
 	
-	public func copy(with action: @escaping (W) -> W) -> UIKitChainingAnimation<W> {
-		var result = UIKitChainingAnimation(wrappedValue, setInitial: setInitial)
-		result.action = action
-		return result
+	public mutating func onGetProperty<P>(_ keyPath: WritableKeyPath<Value, P>, _ value: P) {
+		onGetProperty(keyPath, value, from: nil)
+	}
+	
+	public mutating func onGetProperty<P>(_ keyPath: WritableKeyPath<Value, P>, _ value: P, from: P?) {
+		let property = Lazy<P?> {[wrappedValue] in from ?? wrappedValue?[keyPath: keyPath] }
+		setInitial = {[setInitial] in
+			guard let new = property.wrappedValue else { return $0 }
+			var wrapped = setInitial($0)
+			wrapped[keyPath: keyPath] = new
+			return wrapped
+		}
 	}
 	
 	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
-		Delegete(apply: { _ = self.wrappedValue.map(self.action) }, setInitial: { _ = self.wrappedValue.map(self.setInitial) }, options: options)
+		UIKitChainingDelegete(
+			apply: { _ = self.wrappedValue.map(self.apply) },
+			setInitial: { _ = self.wrappedValue.map(self.setInitial) },
+			options: options
+		)
+	}
+}
+
+private final class UIKitChainingDelegete: AnimationDelegateProtocol {
+	var isRunning: Bool { inner.isRunning }
+	var position: AnimationPosition {
+		get { inner.position }
+		set { set(position: newValue) }
+	}
+	var options: AnimationOptions { inner.options }
+	var isInstant: Bool { inner.isInstant }
+	public var setInitial: () -> Void
+	private var wasInited = false
+	private var inner: AnimationDelegateProtocol
+	
+	init(apply: @escaping () -> Void, setInitial: @escaping () -> Void, options: AnimationOptions) {
+		self.setInitial = setInitial
+		self.inner = UIViewAnimate(apply).delegate(with: options)
 	}
 	
-	final class Delegete: AnimationDelegateProtocol {
-		var isRunning: Bool { inner.isRunning }
-		var position: AnimationPosition {
-			get { inner.position }
-			set { set(position: newValue) }
-		}
-		var options: AnimationOptions { inner.options }
-		var isInstant: Bool { inner.isInstant }
-		public var setInitial: () -> Void
-		private var wasInited = false
-		private var inner: AnimationDelegateProtocol
-		
-		init(apply: @escaping () -> Void, setInitial: @escaping () -> Void, options: AnimationOptions) {
-			self.setInitial = setInitial
-			self.inner = UIViewAnimate(apply).delegate(with: options)
-		}
-		
-		func play(with options: AnimationOptions) {
-			setInitialIfNeeded()
-			inner.play(with: options)
-		}
-		
-		func pause() {
-			inner.pause()
-		}
-		
-		func stop(at position: AnimationPosition?) {
-			inner.stop(at: position)
-		}
-		
-		public func set(position: AnimationPosition) {
-			setInitialIfNeeded()
-			inner.position = position
-		}
-		
-		func add(completion: @escaping (Bool) -> Void) {
-			inner.add(completion: completion)
-		}
-		
-		private func setInitialIfNeeded() {
-			guard !wasInited else { return }
-			wasInited = true
-			setInitial()
-		}
+	func play(with options: AnimationOptions) {
+		setInitialIfNeeded()
+		inner.play(with: options)
+	}
+	
+	func pause() {
+		inner.pause()
+	}
+	
+	func stop(at position: AnimationPosition?) {
+		inner.stop(at: position)
+	}
+	
+	public func set(position: AnimationPosition) {
+		setInitialIfNeeded()
+		inner.position = position
+	}
+	
+	func add(completion: @escaping (Bool) -> Void) {
+		inner.add(completion: completion)
+	}
+	
+	private func setInitialIfNeeded() {
+		guard !wasInited else { return }
+		wasInited = true
+		setInitial()
 	}
 }
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension ChainingProperty where C: UIKitChainingType {
+extension ChainProperty where Base: UIKitChainingType {
 	
-	public subscript(_ value: B) -> C {
-		self.get(from: nil, to: value)
+	public func callAsFunction(_ input: Gradient<Value>) -> Base {
+		self[input]
 	}
 	
-	public subscript(_ gradient: Gradient<B>) -> C {
-		self.get(from: gradient.from, to: gradient.to)
-	}
-	
-	private func get(from: B?, to value: B) -> C {
-		guard let kp = getter as? WritableKeyPath<C.W, B> else { return chaining }
-		let current = chaining.setInitial
-		var result = chaining.copy {
-			var wrapped = $0
-			wrapped[keyPath: kp] = value
-			return wrapped
-		}
-		let property = Lazy<B?> { from ?? result.wrappedValue?[keyPath: kp] }
-		result.setInitial = {
-			guard let new = property.wrappedValue else { return $0 }
-			var wrapped = current($0)
-			wrapped[keyPath: kp] = new
-			return wrapped
-		}
+	public subscript(_ gradient: Gradient<Value>) -> Base {
+		guard let kp = getter as? WritableKeyPath<Base.Value, Value> else { return chaining }
+		var result = chaining
+		result.onGetProperty(kp, gradient.to, from: gradient.from)
+		result.apply = self[gradient.to].apply
 		return result
 	}
 }

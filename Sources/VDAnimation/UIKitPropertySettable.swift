@@ -12,8 +12,8 @@ import VDKit
 public protocol UIKitPropertySettable: AnyObject {}
 
 extension UIKitPropertySettable {
-    public var ca: ChainingProperty<UIKitChainingAnimation<Self>, Self> {
-			ChainingProperty(UIKitChainingAnimation(self, setInitial: { $0 }), getter: \.self)
+    public var ca: ChainProperty<UIKitChainingAnimation<Self>, Self> {
+			ChainProperty(UIKitChainingAnimation(self, setInitial: { $0 }), getter: \.self)
     }
 }
 

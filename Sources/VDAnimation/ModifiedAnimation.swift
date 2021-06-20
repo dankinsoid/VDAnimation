@@ -12,7 +12,7 @@ import VDKit
 public struct ModifiedAnimation: VDAnimationProtocol {
 	var options: AnimationOptions
 	let animation: VDAnimationProtocol
-	var chain: ValueChaining<ModifiedAnimation> { ValueChaining(self) }
+	var chain: Chain<ModifiedAnimation> { Chain(self) }
     
 	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
 		animation.delegate(with: options.or(self.options))
