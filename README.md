@@ -14,15 +14,15 @@ This repository provides a new declarative way to describe animations
 ```swift
 Sequential {
   Parallel {
-    someView.ca.frame.origin.y[100]
-    someView.ca.backgroundColor[.red].duration(relative: 0.2)
+    someView.ca.frame.origin.y(100)
+    someView.ca.backgroundColor(.red).duration(relative: 0.2)
   }
   Parallel {
     someView.ca.transform[CGAffineTransform(rotationAngle: CGFloat.pi / 3)]
-    someView.ca.backgroundColor[.white].duration(0.1)
+    someView.ca.backgroundColor(.white).duration(0.1)
     Sequential {
-      someView.ca.backgroundColor[.blue]
-      someView.ca.backgroundColor[.green]
+      someView.ca.backgroundColor(.blue)
+      someView.ca.backgroundColor(.green)
     }
   }
   UIViewAnimate {
