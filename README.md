@@ -18,7 +18,7 @@ Sequential {
     someView.ca.backgroundColor(.red).duration(relative: 0.2)
   }
   Parallel {
-    someView.ca.transform[CGAffineTransform(rotationAngle: CGFloat.pi / 3)]
+    someView.ca.transform(CGAffineTransform(rotationAngle: CGFloat.pi / 3))
     someView.ca.backgroundColor(.white).duration(0.1)
     Sequential {
       someView.ca.backgroundColor(.blue)
