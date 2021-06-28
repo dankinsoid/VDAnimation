@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'VDAnimation'
-  s.version          = '1.30.0'
+  s.version          = '1.31.0'
   s.summary          = 'A short description of VDAnimation.'
   s.description      = <<-DESC
 TODO: Add long description of the pod here.
