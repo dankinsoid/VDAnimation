@@ -1,0 +1,25 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "ConstraintsOperators",
+        "repositoryURL": "https://github.com/dankinsoid/ConstraintsOperators.git",
+        "state": {
+          "branch": null,
+          "revision": "3b2ac1ec5e9facb3ef4b186b8a60699da8b76ce2",
+          "version": "2.27.0"
+        }
+      },
+      {
+        "package": "VDKit",
+        "repositoryURL": "https://github.com/dankinsoid/VDKit.git",
+        "state": {
+          "branch": null,
+          "revision": "f178beafd8243ec78036c53f2d548832b5144c82",
+          "version": "1.80.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
