@@ -47,8 +47,7 @@ open class InteractiveDriver: UIPercentDrivenInteractiveTransition {
 		guard wasBegun else { return }
 		super.cancel()
 		wasBegun = false
-		transitioning?.animator?.stop(at: .start)
-		delegate?.isInteractive = false
+		delegate?.cancel()
 	}
 	
 	override open func finish() {

@@ -14,10 +14,10 @@ let package = Package(
         .library(
             name: "VDAnimation",
             targets: ["VDAnimation"]
-				),
+		),
     ],
     dependencies: [
-			.package(url: "https://github.com/dankinsoid/VDKit.git", from: "1.69.0")
+			.package(url: "https://github.com/dankinsoid/VDKit.git", from: "1.80.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.

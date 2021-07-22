@@ -87,6 +87,7 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 			.filter({ $0 != toView && $0 != fromView })
 			.map { [$0] + $0.allSubviews() }
 			.joined()
+		
 		let appearViews = [toView] + toView.allSubviews() + (transitionType.show ? [] : containerViews)
 		let disappearViews = [fromView] + fromView.allSubviews() + (transitionType.show ? containerViews : [])
 		
@@ -183,14 +184,15 @@ open class VDAnimatedTransitioning: NSObject, UIViewControllerAnimatedTransition
 							$0.2($0.0)
 						}
 					} else {
-						self?.delegate?.disappearStates = forDisappear.mapDictionary { ($0.0, $0.2) }
+						let forStates = forDisappear.filter { $0.0 !== inView }
+						self?.delegate?.disappearStates = forStates.mapDictionary { ($0.0, $0.2) }
 					}
 				} else {
 					self?.delegate?.disappearStates = [:]
 					changing.removeFromSuperview()
 				}
 			} else {
-				(forAppear + forDisappear).forEach {
+				(forAppear + forDisappear).filter { $0.0 !== inView }.forEach {
 					$0.2($0.0)
 				}
 			}

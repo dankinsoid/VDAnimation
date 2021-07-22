@@ -123,10 +123,6 @@ extension TransitionInteractivity.Single {
 			}
 			if scroll.superview == nil {
 				view.addSubview(scroll)
-				//				scroll.ignoreAutoresizingMask()
-				//				scroll.leading =| 0
-				//				scroll.top =| 0
-				//				scroll.size =| container ?? view
 				scroll.panGestureRecognizer.isEnabled = true
 				view.sendSubviewToBack(scroll)
 				(container ?? view).addGestureRecognizer(scroll.panGestureRecognizer)

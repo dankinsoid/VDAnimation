@@ -97,4 +97,9 @@ open class VDTransitioningDelegate: NSObject, UIViewControllerTransitioningDeleg
 		disappearInteractiveTransition = interactivity.disappear?.driver(container: view, for: controller, delegate: self)
 		appearInteractiveTransition = interactivity.appear?.driver(container: view, for: controller, delegate: self)
 	}
+	
+	func cancel() {
+		currentTransitioning?.animator?.stop(at: .start)
+		isInteractive = false
+	}
 }

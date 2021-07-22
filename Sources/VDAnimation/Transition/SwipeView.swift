@@ -152,7 +152,7 @@ extension SwipeView {
 		
 		func didScroll() {
 			guard scroll.frame.width > 0 else { return }
-			let percent = max(0, min(1, self.percent))
+			let percent = abs(max(0, min(1, self.percent)))
 			if driver?.wasBegun == false, percent > 0 {
 				scroll.instances.filter({ $0.value.driver?.wasBegun == true }).forEach {
 					$0.value.driver?.cancel()

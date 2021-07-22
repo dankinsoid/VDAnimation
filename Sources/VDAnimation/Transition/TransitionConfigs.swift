@@ -10,7 +10,7 @@ import VDKit
 
 extension VСTransitionConfig {
 	
-	public static func pageSheet(from edge: Edges = .bottom, minOffset: CGFloat = 10, cornerRadius: CGFloat = 10, backScale: Double = 0.915, containerColor: UIColor = #colorLiteral(red: 0.21, green: 0.21, blue: 0.23, alpha: 0.37)) -> VСTransitionConfig {
+	public static func pageSheet(from edge: Edges = .bottom, minOffset: CGFloat = 10, cornerRadius: CGFloat = 10, backScale: Double = 0.915, containerColor: UIColor = #colorLiteral(red: 0.21, green: 0.21, blue: 0.23, alpha: 0.37), addBackground: (() -> UIView)? = nil) -> VСTransitionConfig {
 		
 		let result = VСTransitionConfig()
 		result.isEnabled = true
@@ -40,7 +40,7 @@ extension VСTransitionConfig {
 				edges.forEach { edge in
 					topView.edge(edge, to: superView)
 				}
-				constraint = topView.edge(edge.opposite, to: superView, priority: .init(990))
+				constraint = topView.edge(edge.opposite, to: superView, offset: (edge == .right || edge == .bottom ? 1 : -1) * offset, priority: .init(990))
 			}
 			
 			$0.topVC.view.clipsToBounds = true
@@ -53,6 +53,10 @@ extension VСTransitionConfig {
 					result?.vc?.dismiss(animated: true, completion: nil)
 				}
 			}
+		}
+		
+		if let create = addBackground {
+			addSubview(transition: result, remove: false, create: create)
 		}
 		
 		result.interactive.disappear = .swipe(to: .init(edge)) {
@@ -89,31 +93,44 @@ extension VСTransitionConfig {
 		if swipeToShow {
 			transition.interactive.appear = .swipe(to: UIRectEdge(edge.opposite), fromEdges: swipeFromEdge, in: nil, observe: nil)
 		}
+		if containerColor != .clear {
+			addSubview(transition: transition, remove: true) {
+				let result = UIView()
+				result.transition.modifier = .background(containerColor)
+				return result
+			}
+		}
+		transition.isEnabled = true
+		return transition
+	}
+	
+	private static func addSubview(transition: VСTransitionConfig, remove: Bool, create: @escaping () -> UIView) {
 		let id = UUID().uuidString
+		let prepare = transition.prepare
 		transition.prepare = {
-			guard containerColor != .clear else { return }
-			let view = $0.container.subviews.first(where: { $0.accessibilityIdentifier == id }) ?? UIView()
+			let view = $0.container.subviews.first(where: { $0.accessibilityIdentifier == id }) ?? create()
 			view.accessibilityIdentifier = id
 			view.isUserInteractionEnabled = false
 			view.backgroundColor = .clear
-			view.transition.modifier = .background(containerColor)
 			if view.superview == nil {
 				view.frame = $0.container.bounds
 				$0.container.addSubview(view)
 			}
 			if let i = $0.container.subviews.firstIndex(of: $0.topView),
-				 let j = $0.container.subviews.firstIndex(of: view),
-				 i <  j {
+			   let j = $0.container.subviews.firstIndex(of: view),
+			   i <  j {
 				$0.container.exchangeSubview(at: i, withSubviewAt: j)
 			}
+			prepare?($0)
 		}
-		transition.completion = { context, _ in
-			context.container.subviews
+		let completion = transition.completion
+		transition.completion = {
+			completion?($0, $1)
+			guard remove else { return }
+			$0.container.subviews
 				.filter { $0.accessibilityIdentifier == id }
 				.forEach { $0.removeFromSuperview() }
 		}
-		transition.isEnabled = true
-		return transition
 	}
 }
 
