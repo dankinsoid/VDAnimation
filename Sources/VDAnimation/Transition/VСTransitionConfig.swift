@@ -15,16 +15,29 @@ extension ViewControllerTransitable {
 	
 	public var transition: VСTransitionConfig {
 		get {
-			if let result = objc_getAssociatedObject(self, &transitionVCKey) as? VСTransitionConfig {//<Self> {
+			if let result = objc_getAssociatedObject(self, &transitionVCKey) as? VСTransitionConfig {
 				return result
 			}
 			let result = VСTransitionConfig(self)
+			result.isCustom = (self as? CustomTransitionViewController) != nil
 			objc_setAssociatedObject(self, &transitionVCKey, result, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
 			return result
 		}
 		set {
 			newValue.vc = self
 			objc_setAssociatedObject(self, &transitionVCKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+		}
+	}
+	
+	public var presentTransition: VСTransitionConfig {
+		get {
+			let result = transition
+			transition.isCustom = false
+			return result
+		}
+		set {
+			newValue.isCustom = false
+			transition = newValue
 		}
 	}
 }
@@ -35,8 +48,12 @@ public final class VСTransitionConfig {
 			if isEnabled { setEnabled() }
 		}
 	}
+	fileprivate var isCustom: Bool {
+		get { delegate.isCustom }
+		set { delegate.isCustom = newValue }
+	}
 	public private(set) lazy var delegate = VDTransitioningDelegate(vc)
-	private weak var previousTransitionDelegate: UIViewControllerTransitioningDelegate?
+	private weak var previousDelegate: UIViewControllerTransitioningDelegate?
 	
 	public var duration: TimeInterval {
 		get { delegate.duration }
@@ -89,12 +106,9 @@ public final class VСTransitionConfig {
 			if isEnabled {
 				setEnabled()
 			} else {
-				vc?.transitioningDelegate = previousTransitionDelegate
-				if delegate.previousNavigationDelegate != nil {
-					(vc as? UINavigationController)?.delegate = delegate.previousNavigationDelegate
-				}
-				if delegate.previousTabDelegate != nil {
-					(vc as? UITabBarController)?.delegate = delegate.previousTabDelegate
+				vc?.transitioningDelegate = previousDelegate
+				if delegate.previousDelegate != nil {
+					(vc as? CustomTransitionViewController)?.defaultDelegate = delegate.previousDelegate
 				}
 			}
 		}
@@ -104,17 +118,18 @@ public final class VСTransitionConfig {
 		guard vc != nil else { return }
 		delegate.owner = vc
 		
-		if interactive.isNone, vc as? UINavigationController != nil {
-			interactive.disappear = .swipe(to: .right)
+		if isCustom, interactive.isNone, let defaultInteractive = (vc as? CustomTransitionViewController)?.defaultInteractive {
+			interactive = defaultInteractive
 		}
 		
-		previousTransitionDelegate = vc?.transitioningDelegate
-		vc?.transitioningDelegate = delegate
-		vc?.modalPresentationStyle = .overCurrentContext
-		delegate.previousNavigationDelegate = (vc as? UINavigationController)?.delegate
-		delegate.previousTabDelegate = (vc as? UITabBarController)?.delegate
-		(vc as? UINavigationController)?.delegate = delegate
-		(vc as? UITabBarController)?.delegate = delegate
+		if isCustom {
+			delegate.previousDelegate = (vc as? CustomTransitionViewController)?.defaultDelegate
+			(vc as? CustomTransitionViewController)?.setTransition(delegate: delegate)
+		} else {
+			previousDelegate = vc?.transitioningDelegate
+			vc?.transitioningDelegate = delegate
+			vc?.modalPresentationStyle = .overCurrentContext
+		}
 	}
 	
 	public init(_ vc: UIViewController) {

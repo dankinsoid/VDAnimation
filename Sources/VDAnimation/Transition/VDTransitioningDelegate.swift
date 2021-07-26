@@ -25,6 +25,7 @@ open class VDTransitioningDelegate: NSObject, UIViewControllerTransitioningDeleg
 	open var completion: ((VDTransitionContext, Bool) -> Void)?
 	open var currentTransitioning: VDAnimatedTransitioning?
 	open var restoreDisappearedViews: Bool = true
+	var isCustom = true
 	
 	open var isInteractive = false
 	open var appearInteractiveTransition: InteractiveDriver?
@@ -37,12 +38,13 @@ open class VDTransitioningDelegate: NSObject, UIViewControllerTransitioningDeleg
 	
 	var disappearStates: [UIView: (UIView) -> Void] = [:]
 	
-	weak var previousNavigationDelegate: UINavigationControllerDelegate?
-	weak var previousTabDelegate: UITabBarControllerDelegate?
+	public weak var previousDelegate: AnyObject?
 	
 	public init(_ owner: UIViewController?) {
 		self.owner = owner
-		applyModifierOnBothVC = owner as? UITabBarController != nil
+		if isCustom {
+			applyModifierOnBothVC = (owner as? CustomTransitionViewController)?.applyModifierOnBothViews ?? false
+		}
 		super.init()
 	}
 	
@@ -81,15 +83,10 @@ open class VDTransitioningDelegate: NSObject, UIViewControllerTransitioningDeleg
 	}
 	
 	private func configureInteractive(old: TransitionInteractivity) {
-		if let nav = owner as? UINavigationController {
-			nav.loadViewIfNeeded()
-			old.remove(container: nav.view, vc: nav, delegate: self)
-			configureInteractive(in: nav.view)
-		} else if let tab = owner as? UITabBarController {
-			tab.loadViewIfNeeded()
-			old.remove(container: tab.view, vc: tab, delegate: self)
-			configureInteractive(in: tab.view)
-		}
+		guard isCustom, let vc = owner as? CustomTransitionViewController else { return }
+		let container = vc.transitionContainerView()
+		old.remove(container: container, vc: vc, delegate: self)
+		configureInteractive(in: container)
 	}
 	
 	func configureInteractive(in view: UIView) {

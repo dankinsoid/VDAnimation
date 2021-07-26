@@ -7,7 +7,27 @@
 
 import UIKit
 
+extension UINavigationController: CustomTransitionViewController {
+	
+	public var defaultInteractive: TransitionInteractivity? { .disappear(.swipe(to: .right)) }
+	
+	public var applyModifierOnBothViews: Bool { false }
+	
+	public var defaultDelegate: AnyObject? {
+		get { delegate }
+		set { delegate = newValue as? UINavigationControllerDelegate }
+	}
+	
+	public func setTransition(delegate: VDTransitioningDelegate) {
+		self.delegate = delegate
+	}
+}
+
 extension VDTransitioningDelegate: UINavigationControllerDelegate {
+	
+	public var previousNavigationDelegate: UINavigationControllerDelegate? {
+		previousDelegate as? UINavigationControllerDelegate
+	}
 	
 	open func navigationController(_ navigationController: UINavigationController, interactionControllerFor animationController: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
 		transitioning(for: navigationController, interactionControllerFor: animationController)

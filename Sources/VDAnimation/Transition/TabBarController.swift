@@ -7,7 +7,27 @@
 
 import UIKit
 
+extension UITabBarController: CustomTransitionViewController {
+	
+	public var defaultInteractive: TransitionInteractivity? { nil }
+	
+	public var applyModifierOnBothViews: Bool { true }
+	
+	public var defaultDelegate: AnyObject? {
+		get { delegate }
+		set { delegate = newValue as? UITabBarControllerDelegate }
+	}
+	
+	public func setTransition(delegate: VDTransitioningDelegate) {
+		self.delegate = delegate
+	}
+}
+
 extension VDTransitioningDelegate: UITabBarControllerDelegate {
+	
+	public var previousTabDelegate: UITabBarControllerDelegate? {
+		previousDelegate as? UITabBarControllerDelegate
+	}
 	
 	open func tabBarController(_ tabBarController: UITabBarController, interactionControllerFor animationController: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
 		transitioning(for: tabBarController, interactionControllerFor: animationController)
