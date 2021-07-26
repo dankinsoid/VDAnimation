@@ -127,6 +127,8 @@ extension TransitionInteractivity.Single {
 				view.sendSubviewToBack(scroll)
 				(container ?? view).addGestureRecognizer(scroll.panGestureRecognizer)
 			}
+			scroll.showsVerticalScrollIndicator = false
+			scroll.showsHorizontalScrollIndicator = false
 			scroll.delegate = nil
 			scroll.frame = (container ?? view).bounds
 			scroll.delegate = scroll
