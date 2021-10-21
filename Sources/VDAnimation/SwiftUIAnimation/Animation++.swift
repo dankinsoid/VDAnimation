@@ -52,21 +52,21 @@ extension Binding where Value: Animatable {
 	}
 }
 
-@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension View {
-	
-	public func ca(_ store: AnimationsStore) -> ChainProperty<SwiftUIChainingAnimation<Self>, Self> {
-		ca(store: store)
-	}
-	
-	public var ca: ChainProperty<SwiftUIChainingAnimation<Self>, Self> {
-		ca(store: nil)
-	}
-	
-	private func ca(store: AnimationsStore?) -> ChainProperty<SwiftUIChainingAnimation<Self>, Self> {
-		ChainProperty(SwiftUIChainingAnimation(store: store, changes: .identity, binding: .var(self)), getter: \.self)
-	}
-}
+//@available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
+//extension View {
+//
+//	public func ca(_ store: AnimationsStore) -> ChainProperty<SwiftUIChainingAnimation<Self>, Self> {
+//		ca(store: store)
+//	}
+//
+//	public var ca: ChainProperty<SwiftUIChainingAnimation<Self>, Self> {
+//		ca(store: nil)
+//	}
+//
+//	private func ca(store: AnimationsStore?) -> ChainProperty<SwiftUIChainingAnimation<Self>, Self> {
+//		ChainProperty(SwiftUIChainingAnimation(store: store, changes: .identity, binding: Binding(get: { self }, set: { _ in })), getter: \.self)
+//	}
+//}
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
 public protocol SwiftUIChainingType: Chaining {

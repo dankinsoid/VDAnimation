@@ -43,11 +43,11 @@ struct AnimationModifier: AnimatableModifier {
 		}
 		
 		static func +(lhs: AnimationModifier.AnimatableData, rhs: AnimationModifier.AnimatableData) -> AnimationModifier.AnimatableData {
-			.init(lhs.values.union(with: rhs.values, uniquingKeysWith: +))
+			.init(lhs.values.merging(rhs.values, uniquingKeysWith: +))
 		}
 		
 		static func -(lhs: AnimationModifier.AnimatableData, rhs: AnimationModifier.AnimatableData) -> AnimationModifier.AnimatableData {
-			.init(lhs.values.union(with: rhs.values, uniquingKeysWith: -))
+			.init(lhs.values.merging(rhs.values, uniquingKeysWith: -))
 		}
 	}
 }
