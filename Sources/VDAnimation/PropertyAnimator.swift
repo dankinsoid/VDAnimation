@@ -18,7 +18,7 @@ public struct UIKitChainingAnimation<Value: AnyObject>: UIKitChainingType, VDAni
 	
 	private weak var wrappedValue: Value?
 	private var setInitial: (Value) -> Value
-	public var apply: (Value) -> Value = { $0 }
+	public var apply: (inout Value) -> Void = { _ in }
 	
 	public init(_ wrappedValue: Value?, setInitial: @escaping (Value) -> Value) {
 		self.wrappedValue = wrappedValue
@@ -45,7 +45,11 @@ public struct UIKitChainingAnimation<Value: AnyObject>: UIKitChainingType, VDAni
 	
 	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
 		UIKitChainingDelegete(
-			apply: { _ = self.wrappedValue.map(self.apply) },
+			apply: {
+				if var value = self.wrappedValue {
+					self.apply(&value)
+				}
+			},
 			setInitial: { _ = self.wrappedValue.map(self.setInitial) },
 			options: options
 		)

@@ -81,7 +81,7 @@ public struct SwiftUIChainingAnimation<Value>: SwiftUIChainingType, VDAnimationP
 	let store: AnimationsStore?
 	public var changes: StateChanges
 	public var binding: Binding<Value>
-	public var apply: (Value) -> Value = { $0 }
+	public var apply: (inout Value) -> Void = { _ in }
 	
 	public init(store: AnimationsStore?, changes: StateChanges, binding: Binding<Value>) {
 		self.store = store
