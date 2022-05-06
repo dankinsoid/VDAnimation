@@ -162,7 +162,7 @@ extension CAAnimation {
 		if let property = self as? CAPropertyAnimation {
 			return [property]
 		}
-		if let childs = (self as? CAAnimationGroup)?.animations?.map { $0.propertyAnimations() }.joined() {
+		if let childs = (self as? CAAnimationGroup)?.animations?.map({ $0.propertyAnimations() }).joined() {
 			return Array(childs)
 		}
 		return []
