@@ -1,25 +1,16 @@
-//
-//  AnimationsBuilder.swift
-//  SuperAnimations
-//
-//  Created by crypto_user on 20/09/2019.
-//  Copyright © 2019 crypto_user. All rights reserved.
-//
-
 import UIKit
-import VDKit
 
 @resultBuilder
 public enum AnimationsBuilder {
 	
 	@inlinable
 	public static func buildBlock(_ components: [VDAnimationProtocol]...) -> [VDAnimationProtocol] {
-		components.joinedArray()
+		Array(components.joined())
 	}
 	
 	@inlinable
 	public static func buildArray(_ components: [[VDAnimationProtocol]]) -> [VDAnimationProtocol] {
-		components.joinedArray()
+		Array(components.joined())
 	}
 	
 	@inlinable

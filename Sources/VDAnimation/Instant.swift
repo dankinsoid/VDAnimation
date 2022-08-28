@@ -1,13 +1,4 @@
-//
-//  Instant.swift
-//  CA
-//
-//  Created by crypto_user on 03.02.2020.
-//  Copyright © 2020 Voidilov. All rights reserved.
-//
-
 import UIKit
-import VDKit
 
 @available(*, deprecated, message: "Renamed to 'Instant'")
 public typealias WithoutAnimation = Instant
@@ -41,6 +32,7 @@ public struct Instant: VDAnimationProtocol {
 	}
 	
 	final class Delegate: AnimationDelegateProtocol {
+        
 		var isRunning: Bool { false }
 		private var completions: [(Bool) -> Void] = []
 		let action: () -> Void

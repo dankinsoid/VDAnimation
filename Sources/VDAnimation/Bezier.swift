@@ -1,15 +1,8 @@
-//
-//  Bezier.swift
-//  SuperAnimations
-//
-//  Created by Daniil on 23.09.2019.
-//  Copyright © 2019 crypto_user. All rights reserved.
-//
-//https://cubic-bezier.com/
-
 import UIKit
 
+/// https://cubic-bezier.com/
 public struct BezierCurve: Equatable {
+    
     public static let linear = BezierCurve(.zero, .one)
     public static let ease = BezierCurve(CGPoint(x: 0.25, y: 0.1), CGPoint(x: 0.25, y: 1))
     public static let easeIn = BezierCurve(CGPoint(x: 0.42, y: 0), .one)
@@ -20,7 +13,7 @@ public struct BezierCurve: Equatable {
     public var point1: CGPoint
     public var point2: CGPoint
 		public var reversed: BezierCurve {
-			BezierCurve(CGPoint(square: 1) - point2, CGPoint(square: 1) - point1)
+            BezierCurve(CGPoint.one - point2, CGPoint.one - point1)
 		}
     private var end: CGPoint = .one
     
@@ -178,20 +171,19 @@ extension CGFloat {
 }
 
 //public enum Curve {
-////    case bezier(BezierCurve),  //spring
+//   case bezier(BezierCurve),  //spring
 //}
 //
-////easeIn: y = x^1.75; x = y^(4/7)
-////easeOut: y = x^1.1(2-x) = 2x - x^2; x^2 - 2x + y = 0; D = 4 - 4y; x = 2 +- √(4-4y)/2 = 2 - √(1 - y)
-////easeInOut = 2x^2, x<=0.5; 1-2(x-1)^2, x > 0.5
-//// sqrt(y/2)
-////y = -2x^2 + 2x - 1; 2x^2 - 2x + y-1 = 0; D = 12 - 8y; x = 0.5(1 +- sqrt(3 - 2y))
+//easeIn: y = x^1.75; x = y^(4/7)
+//easeOut: y = x^1.1(2-x) = 2x - x^2; x^2 - 2x + y = 0; D = 4 - 4y; x = 2 +- √(4-4y)/2 = 2 - √(1 - y)
+//easeInOut = 2x^2, x<=0.5; 1-2(x-1)^2, x > 0.5
+// sqrt(y/2)
+//y = -2x^2 + 2x - 1; 2x^2 - 2x + y-1 = 0; D = 12 - 8y; x = 0.5(1 +- sqrt(3 - 2y))
 //
-////f(x)
-////y0+f(x0+x(x1-x0))*(y1-y0)
+//f(x)
+//y0+f(x0+x(x1-x0))*(y1-y0)
 //
-////d = (x0, y0)
-////k = (x1-x0, y1-y0)
-////p'= p*k + d
-////p = (p'- d)/k
-//
+//d = (x0, y0)
+//k = (x1-x0, y1-y0)
+//p'= p*k + d
+//p = (p'- d)/k

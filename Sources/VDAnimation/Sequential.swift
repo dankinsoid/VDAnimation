@@ -1,15 +1,7 @@
-//
-//  Sequential.swift
-//  SuperAnimations
-//
-//  Created by crypto_user on 20/09/2019.
-//  Copyright © 2019 crypto_user. All rights reserved.
-//
-
 import Foundation
-import VDKit
 
 public struct Sequential: VDAnimationProtocol {
+    
 	private let animations: [VDAnimationProtocol]
 	
 	public init(_ animations: [VDAnimationProtocol]) {
@@ -17,11 +9,11 @@ public struct Sequential: VDAnimationProtocol {
 	}
 	
 	public init(_ animations: VDAnimationProtocol...) {
-		self = .init(animations)
+		self = Sequential(animations)
 	}
 	
 	public init(@AnimationsBuilder _ animations: () -> [VDAnimationProtocol]) {
-		self = .init(animations())
+		self = Sequential(animations())
 	}
 	
 	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {

@@ -1,14 +1,8 @@
-//
-//  VDTimingProvider.swift
-//  VDTransition
-//
-//  Created by Данил Войдилов on 20.05.2021.
-//
-
 import UIKit
 
 @objc(_TtC15SuperAnimationsVDTimingProvider)
 class VDTimingProvider: NSObject, UITimingCurveProvider {
+    
 	let timingCurveType: UITimingCurveType
 	let cubicTimingParameters: UICubicTimingParameters?
 	let springTimingParameters: UISpringTimingParameters?
@@ -56,7 +50,7 @@ class VDTimingProvider: NSObject, UITimingCurveProvider {
 	}
 	
 	func copy(with zone: NSZone? = nil) -> Any {
-		return VDTimingProvider(timing: timingCurveType, cubic: cubicTimingParameters, spring: springTimingParameters)
+		VDTimingProvider(timing: timingCurveType, cubic: cubicTimingParameters, spring: springTimingParameters)
 	}
 	
 	fileprivate struct Keys {

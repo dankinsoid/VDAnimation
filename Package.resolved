@@ -1,16 +1,23 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "VDKit",
-        "repositoryURL": "https://github.com/dankinsoid/VDKit.git",
-        "state": {
-          "branch": null,
-          "revision": "9c0af10c657edb92f82121a712391e92f5dd536d",
-          "version": "1.120.0"
-        }
+  "pins" : [
+    {
+      "identity" : "vdchain",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/dankinsoid/VDChain.git",
+      "state" : {
+        "revision" : "d1257c83e74526d71c79a094ed181376cf875187",
+        "version" : "2.3.0"
       }
-    ]
-  },
-  "version": 1
+    },
+    {
+      "identity" : "vdtransition",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/dankinsoid/VDTransition.git",
+      "state" : {
+        "revision" : "80c31283927fdbccef522709b7c2328d0d256cae",
+        "version" : "1.11.0"
+      }
+    }
+  ],
+  "version" : 2
 }

@@ -1,14 +1,7 @@
-//
-//  VDViewAnimator.swift
-//  SuperAnimations
-//
-//  Created by Daniil on 21.09.2019.
-//  Copyright © 2019 crypto_user. All rights reserved.
-//
-
 import UIKit
 
 open class VDViewAnimator: UIViewPropertyAnimator, AnimationDelegateProtocol {
+    
 	open var position: AnimationPosition {
 		get { .progress(Double(isReversed ? 1 - fractionComplete : fractionComplete)) }
 		set {
@@ -170,6 +163,7 @@ extension UITimingCurveProvider {
 }
 
 extension UIViewAnimatingState {
+    
 	var string: String {
 		switch self {
 		case .active: return "active"
@@ -181,6 +175,7 @@ extension UIViewAnimatingState {
 }
 
 extension UIViewAnimatingPosition {
+    
 	public var reversed: UIViewAnimatingPosition {
 		switch self {
 		case .end:		return .start

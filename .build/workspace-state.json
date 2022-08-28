@@ -1,0 +1,27 @@
+{
+  "object" : {
+    "artifacts" : [
+
+    ],
+    "dependencies" : [
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "vdkit",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/dankinsoid/VDKit.git",
+          "name" : "VDKit"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "9c0af10c657edb92f82121a712391e92f5dd536d",
+            "version" : "1.120.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "VDKit"
+      }
+    ]
+  },
+  "version" : 5
+}

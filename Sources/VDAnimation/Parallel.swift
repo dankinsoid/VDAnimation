@@ -1,15 +1,7 @@
-//
-//  Parallel.swift
-//  CA
-//
-//  Created by crypto_user on 16.01.2020.
-//  Copyright © 2020 Voidilov. All rights reserved.
-//
-
 import Foundation
-import VDKit
 
 public struct Parallel: VDAnimationProtocol {
+    
 	private let animations: [VDAnimationProtocol]
 	
 	public init(_ animations: [VDAnimationProtocol]) {

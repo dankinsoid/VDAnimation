@@ -1,15 +1,7 @@
-//
-//  AnimationOptions.swift
-//  CA
-//
-//  Created by crypto_user on 16.01.2020.
-//  Copyright © 2020 Voidilov. All rights reserved.
-//
-
 import Foundation
-import VDKit
 
 public struct AnimationOptions: Equatable, ExpressibleByArrayLiteral {
+    
 	public typealias ArrayLiteralElement = AnimationOptions
 	
 	public static var empty: AnimationOptions { AnimationOptions() }
@@ -60,6 +52,7 @@ public struct AnimationOptions: Equatable, ExpressibleByArrayLiteral {
 }
 
 public enum AnimationPosition: ExpressibleByFloatLiteral, Equatable {
+    
 	case start, progress(Double), end
 	
 	public var complete: Double {
@@ -92,10 +85,12 @@ public enum AnimationPosition: ExpressibleByFloatLiteral, Equatable {
 }
 
 extension Optional where Wrapped == AnimationPosition {
+    
 	public static var current: AnimationPosition? { nil }
 }
 
 public enum AutoreverseStep: Equatable {
+    
 	case forward, back
 	
 	public var inverted: AutoreverseStep {

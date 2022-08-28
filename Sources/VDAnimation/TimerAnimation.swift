@@ -1,17 +1,10 @@
-//
-//  FrameAnimation.swift
-//  CA
-//
-//  Created by Daniil on 11.02.2020.
-//  Copyright © 2020 Voidilov. All rights reserved.
-//
-
 import UIKit
 
 @available(*, deprecated, message: "Renamed to 'TimerAnimation'")
 public typealias ForEachFrame = TimerAnimation
 
 public struct TimerAnimation: VDAnimationProtocol {
+    
 	public let fps: Int
 	private let update: (CGFloat, FrameInfo) -> Void
 	private let curve: ((CGFloat) -> CGFloat)?
@@ -184,12 +177,14 @@ public struct TimerAnimation: VDAnimationProtocol {
 }
 
 extension CADisplayLink {
+    
 	var info: TimerAnimation.FrameInfo {
 		.init(displayLink: self, fps: CFTimeInterval(preferredFramesPerSecond))
 	}
 }
 
 extension Optional where Wrapped == CADisplayLink {
+    
 	func info(_ fps: Int) -> TimerAnimation.FrameInfo {
 		.init(displayLink: self, fps: CFTimeInterval(fps))
 	}
