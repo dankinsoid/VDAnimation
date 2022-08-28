@@ -1,13 +1,4 @@
-//
-//  AnimationProtocol.swift
-//  CA
-//
-//  Created by crypto_user on 16.01.2020.
-//  Copyright © 2020 Voidilov. All rights reserved.
-//
-
 import Foundation
-import VDKit
 
 public protocol VDAnimationProtocol {
 	
@@ -15,12 +6,14 @@ public protocol VDAnimationProtocol {
 }
 
 extension VDAnimationProtocol {
+    
 	public func delegate() -> AnimationDelegateProtocol {
 		delegate(with: .empty)
 	}
 }
 
 extension VDAnimationProtocol {
+    
 	var modified: ModifiedAnimation { ModifiedAnimation(options: .empty, animation: self) }
 	
 	@discardableResult
@@ -60,12 +53,14 @@ extension VDAnimationProtocol {
 //}
 
 extension Optional: VDAnimationProtocol where Wrapped: VDAnimationProtocol {
+    
 	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
 		self?.delegate(with: options) ?? EmptyAnimationDelegate()
 	}
 }
 
 public final class EmptyAnimationDelegate: AnimationDelegateProtocol {
+    
 	public var isInstant: Bool { true }
 	public var options: AnimationOptions {
 		.init(duration: .absolute(0), complete: true)
@@ -92,5 +87,6 @@ public final class EmptyAnimationDelegate: AnimationDelegateProtocol {
 }
 
 final class Owner<T> {
+    
 	var delegate: T?
 }

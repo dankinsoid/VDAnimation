@@ -1,15 +1,7 @@
-//
-//  Foundation++.swift
-//  CA
-//
-//  Created by crypto_user on 03.02.2020.
-//  Copyright © 2020 Voidilov. All rights reserved.
-//
-
-import Foundation
 import SwiftUI
 
 public struct Gradient<Bound> {
+    
 	public var from: Bound
 	public var to: Bound
     
@@ -25,6 +17,7 @@ public func ...<Bound>(_ lhs: Bound, _ rhs: Bound) -> Gradient<Bound> {
 
 @available(iOS 13.0, *)
 extension Gradient where Bound: Animatable {
+    
 	public func at(_ percent: Double) -> Bound {
 		var result = from
 		var dif = (to.animatableData - from.animatableData)
@@ -36,6 +29,7 @@ extension Gradient where Bound: Animatable {
 
 @available(iOS 13.0, *)
 extension Gradient where Bound: VectorArithmetic {
+    
 	public func at(_ percent: Double) -> Bound {
 		var result = from
 		var dif = (to - from)
@@ -49,6 +43,7 @@ extension Gradient: Equatable where Bound: Equatable {}
 extension Gradient: Hashable where Bound: Hashable {}
 
 extension Gradient: AdditiveArithmetic where Bound: AdditiveArithmetic {
+    
 	public static var zero: Gradient<Bound> { Gradient(.zero, .zero) }
     
 	public static func +(lhs: Gradient<Bound>, rhs: Gradient<Bound>) -> Gradient<Bound> {

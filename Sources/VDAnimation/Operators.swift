@@ -1,30 +1,21 @@
-//
-//  Operators.swift
-//  CA
-//
-//  Created by crypto_user on 16.01.2020.
-//  Copyright © 2020 Voidilov. All rights reserved.
-//
-
 import Foundation
-import VDKit
 
 extension VDAnimationProtocol {
 	
 	public func duration(_ value: TimeInterval) -> VDAnimationProtocol {
-		modified.chain.options.duration[.absolute(value)].apply()
+		modified.chain.options.duration(.absolute(value)).apply()
 	}
 	
 	public func duration<F: BinaryFloatingPoint>(relative value: F) -> VDAnimationProtocol {
-		modified.chain.options.duration[.relative(Double(value))].apply()
+		modified.chain.options.duration(.relative(Double(value))).apply()
 	}
 	
 	public func curve(_ value: BezierCurve) -> VDAnimationProtocol {
-		modified.chain.options.curve[value].apply()
+		modified.chain.options.curve(value).apply()
 	}
 	
 	public func curve<F: BinaryFloatingPoint>(_ p1: (x: F, y: F), _ p2: (x: F, y: F)) -> VDAnimationProtocol {
-		modified.chain.options.curve[.init(p1, p2)].apply()
+		modified.chain.options.curve(BezierCurve(p1, p2)).apply()
 	}
 	
 	public func `repeat`(_ count: Int) -> VDAnimationProtocol {

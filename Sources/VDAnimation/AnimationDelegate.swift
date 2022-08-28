@@ -1,14 +1,7 @@
-//
-//  AnimationDelegate.swift
-//  CA
-//
-//  Created by Daniil on 13.02.2020.
-//  Copyright © 2020 Voidilov. All rights reserved.
-//
-
 import Foundation
 
 public protocol AnimationDelegateProtocol {
+    
 	var isRunning: Bool { get }
 	var position: AnimationPosition { get nonmutating set }
 	var options: AnimationOptions { get }
@@ -21,10 +14,12 @@ public protocol AnimationDelegateProtocol {
 }
 
 public protocol AnimationDelegateWrapper: AnimationDelegateProtocol {
+    
 	var inner: AnimationDelegateProtocol { get }
 }
 
 extension AnimationDelegateWrapper {
+    
 	public var isRunning: Bool { inner.isRunning }
 	public var position: AnimationPosition { get { inner.position } nonmutating set { inner.position = newValue } }
 	public var options: AnimationOptions { inner.options }

@@ -1,13 +1,7 @@
-//
-//  File.swift
-//  
-//
-//  Created by Данил Войдилов on 29.03.2021.
-//
-
 import Foundation
 
 public struct Timelines: VDAnimationProtocol {
+    
 	let animations: [ClosedRange<Double>: VDAnimationProtocol]
 	let type: AnimationDurationType
 	
@@ -41,9 +35,11 @@ public struct Timelines: VDAnimationProtocol {
 }
 
 public enum DurationRange: Hashable {
+    
 	case absolute(ClosedRange<Double>), relative(ClosedRange<Double>)
 }
 
 public enum AnimationDurationType: Hashable {
+    
 	case absolute, relative
 }

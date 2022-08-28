@@ -1,15 +1,7 @@
-//
-//  AnimateProperty.swift
-//  CA
-//
-//  Created by Daniil on 03.02.2020.
-//  Copyright © 2020 Voidilov. All rights reserved.
-//
-
 import Foundation
-import VDKit
 
 struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
+    
 	private let count: Int?
 	private let animation: A
 	

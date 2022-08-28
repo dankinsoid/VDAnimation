@@ -1,62 +1,72 @@
-//
-//  PropertyAnimator.swift
-//  CA
-//
-//  Created by Daniil on 17.01.2020.
-//  Copyright © 2020 Voidilov. All rights reserved.
-//
-
 import UIKit
-import VDKit
+import VDChain
 
-public protocol UIKitChainingType: Chaining {
-	mutating func onGetProperty<P>(_ keyPath: WritableKeyPath<Value, P>, _ value: P, from: P?)
+public protocol AnimationChaining: ConsistentChaining where Root: AnyObject {
+    
+    var root: Root? { get }
 }
 
 @dynamicMemberLookup
-public struct UIKitChainingAnimation<Value: AnyObject>: UIKitChainingType, VDAnimationProtocol {
+public struct EmptyAnimationChaining<Root: AnyObject>: AnimationChaining {
+    
+    public weak var root: Root?
 	
-	private weak var wrappedValue: Value?
-	private var setInitial: (Value) -> Value
-	public var apply: (inout Value) -> Void = { _ in }
-	
-	public init(_ wrappedValue: Value?, setInitial: @escaping (Value) -> Value) {
-		self.wrappedValue = wrappedValue
-		self.setInitial = setInitial
+	public init(_ root: Root?) {
+		self.root = root
 	}
 	
-	public subscript<A>(dynamicMember keyPath: KeyPath<Value, A>) -> ChainProperty<Self, A> {
-		ChainProperty<Self, A>(self, getter: keyPath)
+	public subscript<A>(dynamicMember keyPath: KeyPath<Root, A>) -> PropertyChain<Self, A> {
+        PropertyChain<Self, A>(self, getter: keyPath)
 	}
 	
-	public mutating func onGetProperty<P>(_ keyPath: WritableKeyPath<Value, P>, _ value: P) {
-		onGetProperty(keyPath, value, from: nil)
-	}
-	
-	public mutating func onGetProperty<P>(_ keyPath: WritableKeyPath<Value, P>, _ value: P, from: P?) {
-		let property = Lazy<P?> {[wrappedValue] in from ?? wrappedValue?[keyPath: keyPath] }
-		setInitial = {[setInitial] in
-			guard let new = property.wrappedValue else { return $0 }
-			var wrapped = setInitial($0)
-			wrapped[keyPath: keyPath] = new
-			return wrapped
-		}
-	}
-	
-	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
-		UIKitChainingDelegete(
-			apply: {
-				if var value = self.wrappedValue {
-					self.apply(&value)
-				}
-			},
-			setInitial: { _ = self.wrappedValue.map(self.setInitial) },
-			options: options
-		)
-	}
+    
+    public func apply(on root: inout Root) {
+    }
+    
+    public func getAllValues(for root: Root) -> Void {
+        ()
+    }
+    
+    public func applyAllValues(_ values: Void, for root: inout Root) {
+    }
 }
 
-private final class UIKitChainingDelegete: AnimationDelegateProtocol {
+extension KeyPathChain: AnimationChaining where Base: AnimationChaining {
+    
+    public var root: Base.Root? {
+        base.root
+    }
+}
+
+extension ChainedChain: AnimationChaining where Base: AnimationChaining {
+    
+    public var root: Base.Root? {
+        base.root
+    }
+}
+
+extension Chain: VDAnimationProtocol where Base: AnimationChaining {
+    
+    public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
+        var cached: Base.AllValues?
+        return ChainingAnimationDelegete(
+            apply: { [base] in
+                guard var root = base.root else { return }
+                base.apply(on: &root)
+            },
+            setInitial: { [base] in
+                guard var root = base.root else { return }
+                let vaules = cached ?? base.getAllValues(for: root)
+                cached = vaules
+                base.applyAllValues(vaules, for: &root)
+            },
+            options: options
+        )
+    }
+}
+
+private final class ChainingAnimationDelegete: AnimationDelegateProtocol {
+    
 	var isRunning: Bool { inner.isRunning }
 	var position: AnimationPosition {
 		get { inner.position }
@@ -64,8 +74,8 @@ private final class UIKitChainingDelegete: AnimationDelegateProtocol {
 	}
 	var options: AnimationOptions { inner.options }
 	var isInstant: Bool { inner.isInstant }
-	public var setInitial: () -> Void
-	private var wasInited = false
+    let setInitial: () -> Void
+    private var wasInited = false
 	private var inner: AnimationDelegateProtocol
 	
 	init(apply: @escaping () -> Void, setInitial: @escaping () -> Void, options: AnimationOptions) {
@@ -103,17 +113,18 @@ private final class UIKitChainingDelegete: AnimationDelegateProtocol {
 }
 
 @available(iOS 13.0, OSX 10.15, tvOS 13.0, watchOS 6.0, *)
-extension ChainProperty where Base: UIKitChainingType {
+extension PropertyChain where Base: AnimationChaining {
 	
-	public func callAsFunction(_ input: Gradient<Value>) -> Base {
-		self[input]
-	}
-	
-	public subscript(_ gradient: Gradient<Value>) -> Base {
-		guard let kp = getter as? WritableKeyPath<Base.Value, Value> else { return chaining }
-		var result = chaining
-		result.onGetProperty(kp, gradient.to, from: gradient.from)
-		result.apply = self[gradient.to].apply
-		return result
+	public func callAsFunction(_ gradient: Gradient<Value>) -> Chain<ChainedChain<Base, Value>> {
+        ChainedChain(
+            base: chaining,
+            value: gradient.to
+        ) { _ in
+            gradient.from
+        } set: { [getter] value, root in
+            guard let writable = getter as? WritableKeyPath<Base.Root, Value> else { return }
+            root[keyPath: writable] = value
+        }
+        .wrap()
 	}
 }

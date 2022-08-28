@@ -1,10 +1,3 @@
-//
-//  Reversed.swift
-//  VDTransition
-//
-//  Created by Данил Войдилов on 24.03.2021.
-//
-
 import Foundation
 
 struct ReversedAnimation: VDAnimationProtocol {

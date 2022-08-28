@@ -1,12 +1,4 @@
-//
-//  SequentialDelegate.swift
-//  VDTransition
-//
-//  Created by Данил Войдилов on 22.03.2021.
-//
-
 import Foundation
-import VDKit
 
 internal final class SequentialDelegate: AnimationDelegateProtocol {
 	
@@ -31,7 +23,9 @@ internal final class SequentialDelegate: AnimationDelegateProtocol {
 	private var stopped = 0
 	private var currentStep: Int
 	private var current: AnimationDelegateProtocol? {
-		animations[safe: currentStep % animations.count]
+        let i = currentStep % animations.count
+        guard animations.indices.contains(i) else { return nil }
+		return animations[i]
 	}
 	
 	// MARK: init

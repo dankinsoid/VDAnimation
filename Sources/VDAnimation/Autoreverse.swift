@@ -1,13 +1,5 @@
-//
-//  Autoreverse.swift
-//  CA
-//
-//  Created by Daniil on 09.02.2020.
-//  Copyright © 2020 Voidilov. All rights reserved.
-//
-
 import Foundation
-import VDKit
+import VDTransition
 
 struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
 	

@@ -1,10 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Данил Войдилов on 29.03.2021.
-//
-
 import UIKit
 
 //func start() {
