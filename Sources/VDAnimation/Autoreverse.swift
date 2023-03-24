@@ -1,5 +1,4 @@
 import Foundation
-import VDTransition
 
 struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
 	

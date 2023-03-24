@@ -83,6 +83,7 @@ internal final class SequentialDelegate: AnimationDelegateProtocol {
 	}
 	
 	private func completed(completed: Bool, index: Int) {
+        print("completed")
 		guard !wasStopped else {
 			stopped += 1
 			if stopped == animations.count {
