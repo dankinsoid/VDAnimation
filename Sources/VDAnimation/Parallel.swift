@@ -153,8 +153,9 @@ public struct Parallel: VDAnimationProtocol {
 				animations.forEach { $0.set(position: .end, stop: stop) }
 				prevProgress = 1
 				completedCount = animations.count
-			case .progress(let k):
+            default:
 				guard !animations.isEmpty else { return }
+                let k = position.complete
 				completedCount = 0
 				for i in 0..<progresses.count {
 					if progresses[i].upperBound <= k || progresses[i].upperBound == 0 {

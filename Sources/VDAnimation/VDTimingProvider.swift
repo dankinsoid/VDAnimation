@@ -88,12 +88,12 @@ fileprivate final class Interactor {
 		case .start:
 			guard position != .start else { return }
 			reset(at: .start)
-		case .progress(let k):
-			create().fractionComplete = CGFloat(k)
 		case .end:
 			guard position != .end else { return }
 			_ = create()
 			reset(at: .end)
+        default:
+            create().fractionComplete = CGFloat(state.complete)
 		}
 	}
 	

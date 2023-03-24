@@ -188,8 +188,8 @@ internal final class SequentialDelegate: AnimationDelegateProtocol {
 			animations.forEach { $0.position = .end }
 			currentStep = max(0, animations.count - 1)
 			wasPlaying = true
-		case .progress(let k):
-			set(progress: k, complete: false)
+		default:
+            set(progress: position.complete, complete: false)
 		}
 	}
 	

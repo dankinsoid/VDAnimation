@@ -137,16 +137,16 @@ open class VDViewAnimator: UIViewPropertyAnimator, AnimationDelegateProtocol {
 	
 	open func stop(at position: AnimationPosition?) {
 		switch position {
-		case .start:
+        case .some(.start):
 			finishAnimation(at: .start)
-		case .progress(let progress):
-			pauseAnimation()
-			self.fractionComplete = CGFloat(progress)
-			finishAnimation(at: .current)
-		case .end:
+        case .some(.end):
 			finishAnimation(at: .end)
-		case .none:
-			finishAnimation(at: .current)
+        case .some(let position):
+            pauseAnimation()
+            self.fractionComplete = CGFloat(position.complete)
+            finishAnimation(at: .current)
+        case .none:
+            finishAnimation(at: .current)
 		}
 	}
 }

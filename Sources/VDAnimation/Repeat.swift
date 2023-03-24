@@ -95,9 +95,9 @@ struct RepeatAnimation<A: VDAnimationProtocol>: VDAnimationProtocol {
 			switch position {
 			case .start, .end:
 				inner.set(position: .start, stop: stop)
-			case .progress(let k):
+            default:
 				if count != nil {
-					let (i, k) = getProgress(for: k)
+                    let (i, k) = getProgress(for: position.complete)
 					current = i
 					inner.set(position: .progress(k), stop: stop)
 				} else {

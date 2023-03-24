@@ -39,13 +39,13 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
 				switch inner.position {
 				case .start:
 					return step == .forward ? .start : .end
-				case .progress(let progress):
-					switch step {
-					case .forward:	return .progress(progress / 2)
-					case .back:			return .progress(1 - progress / 2)
-					}
 				case .end:
 					return .progress(0.5)
+                default:
+                    switch step {
+                    case .forward: return .progress(inner.position.complete / 2)
+                    case .back: return .progress(1 - inner.position.complete / 2)
+                    }
 				}
 			}
 			set {
@@ -117,12 +117,12 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
 				return (.forward, .start)
 			case .end:
 				return (.back, .start)
-			case .progress(let k):
-				switch k {
+			default:
+                switch position.complete {
 				case 0..<0.5:
-					return (.forward, .progress(2 * k))
+					return (.forward, .progress(2 * position.complete))
 				default:
-					return (.back, .progress((1 - k) * 2))
+					return (.back, .progress((1 - position.complete) * 2))
 				}
 			}
 		}
@@ -139,7 +139,7 @@ struct Autoreverse<Animation: VDAnimationProtocol>: VDAnimationProtocol {
 		private func setCurve(for options: inout AnimationOptions, step: AutoreverseStep) {
 			guard let duration = options.duration else { return }
 			guard let fullCurve = options.curve, fullCurve != .linear else {
-				options.duration = duration / 2
+                options.duration = duration / 2.0
 				return
 			}
 			let progress = step == .forward ? 0...0.5 : 0.5...1

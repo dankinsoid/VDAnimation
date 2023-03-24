@@ -1,78 +1,77 @@
-import UIKit
+import SwiftUI
 
-@available(*, deprecated, message: "Renamed to 'Instant'")
-public typealias WithoutAnimation = Instant
+public struct Instant<Value>: AnimationType {
+	
+	private let block: () -> Value
+	
+	public init(_ closure: @escaping () -> Value) {
+		block = closure
+	}
 
-public struct Instant: VDAnimationProtocol {
+    public func createDelegate() -> Delegate {
+        Delegate(block)
+    }
+    
+    public func duration(proposal: ProposedAnimationDuration) -> AnimationDuration {
+        .absolute(0)
+    }
+    
+    public func createOptions() -> Options {
+        Options()
+    }
 	
-	private let block: () -> Void
-	private let initial: (() -> Void)?
-	private let usePerform: Bool
-	
-	public init(_ closure: @escaping () -> Void) {
-		block = closure
-		initial = nil
-		usePerform = false
-	}
-	
-	public init(withoutAnimation: Bool = false, _ closure: @escaping () -> Void, onReverse: @escaping () -> Void) {
-		block = closure
-		initial = onReverse
-		usePerform = withoutAnimation
-	}
-	
-	public init(withoutAnimation: Bool = false, _ closure: @escaping () -> Void) {
-		block = closure
-		initial = nil
-		usePerform = withoutAnimation
-	}
-	
-	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
-		Delegate(block, usePerform: usePerform)
-	}
-	
-	final class Delegate: AnimationDelegateProtocol {
+    public final class Delegate: InteractiveAnimationDelegate {
         
-		var isRunning: Bool { false }
+        public typealias Result = Value
+        
+        public var isRunning: Bool {
+            get { _isRunning }
+            set {
+                guard newValue != _isRunning, newValue else { return }
+                act()
+            }
+        }
+        public var position: AnimationPosition {
+            get { _position }
+            set {
+                let oldValue = _position
+                _position = newValue
+                guard newValue == .end, newValue != oldValue else { return }
+                act()
+            }
+        }
+        let body: () -> Result
+        private var _isRunning = false
+        private var _position: AnimationPosition = .start
+        
+        
 		private var completions: [(Bool) -> Void] = []
-		let action: () -> Void
-		let usePerform: Bool
-		var isInstant: Bool { true }
-		var options: AnimationOptions {
-			[.duration(.absolute(0)), .complete(true)]
-		}
-		var position: AnimationPosition = .start
-		private var hasStopped = false
-		
-		init(_ action: @escaping () -> Void, usePerform: Bool) {
-			self.usePerform = usePerform
-			self.action = action
+//		var isInstant: Bool { true }
+        
+		init(_ body: @escaping () -> Result) {
+			self.body = body
 		}
 		
-		func play(with options: AnimationOptions) {
-			stop(at: .end, final: false)
-		}
-		
-		func pause() {}
-		
-		func stop(at position: AnimationPosition?) {
-			stop(at: position, final: true)
-		}
-		
-		func stop(at position: AnimationPosition?, final: Bool) {
-			self.position = position ?? self.position
-			guard !hasStopped else { return }
-			hasStopped = final
-			if self.position == .end, !final {
-				usePerform ? UIView.performWithoutAnimation(action) : action()
-			}
-			self.completions.forEach {
-				$0(self.position == .end)
-			}
-		}
-		
-		func add(completion: @escaping (Bool) -> Void) {
-			completions.append(completion)
-		}
+        public func stop(at position: UIViewAnimatingPosition) {
+            guard position == .end, self._position != .end else { return }
+            act()
+        }
+        
+        public func start(with options: Options, _ completion: @escaping (Bool) -> Void) -> Result {
+            let result = act()
+            completion(true)
+            return result
+        }
+        
+        @discardableResult
+        private func act() -> Result {
+            _isRunning = true
+            defer { _isRunning = false }
+            _position = .end
+            return body()
+        }
+        
+        public struct Options {
+        }
 	}
 }

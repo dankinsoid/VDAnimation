@@ -150,7 +150,7 @@ extension LayerAnimation {
 	}
 }
 
-extension CAAnimation {
+private extension CAAnimation {
 	func propertyAnimations() -> [CAPropertyAnimation] {
 		if let property = self as? CAPropertyAnimation {
 			return [property]

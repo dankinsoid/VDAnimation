@@ -7,7 +7,7 @@ final class VDTests: XCTestCase {
 	
 	var animations: [VDAnimationProtocol] {
 		[
-			animation, animation.repeat(3), animation.reversed(), animation.autoreverse(), Instant {},
+			animation, animation.repeat(3), animation.reversed(), animation.autoreverse(),
 			Sequential([animation, animation, animation]), Parallel([animation, animation, animation]),
 			TimerAnimation { _ in }
 		]

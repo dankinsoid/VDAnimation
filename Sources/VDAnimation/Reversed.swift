@@ -14,21 +14,11 @@ struct ReversedAnimation: VDAnimationProtocol {
 		var isInstant: Bool { inner.isInstant }
 		var position: AnimationPosition {
 			get {
-				switch inner.position {
-				case .end:		return .start
-				case .start: 	return .end
-				case .progress(let progress):
-					return .progress(1 - progress)
-				}
+                inner.position.reversed
 			}
 			set {
 				firstStart = false
-				switch newValue {
-				case .end:		inner.position = .start
-				case .start:	inner.position = .end
-				case .progress(let progress):
-					inner.position = .progress(1 - progress)
-				}
+                inner.position = newValue.reversed
 			}
 		}
 		let inner: AnimationDelegateProtocol
@@ -52,16 +42,7 @@ struct ReversedAnimation: VDAnimationProtocol {
 		}
 		
 		func stop(at position: AnimationPosition?) {
-			switch position {
-			case .none:
-				inner.stop(at: .current)
-			case .start:
-				inner.stop(at: .end)
-			case .end:
-				inner.stop(at: .start)
-			case .progress(let progress):
-				inner.stop(at: .progress(1 - progress))
-			}
+            inner.stop(at: position?.reversed)
 		}
 		
 		func add(completion: @escaping (Bool) -> Void) {

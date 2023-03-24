@@ -102,6 +102,7 @@ public struct BezierCurve: Equatable {
         return (bezier, duration)
     }
     
+    // TODO: optimize
     public func y(at x: CGFloat) -> CGFloat {
         guard x > 0, x < 1 else { return x }
         var t: CGFloat = 0.0
