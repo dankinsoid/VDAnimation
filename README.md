@@ -205,7 +205,7 @@ import PackageDescription
 let package = Package(
   name: "SomeProject",
   dependencies: [
-    .package(url: "https://github.com/dankinsoid/VDAnimation.git", from: "1.50.0")
+    .package(url: "https://github.com/dankinsoid/VDAnimation.git", from: "1.51.0")
   ],
   targets: [
     .target(name: "SomeProject", dependencies: ["VDAnimation"])
