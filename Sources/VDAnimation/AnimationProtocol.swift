@@ -2,8 +2,6 @@ import Foundation
 
 public protocol AnimationProtocol {
     
-    associatedtype Animator
-    
     // NB: For Xcode to favor autocompleting `var body: Body` over `var body: Never` we must use a
     //     type alias.
     associatedtype _Body
@@ -17,7 +15,7 @@ public protocol AnimationProtocol {
     /// infers this type to be `Never`.
     typealias Body = _Body
     
-    var animator: Animator { get }
+    func accept(visitor: inout some AnimationVisitor)
     
 //    @AnimationBuilder
     var body: Body { get }
@@ -39,10 +37,10 @@ extension AnimationProtocol where Body == Never {
     }
 }
 
-extension AnimationProtocol where Body: AnimationProtocol, Body.Animator == Animator {
+extension AnimationProtocol where Body: AnimationProtocol {
     
     @inlinable
-    public var animator: Body.Animator {
-        body.animator
+    public func accept(visitor: inout some AnimationVisitor) {
+        body.accept(visitor: &visitor)
     }
 }

@@ -2,7 +2,7 @@ import Foundation
 
 public protocol PlayableAnimator {
     
-    func play(with options: _AnimationOptions)
+    mutating func play(with options: _AnimationOptions, completion: @escaping (Bool) -> Void)
     func expected(options: inout _AnimationOptions)
 }
 
@@ -12,26 +12,17 @@ public extension PlayableAnimator {
     }
 }
 
-public protocol CompletableAnimator: PlayableAnimator {
+extension PlayableAnimator {
     
-    func play(with options: _AnimationOptions, completion: @escaping (Bool) -> Void)
-}
-
-extension PlayableAnimator where Self: CompletableAnimator {
-    
-    public func play(with options: _AnimationOptions) {
+    public mutating func play(with options: _AnimationOptions) {
         play(with: options, completion: { _ in })
     }
 }
 
-public protocol PausableAnimator: CompletableAnimator {
+public protocol InteractiveAnimator: PlayableAnimator {
     
     var isPlaying: Bool { get }
-    func pause()
-    func stop()
-}
-
-public protocol InteractiveAnimator: PausableAnimator {
-    
-    var position: AnimationPosition { get nonmutating set }
+    var position: AnimationPosition { get set }
+    mutating func pause()
+    mutating func stop()
 }

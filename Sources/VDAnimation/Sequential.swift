@@ -1,28 +1,41 @@
 import Foundation
 
-public struct Sequential: VDAnimationProtocol {
+public struct Sequential<Base: AnimationProtocol>: AnimationProtocol {
     
-	private let animations: [VDAnimationProtocol]
+	private let base: Base
 	
-	public init(_ animations: [VDAnimationProtocol]) {
-		self.animations = animations
+	public init(_ base: Base) {
+		self.base = base
 	}
 	
-	public init(_ animations: VDAnimationProtocol...) {
-		self = Sequential(animations)
+	public init(@AnimationsBuilder _ base: () -> Base) {
+		self = Sequential(base())
 	}
-	
-	public init(@AnimationsBuilder _ animations: () -> [VDAnimationProtocol]) {
-		self = Sequential(animations())
-	}
-	
-	public func delegate(with options: AnimationOptions) -> AnimationDelegateProtocol {
-		if animations.count == 1 {
-			return animations[0].delegate(with: options)
-		} else if animations.isEmpty {
-			return EmptyAnimationDelegate()
-		} else {
-			return SequentialDelegate(animations: animations.map { $0.delegate(with: .empty) }, options: options)
-		}
-	}
+    
+    public func accept(visitor: inout some AnimationVisitor) {
+        var seqVisitor = Visitor(root: visitor)
+        base.accept(visitor: &seqVisitor)
+        seqVisitor.finish()
+    }
+    
+    private struct Visitor<T: AnimationVisitor>: AnimationVisitor {
+        
+        var root: T
+        var animations: [any InteractiveAnimator] = []
+        
+        mutating func visit(interactive: some InteractiveAnimator) {
+            animations.append(interactive)
+        }
+        
+        mutating func finish() {
+            switch animations.count {
+            case 0:
+                break
+            case 1:
+                root.visit(interactive: animations[0])
+            default:
+                root.visit(interactive: SequentialAnimator(animators: animations))
+            }
+        }
+    }
 }
