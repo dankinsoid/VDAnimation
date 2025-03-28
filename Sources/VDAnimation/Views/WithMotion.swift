@@ -97,7 +97,10 @@ extension MotionState where Value == Double {
     }
 }
 
-struct WithMotionModifier<Value,  Child: View, Content: View>: View {
+/// A view modifier that implements the motion animation.
+///
+/// This is an internal implementation struct used by the `withMotion` view modifier.
+struct WithMotionModifier<Value, Child: View, Content: View>: View {
 
     let state: MotionState<Value>
     let child: Child
@@ -142,8 +145,8 @@ struct WithMotionModifier<Value,  Child: View, Content: View>: View {
             )
     }
 
+    /// A wrapper class to store animation data between view updates.
     private final class Wrapper {
-
         var info: MotionData<Value>?
         var lastProgress: Double?
     }
