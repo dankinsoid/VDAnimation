@@ -229,6 +229,13 @@ extension EdgeInsets: Tweenable {
     }
 }
 
+extension Angle: Tweenable {
+
+    public static func lerp(_ lhs: Angle, _ rhs: Angle, _ t: Double) -> Angle {
+        .radians(.lerp(lhs.radians, rhs.radians, t))
+    }
+}
+
 /// NSDirectionalEdgeInsets implementation of Tweenable
 extension NSDirectionalEdgeInsets: Tweenable {
 

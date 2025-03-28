@@ -1,9 +1,6 @@
 # VDAnimation
 
 [![CI Status](https://img.shields.io/travis/dankinsoid/VDAnimation.svg?style=flat)](https://travis-ci.org/dankinsoid/VDAnimation)
-[![Version](https://img.shields.io/cocoapods/v/VDAnimation.svg?style=flat)](https://cocoapods.org/pods/VDAnimation)
-[![License](https://img.shields.io/cocoapods/l/VDAnimation.svg?style=flat)](https://cocoapods.org/pods/VDAnimation)
-[![Platform](https://img.shields.io/cocoapods/p/VDAnimation.svg?style=flat)](https://cocoapods.org/pods/VDAnimation)
 
 ## Declarative Animations for SwiftUI
 
@@ -48,24 +45,23 @@ struct FadeInView: View {
 ```swift
 Sequential {
     // Move right while fading in
-    Parallel {
-        $0.offset(x: To(100))
-        $0.opacity(To(1.0))
-    }
-    .duration(0.5)
+    Parallel()
+      .offset { To(100) }
+      .opacity { To(1.0) }
+      .duration(0.5)
     
     // Bounce effect
-    AutoReverse {
-        To(1.2).duration(0.2).curve(.easeOut)
-    }
-    .repeat(3)
+    To(1.2)
+      .duration(0.2)
+      .curve(.easeOut)
+      .autoreverse()
+      .repeat(3)
     
     // Spin and fade out
-    Parallel {
-        $0.rotationEffect(To(.degrees(360)))
-        $0.opacity(To(0.0))
-    }
-    .duration(1.0)
+    Parallel()
+      .rotationEffect { To(.degrees(360)) }
+      .opacity { To(0.0) }
+      .duration(1.0)
 }
 ```
 
@@ -162,14 +158,6 @@ dependencies: [
 ```
 
 Or add it directly in Xcode via File > Add Packages...
-
-### CocoaPods
-
-Add to your Podfile:
-
-```ruby
-pod 'VDAnimation', '~> 2.0'
-```
 
 ## License
 
