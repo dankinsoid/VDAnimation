@@ -81,6 +81,14 @@ public struct MotionState<Value>: DynamicProperty {
         controller
     }
 
+    public var progress: Binding<Double> {
+        Binding {
+            controller.currentProgress
+        } set: { newValue in
+            controller.set(progress: newValue)
+        }
+    }
+
     /// Creates a new motion state with an initial value.
     ///
     /// - Parameter wrappedValue: The initial value of the state.

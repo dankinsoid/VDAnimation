@@ -432,7 +432,7 @@ public struct Parallel<Value>: Motion {
                 return AnyMotion { value, expDur in
                     let data = motion.prepare(getter(value, id), expDur)
                     return MotionData(
-                        duration: expDur,
+                        duration: data.duration,
                         lerp: { value, t in
                             var result = value
                             setter(&result, data.lerp(getter(result, id), t), id)
@@ -466,6 +466,7 @@ public struct Parallel<Value>: Motion {
                 let preparedMotion = motion.anyMotion.prepare(value, expDur)
                 
                 let duration = preparedMotion.duration?.seconds
+                
                 let relativeDuration = preparedMotion.duration?.relative
                 let lerp = preparedMotion.lerp
                 let sideEffects = preparedMotion.sideEffects
@@ -563,23 +564,39 @@ public struct Parallel<Value>: Motion {
             return result
         }
     }
-    
+
     /// Helper struct for creating animations for a specific path
+    @dynamicMemberLookup
     public struct Path<Child> {
-        
+
         /// Function to create a parallel motion with an animation for this path
         let create: (@escaping () -> AnyMotion<Child>) -> Parallel
-        
+
         /// Applies a motion to this path
         /// - Parameter value: The motion to apply
         /// - Returns: A parallel motion with the animation added
         public func callAsFunction(@MotionBuilder<Child> _ value: @escaping () -> AnyMotion<Child>) -> Parallel {
             create(value)
         }
+
+        /// Dynamic member lookup for creating animations for specific properties
+        /// - Parameter keyPath: The key path to animate
+        /// - Returns: A path object for further configuration
+        public subscript<T>(dynamicMember keyPath: WritableKeyPath<Child, T>) -> Path<T> {
+            Path<T> { [create] motion in
+                create {
+                    Parallel<Child>(keyPath) {
+                        motion()
+                    }
+                    .anyMotion
+                }
+            }
+        }
     }
 }
 
 extension Parallel {
+
     /// Creates a parallel motion that animates a single property
     /// - Parameters:
     ///   - keyPath: The key path to the property to animate
@@ -684,10 +701,6 @@ public struct To<Value: Tweenable>: Motion {
                 let nextSegment = max(0, min(allValues.count - 1, segment + 1))
                 let segmentT = (t - Double(segment) * segmentSize) / segmentSize
                 
-                if t < 0 {
-                    print(t)
-                }
-                
                 // Lerp between the values in this segment
                 return lerp(allValues[segment], allValues[nextSegment], segmentT)
             }
@@ -755,6 +768,12 @@ public struct Wait<Value>: Motion {
     /// - Parameter duration: The duration to wait (defaults to inheriting from parent)
     public init(_ duration: Duration? = nil) {
         self.duration = duration
+    }
+
+    /// Creates a wait motion
+    /// - Parameter duration: The duration to wait (defaults to inheriting from parent)
+    public init(_ duration: Double) {
+        self.init(.absolute(duration))
     }
 
     /// Converts to a type-erased motion
@@ -1156,20 +1175,37 @@ extension Motion {
     /// - Parameter duration: The duration in seconds
     /// - Returns: A type-erased motion with the specified duration
     public func duration(_ duration: TimeInterval) -> AnyMotion<Value> {
-        AnyMotion { value, _ in
-            anyMotion.prepare(value, .absolute(duration))
-        }
+        self.duration(.absolute(duration))
     }
 
-    /// Sets a relative duration for this motion
-    /// - Parameter duration: The relative duration (0.0-1.0)
-    /// - Returns: A type-erased motion with the specified relative duration
-    public func relativeDuration(_ duration: Double) -> AnyMotion<Value> {
+    /// Sets an absolute duration for this motion
+    /// - Parameter duration: The duration.
+    /// - Returns: A type-erased motion with the specified duration
+    public func duration(_ duration: Duration) -> AnyMotion<Value> {
         AnyMotion { value, _ in
-            anyMotion.prepare(value, .relative(duration))
+            anyMotion.prepare(value, duration)
         }
     }
     
+    /// Sets an absolute delay for this motion
+    /// - Parameter delay: The delay in seconds
+    /// - Returns: A type-erased motion with the specified duration
+    @MotionBuilder<Value>
+    public func delay(_ delay: TimeInterval) -> AnyMotion<Value> {
+        self.delay(.absolute(delay))
+    }
+
+    /// Sets an absolute delay for this motion
+    /// - Parameter delay: The delay.
+    /// - Returns: A type-erased motion with the specified duration
+    @MotionBuilder<Value>
+    public func delay(_ delay: Duration) -> AnyMotion<Value> {
+        Sequential {
+            Wait(delay)
+            self
+        }
+    }
+
     /// Synchronizes this motion with the current time
     ///
     /// This method creates a motion that continuously runs based on the current time

@@ -227,7 +227,7 @@ extension Animated  {
 
 /// Controller that manages animation state and exposes methods to control animations
 public final class AnimationController: ObservableObject {
-    
+
     /// The target progress value the animation is moving toward
     @Published
     fileprivate(set) public var targetProgress = 0.0
@@ -430,7 +430,7 @@ public struct AnimatedModifier<Value, Result: View>: ViewModifier {
                 ) { progress, value in
                     let isAnimating = controller.isAnimating
                     controller.currentProgress = progress
-                    if isAnimating, progress == controller.state.tween.end {
+                    if isAnimating, progress == controller.state.tween.end, !controller.repeatForever {
                         controller.isAnimating = false
                     }
                     if isAnimating {

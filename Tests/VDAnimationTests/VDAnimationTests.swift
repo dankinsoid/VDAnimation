@@ -152,7 +152,7 @@ final class MotionTests: XCTestCase {
     
     func testSequentialWithRelativeDurations() {
         let motion = Sequential<Double> {
-            To(25.0).relativeDuration(0.25)
+            To(25.0).duration(.relative(0.25))
             To(100.0)
         }
         
@@ -174,7 +174,7 @@ final class MotionTests: XCTestCase {
     
     func testSequentialWithRelativeAndAbsoluteDurations() {
         let motion = Sequential<Double> {
-            To(25.0).relativeDuration(0.25)
+            To(25.0).duration(.relative(0.25))
             To(100.0).duration(3)
         }
 
@@ -363,7 +363,7 @@ final class MotionTests: XCTestCase {
         XCTAssertEqual(data1.duration?.seconds, 2.0)
         
         // Test relative duration
-        let motion2 = To<Double>(100.0).relativeDuration(0.5)
+        let motion2 = To<Double>(100.0).duration(.relative(0.5))
         let data2 = motion2.prepare(0.0, .absolute(2.0))
         
         XCTAssertEqual(data2.duration?.relative, 0.5)
