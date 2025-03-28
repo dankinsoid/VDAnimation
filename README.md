@@ -16,53 +16,132 @@ VDAnimation provides a powerful, declarative way to create complex animations in
 
 ## Examples
 
-### Basic Animation
+### Animating Complex Types
 
 ```swift
-struct FadeInView: View {
+struct CircleState {
+    var position: CGPoint
+    var scale: CGFloat
+    var color: Color
+}
 
-    @MotionState private var opacity = 0.0
+struct CircleAnimation: View {
+    @MotionState private var state = CircleState(
+        position: .zero,
+        scale: 1.0,
+        color: .blue
+    )
     
     var body: some View {
-        Rectangle()
-            .fill(.blue)
-            .opacity(opacity)
-            .withMotion(_opacity) { _, value in
-                Rectangle()
-                    .fill(.blue)
-                    .opacity(value)
+        Circle()
+            .fill(state.color)
+            .frame(width: 100, height: 100)
+            .scaleEffect(state.scale)
+            .position(state.position)
+            .withMotion(_state) { _, value in
+                Circle()
+                    .fill(value.color)
+                    .frame(width: 100, height: 100)
+                    .scaleEffect(value.scale)
+                    .position(value.position)
             } motion: {
-                To(1.0).duration(1.0).curve(.easeInOut)
+                Sequential {
+                    // First animate position and color in parallel
+                    Parallel()
+                        .position { To(CGPoint(x: 200, y: 200)) }
+                        .color { To(.red) }
+                        .duration(1.0)
+                    
+                    // Then animate scale and color together
+                    Parallel()
+                        .scale { To(1.5).duration(0.5) }
+                        .color { To(.green).duration(0.5) }
+                    
+                    // Finally animate everything back
+                    Parallel()
+                        .position { To(CGPoint.zero) }
+                        .scale { To(1.0) }
+                        .color { To(.blue) }
+                        .duration(1.0)
+                }
             }
             .onAppear {
-                opacity = 1.0
+                state.position = CGPoint(x: 200, y: 200)
+                state.scale = 1.5
+                state.color = .green
             }
     }
 }
 ```
 
-### Complex Sequence
+### Animating Collections
 
 ```swift
-Sequential {
-    // Move right while fading in
-    Parallel()
-      .offset { To(100) }
-      .opacity { To(1.0) }
-      .duration(0.5)
+struct BarChartAnimation: View {
+    @MotionState private var values: [CGFloat] = [0.2, 0.5, 0.8, 0.3]
     
-    // Bounce effect
-    To(1.2)
-      .duration(0.2)
-      .curve(.easeOut)
-      .autoreverse()
-      .repeat(3)
+    var body: some View {
+        HStack(spacing: 10) {
+            ForEach(values.indices, id: \.self) { index in
+                Rectangle()
+                    .fill(.blue)
+                    .frame(height: values[index] * 200)
+            }
+        }
+        .withMotion(_values) { _, values in
+            HStack(spacing: 10) {
+                ForEach(values.indices, id: \.self) { index in
+                    Rectangle()
+                        .fill(.blue)
+                        .frame(height: values[index] * 200)
+                }
+            }
+        } motion: {
+            // Animate each bar independently
+            Parallel { index in
+                To(values[index] * 1.5).duration(0.5)
+            }
+            .autoreverse()
+            .repeat(2)
+        }
+    }
+}
+```
+
+### Custom Value Interpolation
+
+```swift
+struct CustomType {
+    var x: CGFloat
+    var y: CGFloat
+}
+
+// Make it Tweenable for automatic interpolation
+@Tweenable 
+extension CustomType {
+    static func lerp(_ a: CustomType, _ b: CustomType, _ t: Double) -> CustomType {
+        CustomType(
+            x: a.x + (b.x - a.x) * t,
+            y: a.y + (b.y - a.y) * t
+        )
+    }
+}
+
+struct CustomAnimation: View {
+    @MotionState private var value = CustomType(x: 0, y: 0)
     
-    // Spin and fade out
-    Parallel()
-      .rotationEffect { To(.degrees(360)) }
-      .opacity { To(0.0) }
-      .duration(1.0)
+    var body: some View {
+        Rectangle()
+            .frame(width: 50, height: 50)
+            .offset(x: value.x, y: value.y)
+            .withMotion(_value) { _, value in
+                Rectangle()
+                    .frame(width: 50, height: 50)
+                    .offset(x: value.x, y: value.y)
+            } motion: {
+                To(CustomType(x: 100, y: 100)).duration(1.0)
+            }
+    }
 }
 ```
 
