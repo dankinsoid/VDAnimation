@@ -18,6 +18,35 @@ extension View {
     }
 }
 
+public struct WithMotion<Value, Content: View>: View {
+
+    let state: MotionState<Value>
+    let content: (Value) -> Content
+    let repeatForever: Bool
+    let motion: () -> AnyMotion<Value>
+
+    public init(
+        _ state: MotionState<Value>,
+        repeat repeatForever: Bool = false,
+        @ViewBuilder content: @escaping (Value) -> Content,
+        @MotionBuilder<Value> motion: @escaping () -> AnyMotion<Value>
+    ) {
+        self.state = state
+        self.content = content
+        self.motion = motion
+        self.repeatForever = repeatForever
+    }
+
+    public var body: some View {
+        EmptyView()
+            .withMotion(state, repeat: repeatForever) { _, value in
+                content(value)
+            } motion: {
+                motion()
+            }
+    }
+}
+
 @propertyWrapper
 public struct MotionState<Value>: DynamicProperty {
 
@@ -51,11 +80,11 @@ struct WithMotionModifier<Value,  Child: View, Content: View>: View {
     let content: (AnyView, Value) -> Content
     let repeatForever: Bool
     @State private var wrapper = Wrapper()
-    
+
     var body: some View {
         child
             .modifier(
-                AnimatedView(
+                AnimatedModifier(
                     controller: state.controller,
                     duration: {
                         let info = motion.prepare(state.wrappedValue, nil)

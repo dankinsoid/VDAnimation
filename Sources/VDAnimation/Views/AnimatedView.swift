@@ -2,49 +2,55 @@ import SwiftUI
 
 public extension View {
 
-    func animated<Value: Equatable, Content: View>(
-        _ value: Value,
-        animation: Animation = .default,
-        lerp: @escaping (Value, Value, Double) -> Value,
-        @ViewBuilder _ content: @escaping (AnyView, Value) -> Content
-    ) -> some View {
-        AnimatedTweenView(value, animation, lerp: lerp, child: { self }, content: content)
-    }
-
     func animated<Value: Equatable & Tweenable, Content: View>(
         _ value: Value,
-        animation: Animation = .default,
+        duration: TimeInterval = 0.25,
+        curve: Curve = .easeInOut,
         @ViewBuilder _ content: @escaping (AnyView) -> (Value) -> Content
     ) -> some View {
-        animated(value, animation: animation, lerp: Value.lerp) { content($0)($1) }
+        animated(value, duration: duration, curve: curve, lerp: Value.lerp) { content($0)($1) }
     }
 
     func animated<Value: Equatable & Tweenable, Content: View>(
         _ value: Value,
-        animation: Animation = .default,
+        duration: TimeInterval = 0.25,
+        curve: Curve = .easeInOut,
         @ViewBuilder _ content: @escaping (AnyView, Value) -> Content
     ) -> some View {
-        animated(value, animation: animation, lerp: Value.lerp, content)
+        animated(value, duration: duration, curve: curve, lerp: Value.lerp, content)
     }
 
     @_disfavoredOverload
     func animated<Value: Equatable & Codable, Content: View>(
         _ value: Value,
-        animation: Animation = .default,
+        duration: TimeInterval = 0.25,
+        curve: Curve = .easeInOut,
         @ViewBuilder _ content: @escaping (AnyView, Value) -> Content
     ) -> some View {
-        animated(value, animation: animation, lerp: Value.lerp, content)
+        animated(value, duration: duration, curve: curve, lerp: Value.lerp, content)
+    }
+
+    func animated<Value: Equatable, Content: View>(
+        _ value: Value,
+        duration: TimeInterval = 0.25,
+        curve: Curve = .easeInOut,
+        lerp: @escaping (Value, Value, Double) -> Value,
+        @ViewBuilder _ content: @escaping (AnyView, Value) -> Content
+    ) -> some View {
+        modifier(
+            AnimatedTweenModifier(value, lerp: lerp, duration: duration, curve: curve, content: content)
+        )
     }
 
     func animated<Value, Content: View>(
         _ controller: AnimationController,
+        lerp: @escaping (Double) -> Value,
         duration: TimeInterval = 0.25,
         curve: Curve = .easeInOut,
-        lerp: @escaping (Double) -> Value,
         @ViewBuilder content: @escaping (AnyView, Value) -> Content
     ) -> some View {
         modifier(
-            AnimatedView(
+            AnimatedModifier(
                 controller: controller,
                 duration: { duration },
                 lerp: { lerp(curve($0)) },
@@ -62,23 +68,105 @@ public extension View {
     ) -> some View {
         animated(
             controller,
+            lerp: tween.lerp,
             duration: duration,
             curve: curve,
-            lerp: tween.lerp,
             content: content
         )
     }
 }
 
-public final class AnimationController: ObservableObject {
+public struct Animated<Value, Modifier: ViewModifier>: View {
 
+    let modifier: Modifier
+    
+    public var body: some View {
+        EmptyView()
+            .modifier(modifier)
+    }
+}
+
+extension Animated  {
+    
+    public init<Result: View>(
+        _ controller: AnimationController,
+        tween: Tween<Value>,
+        duration: TimeInterval = 0.25,
+        curve: Curve = .easeInOut,
+        @ViewBuilder content: @escaping (Value) -> Result
+    ) where Value: Tweenable, Modifier == AnimatedModifier<Value, Result> {
+        modifier = AnimatedModifier(
+            controller: controller,
+            duration: { duration },
+            lerp: tween.lerp
+        ) { _, value in content(value) }
+    }
+
+    public init<Result: View>(
+        _ controller: AnimationController,
+        lerp: @escaping (Double) -> Value,
+        duration: TimeInterval = 0.25,
+        curve: Curve = .easeInOut,
+        @ViewBuilder content: @escaping (Value) -> Result
+    ) where Modifier == AnimatedModifier<Value, Result>  {
+        modifier = AnimatedModifier(
+            controller: controller,
+            duration: { duration },
+            lerp: lerp
+        ) { _, value in content(value) }
+    }
+}
+
+extension Animated  {
+    
+    public init<Result: View>(
+        _ value: Value,
+        duration: TimeInterval = 0.25,
+        curve: Curve = .easeInOut,
+        @ViewBuilder content: @escaping (Value) -> Result
+    ) where Value: Equatable, Value: Tweenable, Modifier == AnimatedTweenModifier<Value, Result> {
+        modifier = AnimatedTweenModifier(
+            value,
+            lerp: Value.lerp,
+            duration: duration,
+            curve: curve
+        ) { _, value in content(value) }
+    }
+
+    public init<Result: View>(
+        _ value: Value,
+        lerp: @escaping (Value, Value, Double) -> Value,
+        duration: TimeInterval = 0.25,
+        curve: Curve = .easeInOut,
+        @ViewBuilder content: @escaping (Value) -> Result
+    ) where Value: Equatable, Modifier == AnimatedTweenModifier<Value, Result> {
+        modifier = AnimatedTweenModifier(
+            value,
+            lerp: lerp,
+            duration: duration,
+            curve: curve
+        ) { _, value in content(value) }
+    }
+}
+
+
+public final class AnimationController: ObservableObject {
+    
     @Published
     fileprivate(set) public var targetProgress = 0.0
     @Published
-    fileprivate var state = AnimationControllerState()
+    fileprivate var state = AnimationControllerState() {
+        didSet {
+            updateState()
+        }
+    }
     fileprivate var repeatForever = false
     fileprivate(set) public var currentProgress = 0.0
     fileprivate(set) public var isAnimating = false
+    var duration: () -> TimeInterval = { 0.25 }
+    var onBreak: (Double) -> Void = { _ in }
+    
+    public init() {}
 
     public func play(
         from: Double? = nil,
@@ -127,84 +215,104 @@ public final class AnimationController: ObservableObject {
             needAnimate: false
         )
     }
+
+    private func updateState() {
+        if isAnimating {
+            isAnimating = false
+            withAnimation(.easeOut(duration: 0.0)) {
+                targetProgress = state.tween.start
+            }
+        } else {
+            targetProgress = state.tween.start
+        }
+        guard state.needAnimate else {
+            onBreak(currentProgress)
+            return
+        }
+        var animation: Animation = .linear(
+            duration: duration() * abs(state.tween.end - state.tween.start)
+        )
+        if repeatForever {
+            animation = animation.repeatForever(autoreverses: false)
+        }
+        isAnimating = true
+        withAnimation(animation) {
+            targetProgress = state.tween.end
+        }
+    }
 }
 
 private struct AnimationControllerState: Equatable {
+
     var tween = Tween(0.0, 1.0)
     var needAnimate = false
 }
 
-private struct AnimatedTweenView<Value: Equatable, Child: View, Content: View>: View {
+public struct AnimatedTweenModifier<Value: Equatable, Result: View>: ViewModifier {
 
     @State private var props: Props
     let value: Value
     let lerp: (Value, Value, Double) -> Value
-    let animation: Animation?
-    let child: Child
-    let content: (AnyView, Value) -> Content
+    let duration: TimeInterval
+    let curve: Curve
+    let content: (AnyView, Value) -> Result
+
+    @State
+    private var controller = AnimationController()
 
     init(
         _ value: Value,
-        _ animation: Animation? = .default,
         lerp: @escaping (Value, Value, Double) -> Value,
-        @ViewBuilder child: () -> Child,
-        @ViewBuilder content: @escaping (AnyView, Value) -> Content
+        duration: TimeInterval,
+        curve: Curve,
+        @ViewBuilder content: @escaping (AnyView, Value) -> Result
     ) {
         self.value = value
         self.lerp = lerp
-        self.child = child()
         self.content = content
-        self.animation = animation
-        _props = State(wrappedValue: Props(progress: 0.0, start: value, end: value))
+        self.duration = duration
+        self.curve = curve
+        _props = State(wrappedValue: Props(value, value))
     }
 
-    var body: some View {
-        child
+    public func body(content: Content) -> some View {
+        content
             .modifier(
-                AnimatedTweenModifier(
-                    animatableData: props.progress,
-                    value: value,
-                    lerp: { lerp(props.start, props.end, $0) },
-                    result: content
-                ) { isAnimating, start, end in
-                    withAnimation(.easeInOut(duration: 0)) {
-                        props = Props(progress: 0.0, start: start, end: end)
-                    }
-                    withAnimation(animation) {
-                        props = Props(progress: 1.0, start: start, end: end)
-                    }
-                } observer: { _, _ in }
+                AnimatedModifier(
+                    controller: controller,
+                    duration: { duration },
+                    lerp: { lerp(props.start, props.end, curve($0)) },
+                    result: self.content,
+                    observer: { isAnimating, progress, value in }
+                )
             )
-    }
-
-    struct Props {
-
-        var progress: Double
-        var start: Value
-        var end: Value
-    }
-}
-
-private struct AnimatedTweenModifier<Value: Equatable, Result: View>: AnimatableModifier {
-
-    var animatableData: Double
-    let value: Value
-    let lerp: (Double) -> Value
-    let result: (AnyView, Value) -> Result
-    let onStartAnimation: (Bool, Value, Value) -> Void
-    let observer: (Double, Value) -> Void
-
-    func body(content: Content) -> some View {
-        let currentValue = lerp(animatableData)
-        observer(animatableData, currentValue)
-        return result(AnyView(content), currentValue)
             .onChange(of: value) { newValue in
-                onStartAnimation(animatableData != 0.0 && animatableData != 1.0, currentValue, newValue)
+                if controller.isAnimating {
+                    controller.pause()
+                }
+                props.start = lerp(props.start, props.end, controller.currentProgress)
+                props.end = newValue
+                if props.start != props.end {
+                    controller.play(from: 0)
+                } else {
+                    controller.stop()
+                }
             }
     }
+
+    final class Props {
+
+        var start: Value
+        var end: Value
+
+        init(_ start: Value, _ end: Value) {
+            self.start = start
+            self.end = end
+        }
+    }
 }
 
-struct AnimatedView<Value, Result: View>: ViewModifier {
+public struct AnimatedModifier<Value, Result: View>: ViewModifier {
 
     @ObservedObject
     var controller: AnimationController
@@ -213,8 +321,10 @@ struct AnimatedView<Value, Result: View>: ViewModifier {
     let result: (AnyView, Value) -> Result
     var observer: (Bool, Double, Value) -> Void = { _, _, _ in }
 
-    func body(content: Content) -> some View {
-        content
+    public func body(content: Content) -> some View {
+        controller.duration = duration
+        controller.onBreak = { observer(false, $0, lerp($0)) }
+        return content
             .modifier(
                 AnimationModifier(
                     animatableData: controller.targetProgress,
@@ -234,33 +344,6 @@ struct AnimatedView<Value, Result: View>: ViewModifier {
                     }
                 }
             )
-            .onChange(of: controller.state) { newValue in
-                if controller.isAnimating {
-                    controller.isAnimating = false
-                    withAnimation(.easeOut(duration: 0.0)) {
-                        controller.targetProgress = newValue.tween.start
-                    }
-                } else {
-                    controller.targetProgress = newValue.tween.start
-                }
-                guard newValue.needAnimate,
-                        controller.currentProgress != newValue.tween.end
-                        || controller.repeatForever
-                else {
-                    observer(false, controller.currentProgress, lerp(controller.currentProgress))
-                    return
-                }
-                var animation: Animation = .linear(
-                    duration: duration() * abs(newValue.tween.end - newValue.tween.start)
-                )
-                if controller.repeatForever {
-                    animation = animation.repeatForever(autoreverses: false)
-                }
-                controller.isAnimating = true
-                withAnimation(animation) {
-                    controller.targetProgress = newValue.tween.end
-                }
-            }
     }
 }
 
@@ -276,8 +359,4 @@ struct AnimationModifier<Value, Body: View>: AnimatableModifier {
         observer(animatableData, currentValue)
         return result(AnyView(content), currentValue)
     }
-}
-
-#Preview {
-//    ContentView()
 }

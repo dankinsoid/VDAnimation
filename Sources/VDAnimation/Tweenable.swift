@@ -144,18 +144,6 @@ extension EdgeInsets: Tweenable {
     }
 }
 
-extension NSEdgeInsets: Tweenable {
-
-    public static func lerp(_ lhs: NSEdgeInsets, _ rhs: NSEdgeInsets, _ t: Double) -> NSEdgeInsets {
-        NSEdgeInsets(
-            top: .lerp(lhs.top, rhs.top, t),
-            left: .lerp(lhs.left, rhs.left, t),
-            bottom: .lerp(lhs.bottom, rhs.bottom, t),
-            right: .lerp(lhs.right, rhs.right, t)
-        )
-    }
-}
-
 extension NSDirectionalEdgeInsets: Tweenable {
 
     public static func lerp(_ lhs: NSDirectionalEdgeInsets, _ rhs: NSDirectionalEdgeInsets, _ t: Double) -> NSDirectionalEdgeInsets {
@@ -212,6 +200,19 @@ extension Color: Tweenable {
         return Color(interpolatedUIColor)
     }
 }
+
+extension UIEdgeInsets: Tweenable {
+
+    public static func lerp(_ lhs: UIEdgeInsets, _ rhs: UIEdgeInsets, _ t: Double) -> UIEdgeInsets {
+        UIEdgeInsets(
+            top: .lerp(lhs.top, rhs.top, t),
+            left: .lerp(lhs.left, rhs.left, t),
+            bottom: .lerp(lhs.bottom, rhs.bottom, t),
+            right: .lerp(lhs.right, rhs.right, t)
+        )
+    }
+}
+
 #endif
 
 #if canImport(AppKit)
@@ -257,4 +258,17 @@ extension Color: Tweenable {
         return Color(interpolatedNSColor)
     }
 }
+
+extension NSEdgeInsets: Tweenable {
+
+    public static func lerp(_ lhs: NSEdgeInsets, _ rhs: NSEdgeInsets, _ t: Double) -> NSEdgeInsets {
+        NSEdgeInsets(
+            top: .lerp(lhs.top, rhs.top, t),
+            left: .lerp(lhs.left, rhs.left, t),
+            bottom: .lerp(lhs.bottom, rhs.bottom, t),
+            right: .lerp(lhs.right, rhs.right, t)
+        )
+    }
+}
+
 #endif
