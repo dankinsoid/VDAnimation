@@ -341,6 +341,48 @@ extension UIEdgeInsets: Tweenable {
 
 #endif
 
+// MARK: - CoreGraphics Types
+
+extension CGPoint: Tweenable {
+    public static func lerp(_ lhs: CGPoint, _ rhs: CGPoint, _ t: Double) -> CGPoint {
+        CGPoint(
+            x: CGFloat.lerp(lhs.x, rhs.x, t),
+            y: CGFloat.lerp(lhs.y, rhs.y, t)
+        )
+    }
+}
+
+extension CGSize: Tweenable {
+    public static func lerp(_ lhs: CGSize, _ rhs: CGSize, _ t: Double) -> CGSize {
+        CGSize(
+            width: CGFloat.lerp(lhs.width, rhs.width, t),
+            height: CGFloat.lerp(lhs.height, rhs.height, t)
+        )
+    }
+}
+
+extension CGRect: Tweenable {
+    public static func lerp(_ lhs: CGRect, _ rhs: CGRect, _ t: Double) -> CGRect {
+        CGRect(
+            origin: .lerp(lhs.origin, rhs.origin, t),
+            size: .lerp(lhs.size, rhs.size, t)
+        )
+    }
+}
+
+extension CGAffineTransform: Tweenable {
+    public static func lerp(_ lhs: CGAffineTransform, _ rhs: CGAffineTransform, _ t: Double) -> CGAffineTransform {
+        CGAffineTransform(
+            a: CGFloat.lerp(lhs.a, rhs.a, t),
+            b: CGFloat.lerp(lhs.b, rhs.b, t),
+            c: CGFloat.lerp(lhs.c, rhs.c, t),
+            d: CGFloat.lerp(lhs.d, rhs.d, t),
+            tx: CGFloat.lerp(lhs.tx, rhs.tx, t),
+            ty: CGFloat.lerp(lhs.ty, rhs.ty, t)
+        )
+    }
+}
+
 #if canImport(AppKit)
 /// NSColor implementation of Tweenable
 extension NSColor: Tweenable {
