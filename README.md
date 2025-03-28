@@ -20,13 +20,14 @@ VDAnimation provides a powerful, declarative way to create complex animations in
 
 ```swift
 struct FadeInView: View {
-    @State private var opacity = 0.0
+
+    @MotionState private var opacity = 0.0
     
     var body: some View {
         Rectangle()
             .fill(.blue)
             .opacity(opacity)
-            .withMotion(.init(wrappedValue: opacity)) { _, value in
+            .withMotion(_opacity) { _, value in
                 Rectangle()
                     .fill(.blue)
                     .opacity(value)
