@@ -1,7 +1,15 @@
 import SwiftUI
 
+/// Extension providing animation capabilities to SwiftUI views
 public extension View {
 
+    /// Animates a value change with automatic tweening for types conforming to `Equatable` and `Tweenable`.
+    /// - Parameters:
+    ///   - value: The value to animate
+    ///   - duration: Animation duration in seconds (default: 0.25)
+    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - content: A closure that takes the view and current animated value
+    /// - Returns: A view with animation applied
     func animated<Value: Equatable & Tweenable, Content: View>(
         _ value: Value,
         duration: TimeInterval = 0.25,
@@ -11,6 +19,13 @@ public extension View {
         animated(value, duration: duration, curve: curve, lerp: Value.lerp) { content($0)($1) }
     }
 
+    /// Animates a value change with automatic tweening for types conforming to `Equatable` and `Tweenable`.
+    /// - Parameters:
+    ///   - value: The value to animate
+    ///   - duration: Animation duration in seconds (default: 0.25)
+    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - content: A closure that takes the view and current animated value
+    /// - Returns: A view with animation applied
     func animated<Value: Equatable & Tweenable, Content: View>(
         _ value: Value,
         duration: TimeInterval = 0.25,
@@ -20,6 +35,13 @@ public extension View {
         animated(value, duration: duration, curve: curve, lerp: Value.lerp, content)
     }
 
+    /// Animates a value change for types conforming to `Equatable` and `Codable`.
+    /// - Parameters:
+    ///   - value: The value to animate
+    ///   - duration: Animation duration in seconds (default: 0.25)
+    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - content: A closure that takes the view and current animated value
+    /// - Returns: A view with animation applied
     @_disfavoredOverload
     func animated<Value: Equatable & Codable, Content: View>(
         _ value: Value,
@@ -30,6 +52,14 @@ public extension View {
         animated(value, duration: duration, curve: curve, lerp: Value.lerp, content)
     }
 
+    /// Animates a value change with a custom linear interpolation function.
+    /// - Parameters:
+    ///   - value: The value to animate
+    ///   - duration: Animation duration in seconds (default: 0.25)
+    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - lerp: Custom interpolation function for the value
+    ///   - content: A closure that takes the view and current animated value
+    /// - Returns: A view with animation applied
     func animated<Value: Equatable, Content: View>(
         _ value: Value,
         duration: TimeInterval = 0.25,
@@ -42,6 +72,14 @@ public extension View {
         )
     }
 
+    /// Animates a value using an `AnimationController` and custom lerp function.
+    /// - Parameters:
+    ///   - controller: The animation controller to manage animation state
+    ///   - lerp: Function to compute the interpolated value from the progress
+    ///   - duration: Animation duration in seconds (default: 0.25)
+    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - content: A closure that takes the view and current animated value
+    /// - Returns: A view with animation applied
     func animated<Value, Content: View>(
         _ controller: AnimationController,
         lerp: @escaping (Double) -> Value,
@@ -59,6 +97,14 @@ public extension View {
         )
     }
 
+    /// Animates a value using an `AnimationController` and a `Tween`.
+    /// - Parameters:
+    ///   - controller: The animation controller to manage animation state
+    ///   - tween: The tween object that defines how values are interpolated
+    ///   - duration: Animation duration in seconds (default: 0.25)
+    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - content: A closure that takes the view and current animated value
+    /// - Returns: A view with animation applied
     func animated<Value, Content: View>(
         _ controller: AnimationController,
         tween: Tween<Value>,
@@ -76,10 +122,12 @@ public extension View {
     }
 }
 
+/// A view that renders animated content with various animation configurations
 public struct Animated<Value, Modifier: ViewModifier>: View {
 
     let modifier: Modifier
     
+    /// The content of the `Animated` view
     public var body: some View {
         EmptyView()
             .modifier(modifier)
@@ -88,6 +136,13 @@ public struct Animated<Value, Modifier: ViewModifier>: View {
 
 extension Animated  {
     
+    /// Creates an animated view using an animation controller and a tween.
+    /// - Parameters:
+    ///   - controller: The animation controller to manage animation state
+    ///   - tween: The tween object that defines how values are interpolated
+    ///   - duration: Animation duration in seconds (default: 0.25)
+    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - content: A closure that produces content from the animated value
     public init<Result: View>(
         _ controller: AnimationController,
         tween: Tween<Value>,
@@ -102,6 +157,13 @@ extension Animated  {
         ) { _, value in content(value) }
     }
 
+    /// Creates an animated view using an animation controller and a custom lerp function.
+    /// - Parameters:
+    ///   - controller: The animation controller to manage animation state
+    ///   - lerp: Function to compute the interpolated value from the progress
+    ///   - duration: Animation duration in seconds (default: 0.25)
+    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - content: A closure that produces content from the animated value
     public init<Result: View>(
         _ controller: AnimationController,
         lerp: @escaping (Double) -> Value,
@@ -119,6 +181,12 @@ extension Animated  {
 
 extension Animated  {
     
+    /// Creates an animated view for a changing value with automatic tweening.
+    /// - Parameters:
+    ///   - value: The value to animate
+    ///   - duration: Animation duration in seconds (default: 0.25)
+    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - content: A closure that produces content from the animated value
     public init<Result: View>(
         _ value: Value,
         duration: TimeInterval = 0.25,
@@ -133,6 +201,13 @@ extension Animated  {
         ) { _, value in content(value) }
     }
 
+    /// Creates an animated view for a changing value with a custom lerp function.
+    /// - Parameters:
+    ///   - value: The value to animate
+    ///   - lerp: Custom interpolation function for the value
+    ///   - duration: Animation duration in seconds (default: 0.25)
+    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - content: A closure that produces content from the animated value
     public init<Result: View>(
         _ value: Value,
         lerp: @escaping (Value, Value, Double) -> Value,
@@ -150,8 +225,10 @@ extension Animated  {
 }
 
 
+/// Controller that manages animation state and exposes methods to control animations
 public final class AnimationController: ObservableObject {
     
+    /// The target progress value the animation is moving toward
     @Published
     fileprivate(set) public var targetProgress = 0.0
     @Published
@@ -161,13 +238,21 @@ public final class AnimationController: ObservableObject {
         }
     }
     fileprivate var repeatForever = false
+    /// The current progress of the animation (between 0.0 and 1.0)
     fileprivate(set) public var currentProgress = 0.0
+    /// Indicates whether an animation is currently in progress
     fileprivate(set) public var isAnimating = false
     var duration: () -> TimeInterval = { 0.25 }
     var onBreak: (Double) -> Void = { _ in }
     
+    /// Initializes a new animation controller
     public init() {}
 
+    /// Plays the animation from a specified progress value to another
+    /// - Parameters:
+    ///   - from: The starting progress value (defaults to current progress if nil)
+    ///   - to: The ending progress value (defaults to current state's end value if nil)
+    ///   - repeatForever: Whether the animation should repeat indefinitely
     public func play(
         from: Double? = nil,
         to progress: Double? = nil,
@@ -180,6 +265,8 @@ public final class AnimationController: ObservableObject {
         )
     }
 
+    /// Reverses the animation direction
+    /// - Parameter from: The starting progress value (defaults to current progress if nil)
     public func reverse(from: Double? = nil) {
         state = AnimationControllerState(
             tween: Tween(
@@ -191,6 +278,7 @@ public final class AnimationController: ObservableObject {
         )
     }
 
+    /// Toggles the animation state between playing and paused
     public func toggle() {
         state = AnimationControllerState(
             tween: Tween(currentProgress, state.tween.end),
@@ -198,6 +286,8 @@ public final class AnimationController: ObservableObject {
         )
     }
 
+    /// Sets the animation directly to a specific progress value without animating
+    /// - Parameter progress: The progress value to set (between 0.0 and 1.0)
     public func set(progress: Double) {
         state = AnimationControllerState(
             tween: Tween(progress, progress),
@@ -205,10 +295,13 @@ public final class AnimationController: ObservableObject {
         )
     }
 
+    /// Pauses the animation at the current progress
     public func pause() {
         stop(at: currentProgress)
     }
 
+    /// Stops the animation and resets to a specific progress value
+    /// - Parameter progress: The progress value to stop at (defaults to 0.0)
     public func stop(at progress: Double = 0) {
         state = AnimationControllerState(
             tween: Tween(progress, state.tween.end),
@@ -248,6 +341,7 @@ private struct AnimationControllerState: Equatable {
     var needAnimate = false
 }
 
+/// A view modifier that animates between values using tweening
 public struct AnimatedTweenModifier<Value: Equatable, Result: View>: ViewModifier {
 
     @State private var props: Props
@@ -275,6 +369,7 @@ public struct AnimatedTweenModifier<Value: Equatable, Result: View>: ViewModifie
         _props = State(wrappedValue: Props(value, value))
     }
 
+    /// Modifies the view content by applying animation
     public func body(content: Content) -> some View {
         content
             .modifier(
@@ -312,6 +407,7 @@ public struct AnimatedTweenModifier<Value: Equatable, Result: View>: ViewModifie
     }
 }
 
+/// A view modifier that animates using an animation controller
 public struct AnimatedModifier<Value, Result: View>: ViewModifier {
 
     @ObservedObject
@@ -321,6 +417,7 @@ public struct AnimatedModifier<Value, Result: View>: ViewModifier {
     let result: (AnyView, Value) -> Result
     var observer: (Bool, Double, Value) -> Void = { _, _, _ in }
 
+    /// Modifies the view content by applying animation
     public func body(content: Content) -> some View {
         controller.duration = duration
         controller.onBreak = { observer(false, $0, lerp($0)) }

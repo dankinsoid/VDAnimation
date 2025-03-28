@@ -20,7 +20,7 @@ struct ContentView: View {
             }
         } motion: {
             Sequential {
-                0.5
+                To(0.5)
             }
         }
     }
