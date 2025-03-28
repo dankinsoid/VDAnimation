@@ -383,6 +383,29 @@ extension CGAffineTransform: Tweenable {
     }
 }
 
+extension CATransform3D: Tweenable {
+    public static func lerp(_ lhs: CATransform3D, _ rhs: CATransform3D, _ t: Double) -> CATransform3D {
+        CATransform3D(
+            m11: CGFloat.lerp(lhs.m11, rhs.m11, t),
+            m12: CGFloat.lerp(lhs.m12, rhs.m12, t),
+            m13: CGFloat.lerp(lhs.m13, rhs.m13, t),
+            m14: CGFloat.lerp(lhs.m14, rhs.m14, t),
+            m21: CGFloat.lerp(lhs.m21, rhs.m21, t),
+            m22: CGFloat.lerp(lhs.m22, rhs.m22, t),
+            m23: CGFloat.lerp(lhs.m23, rhs.m23, t),
+            m24: CGFloat.lerp(lhs.m24, rhs.m24, t),
+            m31: CGFloat.lerp(lhs.m31, rhs.m31, t),
+            m32: CGFloat.lerp(lhs.m32, rhs.m32, t),
+            m33: CGFloat.lerp(lhs.m33, rhs.m33, t),
+            m34: CGFloat.lerp(lhs.m34, rhs.m34, t),
+            m41: CGFloat.lerp(lhs.m41, rhs.m41, t),
+            m42: CGFloat.lerp(lhs.m42, rhs.m42, t),
+            m43: CGFloat.lerp(lhs.m43, rhs.m43, t),
+            m44: CGFloat.lerp(lhs.m44, rhs.m44, t)
+        )
+    }
+}
+
 #if canImport(AppKit)
 /// NSColor implementation of Tweenable
 extension NSColor: Tweenable {
