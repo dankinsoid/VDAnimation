@@ -1,7 +1,6 @@
 import SwiftUI
 
-extension View {
-
+public extension View {
     /// Applies motion animation to a view with a given state.
     ///
     /// - Parameters:
@@ -10,7 +9,7 @@ extension View {
     ///   - content: A closure that takes the view and current value to create the animated content.
     ///   - motion: A closure that returns the motion to apply.
     /// - Returns: A view with the motion animation applied.
-    public func withMotion<Value, Content: View>(
+    func withMotion<Value, Content: View>(
         _ state: MotionState<Value>,
         repeat repeatForever: Bool = false,
         @ViewBuilder content: @escaping (AnyView, Value) -> Content,
@@ -28,7 +27,6 @@ extension View {
 
 /// A view that applies motion animation to its content.
 public struct WithMotion<Value, Content: View>: View {
-
     let state: MotionState<Value>
     let content: (Value) -> Content
     let repeatForever: Bool
@@ -68,7 +66,6 @@ public struct WithMotion<Value, Content: View>: View {
 /// Use this to create state that can be animated with motion animations.
 @propertyWrapper
 public struct MotionState<Value>: DynamicProperty {
-
     /// The underlying value that will be animated.
     @State
     public var wrappedValue: Value
@@ -81,26 +78,35 @@ public struct MotionState<Value>: DynamicProperty {
         controller
     }
 
-    public var progress: Binding<Double> {
-        Binding {
-            controller.currentProgress
-        } set: { newValue in
-            controller.set(progress: newValue)
-        }
-    }
+    @Binding
+    public var progress: Double
+
+    @Binding
+    public var isAnimating: Bool
 
     /// Creates a new motion state with an initial value.
     ///
     /// - Parameter wrappedValue: The initial value of the state.
     public init(wrappedValue: Value) {
         self.wrappedValue = wrappedValue
+        _progress = .constant(0)
+        _isAnimating = .constant(false)
+        _progress = Binding { [controller] in
+            controller.progress
+        } set: { [controller] newValue in
+            controller.progress = newValue
+        }
+        _isAnimating = Binding { [controller] in
+            controller.isAnimating
+        } set: { [controller] newValue in
+            controller.isAnimating = newValue
+        }
     }
 }
 
-extension MotionState where Value == Double {
-
+public extension MotionState where Value == Double {
     /// Creates a new motion state with an initial value of 0.0.
-    public init() {
+    init() {
         self.init(wrappedValue: 0.0)
     }
 }
@@ -109,28 +115,31 @@ extension MotionState where Value == Double {
 ///
 /// This is an internal implementation struct used by the `withMotion` view modifier.
 struct WithMotionModifier<Value, Child: View, Content: View>: View {
-
     let state: MotionState<Value>
     let child: Child
     let motion: AnyMotion<Value>
     let content: (AnyView, Value) -> Content
     let repeatForever: Bool
     @State private var wrapper = Wrapper()
+    @Environment(\.animationDuration)
+    private var defaultDuration
 
     var body: some View {
-        child
+        let value = state.wrappedValue
+        return child
             .modifier(
                 AnimatedModifier(
                     controller: state.controller,
-                    duration: {
-                        let info = motion.prepare(state.wrappedValue, nil)
-                        let duration = info.duration?.seconds ?? 0.25
+                    duration: { [motion, wrapper, defaultDuration] in
+                        let info = motion.prepare(value, nil)
+                        let duration = info.duration?.seconds ?? defaultDuration
                         wrapper.info = info
                         return duration
                     },
-                    lerp: { t in wrapper.info?.lerp(state.wrappedValue, t) ?? state.wrappedValue },
+                    lerp: { [wrapper] t in wrapper.info?.lerp(state.wrappedValue, t) ?? value },
+                    curve: .linear,
                     result: content
-                ) { isAnimating, progress, value in
+                ) { [wrapper] isAnimating, progress, value in
                     if isAnimating {
                         let last = wrapper.lastProgress
                         if last != progress {
@@ -138,7 +147,7 @@ struct WithMotionModifier<Value, Child: View, Content: View>: View {
                             if let effects = wrapper.info?.sideEffects {
                                 DispatchQueue.main.async {
                                     let last = last ?? progress
-                                    let range = min(last, progress)...max(last, progress)
+                                    let range = min(last, progress) ... max(last, progress)
                                     let active = effects(range)
                                     for effect in active {
                                         effect(value)

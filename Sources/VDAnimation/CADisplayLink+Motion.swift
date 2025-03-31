@@ -1,18 +1,26 @@
 import UIKit
 
-public final class MotionDisplayLink<Value> {
+public final class MotionDisplayLink<Value>: AnimationDriver {
 
     public var initialValue: Value
     public let motion: AnyMotion<Value>
 
     /// The current progress of the animation (between 0.0 and 1.0)
-    public var currentProgress: Double {
+    public var progress: Double {
         get { _progress }
+        set { set(progress: newValue) }
     }
 
     /// Indicates whether an animation is currently in progress
     public var isAnimating: Bool {
         get { !isStopped && !link.isPaused }
+        set {
+            if newValue {
+                play()
+            } else {
+                pause()
+            }
+        }
     }
 
     public var currentValue: Value {
@@ -31,7 +39,7 @@ public final class MotionDisplayLink<Value> {
     private var lastRenderTimestamp: CFTimeInterval = 0
     private var animationStartTime: CFTimeInterval = 0
     private var progressTween = Tween(0.0, 1.0)
-    private var completions: [(Double) -> Void] = []
+    private var completions: [() -> Void] = []
 
     public init(
         _ initialValue: Value,
@@ -52,7 +60,7 @@ public final class MotionDisplayLink<Value> {
         from: Double? = nil,
         to progress: Double? = nil,
         repeat repeatForever: Bool = false,
-        completion: ((Double) -> Void)? = nil
+        completion: (() -> Void)? = nil
     ) {
         self.repeatForever = repeatForever
         progressTween = Tween(from ?? _progress, progress ?? progressTween.end)
@@ -125,7 +133,7 @@ public final class MotionDisplayLink<Value> {
         }
         let data = prepareIfNeeded()
 
-        let duration = data.duration?.seconds ?? 0.25
+        let duration = data.duration?.seconds ?? .defaultAnimationDuration
 
         let elapsed = link.targetTimestamp - animationStartTime
         var progress = elapsed / duration
@@ -164,7 +172,7 @@ public final class MotionDisplayLink<Value> {
     }
 
     private func notifyCompletions() {
-        completions.forEach { $0(_progress) }
+        completions.forEach { $0() }
         completions.removeAll()
     }
 
@@ -233,4 +241,5 @@ func test() {
         .autoreverse()
         .repeat(3)
     }
+    link.play()
 }

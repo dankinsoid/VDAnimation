@@ -19,7 +19,7 @@ public protocol Motion<Value> {
 
     /// The type of value being animated
     associatedtype Value
-    
+
     /// Converts this motion to a type-erased AnyMotion representation
     var anyMotion: AnyMotion<Value> { get }
 }
@@ -38,9 +38,6 @@ public enum Duration {
     
     /// A duration of zero seconds
     public static let zero = Duration.absolute(0)
-    
-    /// Default animation duration (0.25 seconds)
-    public static var `default` = Duration.absolute(0.25)
     
     /// The duration in seconds if this is an absolute duration, nil otherwise
     public var seconds: Double? {
@@ -89,12 +86,20 @@ public enum Duration {
 
 /// A type-erased motion for animating values of type Value
 public struct AnyMotion<Value>: Motion {
-    
+
     /// Function to prepare motion data based on initial value and duration
     public let prepare: (Value, Duration?) -> MotionData<Value>
-    
+
     /// Returns self as an AnyMotion since this is already type-erased
     public var anyMotion: AnyMotion<Value> { self }
+
+    public init(prepare: @escaping (Value, Duration?) -> MotionData<Value>) {
+        self.prepare = prepare
+    }
+
+    public init(@MotionBuilder<Value> _ builder: () -> AnyMotion<Value>) {
+        prepare = builder().prepare
+    }
 }
 
 /// Contains the data needed to perform a motion animation
@@ -215,10 +220,11 @@ public struct Sequential<Value>: Motion {
             var state = MotionState(lastValue: initialValue)
             
             for motion in motions() {
-                let info = motion.prepare(state.lastValue, nil)
+                var info = motion.prepare(state.lastValue, nil)
                 let nextValue = info.lerp(state.lastValue, 1.0)
                 let duration = info.duration?.seconds
                 let relative = (info.duration?.relative).map(clamp)
+                info.duration = relative.map(Duration.relative) ?? info.duration
                 
                 // Update state
                 state.lastValue = nextValue
@@ -282,7 +288,7 @@ public struct Sequential<Value>: Motion {
                 
                 let relDur: Double
                 if let relativeDuration = info.duration?.relative {
-                    relDur = relativeDuration
+                    relDur = relativeDuration * relK
                 } else if let resDur = resDur {
                     if resDur > 0 {
                         if let duration = info.duration?.seconds {
@@ -540,7 +546,7 @@ public struct Parallel<Value>: Motion {
             )
         }
     }
-    
+
     /// Adds a motion for a specific key path
     /// - Parameters:
     ///   - keyPath: The key path to animate
@@ -552,45 +558,48 @@ public struct Parallel<Value>: Motion {
         result.motions = { motions($0) + Parallel(keyPath, motion).motions($0) }
         return result
     }
-    
+
     /// Dynamic member lookup for creating animations for specific properties
     /// - Parameter keyPath: The key path to animate
     /// - Returns: A path object for further configuration
     public subscript<Child>(dynamicMember keyPath: WritableKeyPath<Value, Child>) -> Path<Child> {
-        Path<Child> { motion in
-            var result = self
-            let motions = result.motions
-            result.motions = { motions($0) + Parallel(keyPath, motion).motions($0) }
-            return result
-        }
+        Path<Child>(base: self, keyPath: keyPath)
     }
 
     /// Helper struct for creating animations for a specific path
     @dynamicMemberLookup
     public struct Path<Child> {
 
-        /// Function to create a parallel motion with an animation for this path
-        let create: (@escaping () -> AnyMotion<Child>) -> Parallel
+        let base: Parallel<Value>
+        let keyPath: WritableKeyPath<Value, Child>
 
         /// Applies a motion to this path
         /// - Parameter value: The motion to apply
         /// - Returns: A parallel motion with the animation added
         public func callAsFunction(@MotionBuilder<Child> _ value: @escaping () -> AnyMotion<Child>) -> Parallel {
-            create(value)
+            var result = base
+            let motions = result.motions
+            result.motions = { motions($0) + Parallel(keyPath, value).motions($0) }
+            return result
+        }
+
+        public func callAsFunction(_ value: Child, _ rest: Child..., lerp: @escaping (Child, Child, Double) -> Child) -> Parallel {
+            callAsFunction {
+                To([value] + rest, lerp: lerp)
+            }
+        }
+
+        public func callAsFunction(_ value: Child, _ rest: Child...) -> Parallel where Child: Tweenable {
+            callAsFunction {
+                To([value] + rest)
+            }
         }
 
         /// Dynamic member lookup for creating animations for specific properties
         /// - Parameter keyPath: The key path to animate
         /// - Returns: A path object for further configuration
         public subscript<T>(dynamicMember keyPath: WritableKeyPath<Child, T>) -> Path<T> {
-            Path<T> { [create] motion in
-                create {
-                    Parallel<Child>(keyPath) {
-                        motion()
-                    }
-                    .anyMotion
-                }
-            }
+            Path<T>(base: base, keyPath: self.keyPath.appending(path: keyPath))
         }
     }
 }
@@ -661,7 +670,7 @@ extension Parallel where Value: MutableCollection {
 ///     .duration(0.5)
 ///     .curve(.easeInOut)
 /// ```
-public struct To<Value: Tweenable>: Motion {
+public struct To<Value>: Motion {
 
     /// The target values to animate toward
     public let values: [Value]
@@ -671,19 +680,19 @@ public struct To<Value: Tweenable>: Motion {
 
     /// Creates a "to" motion with a custom interpolation function
     /// - Parameters:
-    ///   - lerp: The interpolation function to use
     ///   - values: The target values to animate toward
-    public init(lerp: @escaping (Value, Value, Double) -> Value, _ values: [Value]) {
+    ///   - lerp: The interpolation function to use
+    public init(_ values: [Value], lerp: @escaping (Value, Value, Double) -> Value) {
         self.values = values
         self.lerp = lerp
     }
 
     /// Creates a "to" motion with a custom interpolation function and variadic values
     /// - Parameters:
-    ///   - lerp: The interpolation function to use
     ///   - values: The target values to animate toward
-    public init(lerp: @escaping (Value, Value, Double) -> Value, _ values: Value...) {
-        self.init(lerp: lerp, values)
+    ///   - lerp: The interpolation function to use
+    public init(_ values: Value..., lerp: @escaping (Value, Value, Double) -> Value) {
+        self.init(values, lerp: lerp)
     }
 
     /// Converts to a type-erased motion
@@ -709,16 +718,17 @@ public struct To<Value: Tweenable>: Motion {
 }
 
 extension To where Value: Tweenable {
+
     /// Creates a "to" motion using the default lerp function
     /// - Parameter values: The target values to animate toward
     public init(_ values: [Value]) {
-        self.init(lerp: Value.lerp, values)
+        self.init(values, lerp: Value.lerp)
     }
 
     /// Creates a "to" motion using the default lerp function and variadic values
     /// - Parameter values: The target values to animate toward
-    public init(_ values: Value...) {
-        self.init(lerp: Value.lerp, values)
+    public init(_ value: Value, _ rest: Value...) {
+        self.init([value] + rest, lerp: Value.lerp)
     }
 }
 
@@ -727,14 +737,63 @@ extension To where Value: Codable {
     /// - Parameter values: The target values to animate toward
     @_disfavoredOverload
     public init(_ values: [Value]) {
-        self.init(lerp: Value.lerp, values)
+        self.init(values, lerp: Value.lerp)
     }
 
     /// Creates a "to" motion for Codable values with variadic syntax
     /// - Parameter values: The target values to animate toward
     @_disfavoredOverload
     public init(_ values: Value...) {
-        self.init(lerp: Value.lerp, values)
+        self.init(values, lerp: Value.lerp)
+    }
+}
+
+public struct TransforTo<Value>: Motion {
+    
+    /// The target values to animate toward
+    public let transform: (Value) -> Value
+    
+    /// The interpolation function to use
+    public let lerp: (Value, Value, Double) -> Value
+
+    /// Creates a "to" motion with a custom interpolation function
+    /// - Parameters:
+    ///   - transform: The target values to animate toward
+    ///   - lerp: The interpolation function to use
+    public init(_ transform: @escaping (Value) -> Value, lerp: @escaping (Value, Value, Double) -> Value) {
+        self.transform = transform
+        self.lerp = lerp
+    }
+
+    /// Converts to a type-erased motion
+    public var anyMotion: AnyMotion<Value> {
+        AnyMotion { _, dur in
+            return MotionData(duration: dur) { first, t in
+                let value = transform(first)
+                guard t != 0 else { return first }
+                guard t != 1 else { return value }
+                // Lerp between the values in this segment
+                return lerp(first, value, t)
+            }
+        }
+    }
+}
+
+extension TransforTo where Value: Tweenable {
+
+    /// Creates a "to" motion using the default lerp function
+    /// - Parameter values: The target values to animate toward
+    public init(_ transform: @escaping (Value) -> Value) {
+        self.init(transform, lerp: Value.lerp)
+    }
+}
+
+extension TransforTo where Value: Codable {
+    /// Creates a "to" motion for Codable values
+    /// - Parameter values: The target values to animate toward
+    @_disfavoredOverload
+    public init(_ transform: @escaping (Value) -> Value) {
+        self.init(transform, lerp: Value.lerp)
     }
 }
 
@@ -755,7 +814,7 @@ extension To where Value: Codable {
 /// // Wait with relative duration
 /// let relativeWait = Sequential<CGFloat> {
 ///     To(1.0)
-///     Wait(Duration.relative(0.25))  // Wait for 25% of the parent duration
+///     Wait(.relative(0.25))  // Wait for 25% of the parent duration
 ///     To(0.0)
 /// }
 /// ```

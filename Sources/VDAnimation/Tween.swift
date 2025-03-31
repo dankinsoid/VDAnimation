@@ -4,13 +4,17 @@ import Foundation
 ///
 /// Tween encapsulates start and end values of a type that conforms to `Tweenable`,
 /// providing a convenient way to perform interpolation between those values.
-public struct Tween<Bound: Tweenable>: Tweenable {
+public struct Tween<Bound: Tweenable>: Tweenable, CustomStringConvertible {
 
     /// The starting value of the tween (when t=0)
     public var start: Bound
     
     /// The ending value of the tween (when t=1)
     public var end: Bound
+    
+    public var description: String {
+        "(\(start) -> \(end))"
+    }
 
     /// Creates a new tween between two values
     /// - Parameters:

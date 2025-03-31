@@ -308,15 +308,7 @@ extension Color: Tweenable {
     ///   - t: Interpolation factor (typically between 0 and 1)
     /// - Returns: Interpolated Color
     public static func lerp(_ lhs: Color, _ rhs: Color, _ t: Double) -> Color {
-        // Convert SwiftUI Color to UIColor, interpolate, then convert back
-        let lhsUIColor = UIColor(lhs)
-        let rhsUIColor = UIColor(rhs)
-        
-        // Use the UIColor lerp implementation
-        let interpolatedUIColor = UIColor.lerp(lhsUIColor, rhsUIColor, t)
-        
-        // Convert back to SwiftUI Color
-        return Color(interpolatedUIColor)
+        return colorLerp(lhs, rhs, t)
     }
 }
 
@@ -406,6 +398,13 @@ extension CATransform3D: Tweenable {
     }
 }
 
+extension CGColor: Tweenable {
+
+    public static func lerp(_ lhs: CGColor, _ rhs: CGColor, _ t: Double) -> Self {
+        return colorLerp(lhs, rhs, t) as! Self
+    }
+}
+
 #if canImport(AppKit)
 /// NSColor implementation of Tweenable
 extension NSColor: Tweenable {
@@ -417,28 +416,7 @@ extension NSColor: Tweenable {
     ///   - t: Interpolation factor (typically between 0 and 1)
     /// - Returns: Interpolated NSColor
     public static func lerp(_ lhs: NSColor, _ rhs: NSColor, _ t: Double) -> Self {
-        // Convert both colors to the calibrated RGB color space
-        guard let lhsRGB = lhs.usingColorSpace(.sRGB),
-              let rhsRGB = rhs.usingColorSpace(.sRGB) else {
-            return lhs as! Self // Fallback if conversion fails
-        }
-        
-        // Extract components from both colors
-        var lhsR: CGFloat = 0, lhsG: CGFloat = 0, lhsB: CGFloat = 0, lhsA: CGFloat = 0
-        var rhsR: CGFloat = 0, rhsG: CGFloat = 0, rhsB: CGFloat = 0, rhsA: CGFloat = 0
-        
-        lhsRGB.getRed(&lhsR, green: &lhsG, blue: &lhsB, alpha: &lhsA)
-        rhsRGB.getRed(&rhsR, green: &rhsG, blue: &rhsB, alpha: &rhsA)
-        
-        // Linearly interpolate each component
-        let t = CGFloat(max(0, min(1, t))) // Clamp t between 0 and 1
-        let r = lhsR + (rhsR - lhsR) * t
-        let g = lhsG + (rhsG - lhsG) * t
-        let b = lhsB + (rhsB - lhsB) * t
-        let a = lhsA + (rhsA - lhsA) * t
-        
-        // Create and return the interpolated color
-        return NSColor(srgbRed: r, green: g, blue: b, alpha: a) as! Self
+        return colorLerp(lhs, rhs, t)
     }
 }
 
@@ -452,15 +430,7 @@ extension Color: Tweenable {
     ///   - t: Interpolation factor (typically between 0 and 1)
     /// - Returns: Interpolated Color
     public static func lerp(_ lhs: Color, _ rhs: Color, _ t: Double) -> Color {
-        // Convert SwiftUI Color to NSColor
-        let lhsNSColor = NSColor(lhs)
-        let rhsNSColor = NSColor(rhs)
-        
-        // Use the NSColor lerp implementation
-        let interpolatedNSColor = NSColor.lerp(lhsNSColor, rhsNSColor, t)
-        
-        // Convert back to SwiftUI Color
-        return Color(interpolatedNSColor)
+        return colorLerp(lhs, rhs, t)
     }
 }
 

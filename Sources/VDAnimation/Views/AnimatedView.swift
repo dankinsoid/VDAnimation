@@ -6,14 +6,14 @@ public extension View {
     /// Animates a value change with automatic tweening for types conforming to `Equatable` and `Tweenable`.
     /// - Parameters:
     ///   - value: The value to animate
-    ///   - duration: Animation duration in seconds (default: 0.25)
-    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
+    ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that takes the view and current animated value
     /// - Returns: A view with animation applied
     func animated<Value: Equatable & Tweenable, Content: View>(
         _ value: Value,
-        duration: TimeInterval = 0.25,
-        curve: Curve = .easeInOut,
+        duration: TimeInterval? = nil,
+        curve: Curve? = nil,
         @ViewBuilder _ content: @escaping (AnyView) -> (Value) -> Content
     ) -> some View {
         animated(value, duration: duration, curve: curve, lerp: Value.lerp) { content($0)($1) }
@@ -22,14 +22,14 @@ public extension View {
     /// Animates a value change with automatic tweening for types conforming to `Equatable` and `Tweenable`.
     /// - Parameters:
     ///   - value: The value to animate
-    ///   - duration: Animation duration in seconds (default: 0.25)
-    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
+    ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that takes the view and current animated value
     /// - Returns: A view with animation applied
     func animated<Value: Equatable & Tweenable, Content: View>(
         _ value: Value,
-        duration: TimeInterval = 0.25,
-        curve: Curve = .easeInOut,
+        duration: TimeInterval? = nil,
+        curve: Curve? = nil,
         @ViewBuilder _ content: @escaping (AnyView, Value) -> Content
     ) -> some View {
         animated(value, duration: duration, curve: curve, lerp: Value.lerp, content)
@@ -38,15 +38,15 @@ public extension View {
     /// Animates a value change for types conforming to `Equatable` and `Codable`.
     /// - Parameters:
     ///   - value: The value to animate
-    ///   - duration: Animation duration in seconds (default: 0.25)
-    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
+    ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that takes the view and current animated value
     /// - Returns: A view with animation applied
     @_disfavoredOverload
     func animated<Value: Equatable & Codable, Content: View>(
         _ value: Value,
-        duration: TimeInterval = 0.25,
-        curve: Curve = .easeInOut,
+        duration: TimeInterval? = nil,
+        curve: Curve? = nil,
         @ViewBuilder _ content: @escaping (AnyView, Value) -> Content
     ) -> some View {
         animated(value, duration: duration, curve: curve, lerp: Value.lerp, content)
@@ -55,15 +55,15 @@ public extension View {
     /// Animates a value change with a custom linear interpolation function.
     /// - Parameters:
     ///   - value: The value to animate
-    ///   - duration: Animation duration in seconds (default: 0.25)
-    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
+    ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - lerp: Custom interpolation function for the value
     ///   - content: A closure that takes the view and current animated value
     /// - Returns: A view with animation applied
     func animated<Value: Equatable, Content: View>(
         _ value: Value,
-        duration: TimeInterval = 0.25,
-        curve: Curve = .easeInOut,
+        duration: TimeInterval? = nil,
+        curve: Curve? = nil,
         lerp: @escaping (Value, Value, Double) -> Value,
         @ViewBuilder _ content: @escaping (AnyView, Value) -> Content
     ) -> some View {
@@ -76,22 +76,23 @@ public extension View {
     /// - Parameters:
     ///   - controller: The animation controller to manage animation state
     ///   - lerp: Function to compute the interpolated value from the progress
-    ///   - duration: Animation duration in seconds (default: 0.25)
-    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
+    ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that takes the view and current animated value
     /// - Returns: A view with animation applied
     func animated<Value, Content: View>(
         _ controller: AnimationController,
         lerp: @escaping (Double) -> Value,
-        duration: TimeInterval = 0.25,
-        curve: Curve = .easeInOut,
+        duration: TimeInterval? = nil,
+        curve: Curve? = nil,
         @ViewBuilder content: @escaping (AnyView, Value) -> Content
     ) -> some View {
         modifier(
             AnimatedModifier(
                 controller: controller,
                 duration: { duration },
-                lerp: { lerp(curve($0)) },
+                lerp: lerp,
+                curve: curve,
                 result: content
             )
         )
@@ -101,15 +102,15 @@ public extension View {
     /// - Parameters:
     ///   - controller: The animation controller to manage animation state
     ///   - tween: The tween object that defines how values are interpolated
-    ///   - duration: Animation duration in seconds (default: 0.25)
-    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
+    ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that takes the view and current animated value
     /// - Returns: A view with animation applied
     func animated<Value, Content: View>(
         _ controller: AnimationController,
         tween: Tween<Value>,
-        duration: TimeInterval = 0.25,
-        curve: Curve = .easeInOut,
+        duration: TimeInterval? = nil,
+        curve: Curve? = nil,
         @ViewBuilder content: @escaping (AnyView, Value) -> Content
     ) -> some View {
         animated(
@@ -140,20 +141,21 @@ extension Animated  {
     /// - Parameters:
     ///   - controller: The animation controller to manage animation state
     ///   - tween: The tween object that defines how values are interpolated
-    ///   - duration: Animation duration in seconds (default: 0.25)
-    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
+    ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that produces content from the animated value
     public init<Result: View>(
         _ controller: AnimationController,
         tween: Tween<Value>,
-        duration: TimeInterval = 0.25,
-        curve: Curve = .easeInOut,
+        duration: TimeInterval? = nil,
+        curve: Curve? = nil,
         @ViewBuilder content: @escaping (Value) -> Result
     ) where Value: Tweenable, Modifier == AnimatedModifier<Value, Result> {
         modifier = AnimatedModifier(
             controller: controller,
             duration: { duration },
-            lerp: tween.lerp
+            lerp: tween.lerp,
+            curve: curve
         ) { _, value in content(value) }
     }
 
@@ -161,20 +163,21 @@ extension Animated  {
     /// - Parameters:
     ///   - controller: The animation controller to manage animation state
     ///   - lerp: Function to compute the interpolated value from the progress
-    ///   - duration: Animation duration in seconds (default: 0.25)
-    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
+    ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that produces content from the animated value
     public init<Result: View>(
         _ controller: AnimationController,
         lerp: @escaping (Double) -> Value,
-        duration: TimeInterval = 0.25,
-        curve: Curve = .easeInOut,
+        duration: TimeInterval? = nil,
+        curve: Curve? = nil,
         @ViewBuilder content: @escaping (Value) -> Result
     ) where Modifier == AnimatedModifier<Value, Result>  {
         modifier = AnimatedModifier(
             controller: controller,
             duration: { duration },
-            lerp: lerp
+            lerp: lerp,
+            curve: curve
         ) { _, value in content(value) }
     }
 }
@@ -184,13 +187,13 @@ extension Animated  {
     /// Creates an animated view for a changing value with automatic tweening.
     /// - Parameters:
     ///   - value: The value to animate
-    ///   - duration: Animation duration in seconds (default: 0.25)
-    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
+    ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that produces content from the animated value
     public init<Result: View>(
         _ value: Value,
-        duration: TimeInterval = 0.25,
-        curve: Curve = .easeInOut,
+        duration: TimeInterval? = nil,
+        curve: Curve? = nil,
         @ViewBuilder content: @escaping (Value) -> Result
     ) where Value: Equatable, Value: Tweenable, Modifier == AnimatedTweenModifier<Value, Result> {
         modifier = AnimatedTweenModifier(
@@ -205,14 +208,14 @@ extension Animated  {
     /// - Parameters:
     ///   - value: The value to animate
     ///   - lerp: Custom interpolation function for the value
-    ///   - duration: Animation duration in seconds (default: 0.25)
-    ///   - curve: Animation curve to use (default: .easeInOut)
+    ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
+    ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that produces content from the animated value
     public init<Result: View>(
         _ value: Value,
         lerp: @escaping (Value, Value, Double) -> Value,
-        duration: TimeInterval = 0.25,
-        curve: Curve = .easeInOut,
+        duration: TimeInterval? = nil,
+        curve: Curve? = nil,
         @ViewBuilder content: @escaping (Value) -> Result
     ) where Value: Equatable, Modifier == AnimatedTweenModifier<Value, Result> {
         modifier = AnimatedTweenModifier(
@@ -226,7 +229,7 @@ extension Animated  {
 
 
 /// Controller that manages animation state and exposes methods to control animations
-public final class AnimationController: ObservableObject {
+public final class AnimationController: ObservableObject, AnimationDriver {
 
     /// The target progress value the animation is moving toward
     @Published
@@ -238,11 +241,30 @@ public final class AnimationController: ObservableObject {
         }
     }
     fileprivate var repeatForever = false
+
     /// The current progress of the animation (between 0.0 and 1.0)
-    fileprivate(set) public var currentProgress = 0.0
+    public var progress: Double {
+        get { currentProgress }
+        set { set(progress: newValue) }
+    }
+
+    fileprivate var currentProgress = 0.0
+    private var completions: [() -> Void] = []
+
     /// Indicates whether an animation is currently in progress
-    fileprivate(set) public var isAnimating = false
-    var duration: () -> TimeInterval = { 0.25 }
+    public var isAnimating: Bool {
+        get { _isAnimating }
+        set {
+            if newValue {
+                play()
+            } else {
+                pause()
+            }
+        }
+    }
+
+    fileprivate var _isAnimating = false
+    var duration: () -> TimeInterval = { .defaultAnimationDuration }
     var onBreak: (Double) -> Void = { _ in }
     
     /// Initializes a new animation controller
@@ -256,8 +278,12 @@ public final class AnimationController: ObservableObject {
     public func play(
         from: Double? = nil,
         to progress: Double? = nil,
-        repeat repeatForever: Bool = false
+        repeat repeatForever: Bool = false,
+        completion: (() -> Void)? = nil
     ) {
+        if let completion {
+            completions.append(completion)
+        }
         self.repeatForever = repeatForever
         state = AnimationControllerState(
             tween: Tween(from ?? currentProgress, progress ?? state.tween.end),
@@ -282,13 +308,13 @@ public final class AnimationController: ObservableObject {
     public func toggle() {
         state = AnimationControllerState(
             tween: Tween(currentProgress, state.tween.end),
-            needAnimate: !isAnimating
+            needAnimate: !_isAnimating
         )
     }
 
     /// Sets the animation directly to a specific progress value without animating
     /// - Parameter progress: The progress value to set (between 0.0 and 1.0)
-    public func set(progress: Double) {
+    private func set(progress: Double) {
         state = AnimationControllerState(
             tween: Tween(progress, progress),
             needAnimate: false
@@ -297,7 +323,10 @@ public final class AnimationController: ObservableObject {
 
     /// Pauses the animation at the current progress
     public func pause() {
-        stop(at: currentProgress)
+        state = AnimationControllerState(
+            tween: Tween(currentProgress, state.tween.end),
+            needAnimate: false
+        )
     }
 
     /// Stops the animation and resets to a specific progress value
@@ -307,11 +336,12 @@ public final class AnimationController: ObservableObject {
             tween: Tween(progress, state.tween.end),
             needAnimate: false
         )
+        notifyCompletions()
     }
 
     private func updateState() {
-        if isAnimating {
-            isAnimating = false
+        if _isAnimating {
+            _isAnimating = false
             withAnimation(.easeOut(duration: 0.0)) {
                 targetProgress = state.tween.start
             }
@@ -328,10 +358,15 @@ public final class AnimationController: ObservableObject {
         if repeatForever {
             animation = animation.repeatForever(autoreverses: false)
         }
-        isAnimating = true
+        _isAnimating = true
         withAnimation(animation) {
             targetProgress = state.tween.end
         }
+    }
+    
+    fileprivate func notifyCompletions() {
+        completions.forEach { $0() }
+        completions = []
     }
 }
 
@@ -347,8 +382,8 @@ public struct AnimatedTweenModifier<Value: Equatable, Result: View>: ViewModifie
     @State private var props: Props
     let value: Value
     let lerp: (Value, Value, Double) -> Value
-    let duration: TimeInterval
-    let curve: Curve
+    let duration: TimeInterval?
+    let curve: Curve?
     let content: (AnyView, Value) -> Result
 
     @State
@@ -357,8 +392,8 @@ public struct AnimatedTweenModifier<Value: Equatable, Result: View>: ViewModifie
     init(
         _ value: Value,
         lerp: @escaping (Value, Value, Double) -> Value,
-        duration: TimeInterval,
-        curve: Curve,
+        duration: TimeInterval?,
+        curve: Curve?,
         @ViewBuilder content: @escaping (AnyView, Value) -> Result
     ) {
         self.value = value
@@ -371,18 +406,19 @@ public struct AnimatedTweenModifier<Value: Equatable, Result: View>: ViewModifie
 
     /// Modifies the view content by applying animation
     public func body(content: Content) -> some View {
-        content
+        return content
             .modifier(
                 AnimatedModifier(
                     controller: controller,
                     duration: { duration },
-                    lerp: { lerp(props.start, props.end, curve($0)) },
+                    lerp: { lerp(props.start, props.end, $0) },
+                    curve: curve,
                     result: self.content,
-                    observer: { isAnimating, progress, value in }
+                    observer: { _isAnimating, progress, value in }
                 )
             )
             .onChange(of: value) { newValue in
-                if controller.isAnimating {
+                if controller._isAnimating {
                     controller.pause()
                 }
                 props.start = lerp(props.start, props.end, controller.currentProgress)
@@ -412,31 +448,38 @@ public struct AnimatedModifier<Value, Result: View>: ViewModifier {
 
     @ObservedObject
     var controller: AnimationController
-    let duration: () -> Double
+    @Environment(\.animationDuration)
+    private var defaultDuration
+    let duration: () -> Double?
     let lerp: (Double) -> Value
+    let curve: Curve?
     let result: (AnyView, Value) -> Result
     var observer: (Bool, Double, Value) -> Void = { _, _, _ in }
+    @Environment(\.curve)
+    private var defaultCurve
 
     /// Modifies the view content by applying animation
     public func body(content: Content) -> some View {
-        controller.duration = duration
+        let defaultDuration = self.defaultDuration
+        let curve = self.curve ?? defaultCurve
+        controller.duration = { duration() ?? defaultDuration }
         controller.onBreak = { observer(false, $0, lerp($0)) }
         return content
             .modifier(
                 AnimationModifier(
                     animatableData: controller.targetProgress,
-                    lerp: lerp,
+                    lerp: { lerp(curve($0)) },
                     result: result
                 ) { progress, value in
-                    let isAnimating = controller.isAnimating
+                    let wasAnimating = controller._isAnimating
                     controller.currentProgress = progress
-                    if isAnimating, progress == controller.state.tween.end, !controller.repeatForever {
-                        controller.isAnimating = false
-                    }
-                    if isAnimating {
-                        observer(isAnimating, progress, value)
-                        if !controller.isAnimating {
-                            observer(false, progress, value)
+                    guard wasAnimating else { return }
+                    observer(true, progress, value)
+                    if progress == controller.state.tween.end, !controller.repeatForever {
+                        controller._isAnimating = false
+                        observer(false, progress, value)
+                        DispatchQueue.main.async {
+                            controller.notifyCompletions()
                         }
                     }
                 }

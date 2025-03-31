@@ -140,11 +140,10 @@ public extension Curve {
         Curve { t in
             let b = damping
             let v = velocity
-            let t2 = t * t
-            return 1.0 - (exp(-t * v) * (cos(t2 * v) + (b / v) * sin(t2 * v)))
+            return 1.0 - (exp(-b * t) * cos(sqrt(1.0 - b * b) * v * t + atan(b / sqrt(1.0 - b * b))))
         }
     }
-    
+
     /// Returns a new curve that is the reverse of this curve.
     ///
     /// - Returns: A curve that progresses in the opposite direction.
