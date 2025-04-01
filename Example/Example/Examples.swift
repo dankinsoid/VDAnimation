@@ -1,36 +1,35 @@
 import SwiftUI
+import VDAnimation
 
 struct LoaderAnimation: View {
 
     @MotionState private var state = Tween(0.0, 0.01)
     private let arcSize = 0.4
-    
+
     var body: some View {
-        VStack {
-            WithMotion(_state) { value in
-                Circle()
-                    .trim(from: value.start, to: value.end)
-                    .stroke(
-                        Color.white,
-                        style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                    )
-                    .frame(width: 50, height: 50)
-                    .rotationEffect(-.degrees(90), anchor: .center)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.green)
-            } motion: {
-                Sequential {
-                    Parallel()
-                        .end(arcSize) // animate .end property of the state
-                        .curve(.easeIn)
-                    To(Tween(1 - arcSize, 1.0)) // animate the whole state
-                        .duration(.relative((1 - arcSize) / (1 + arcSize)))
-                    Parallel()
-                        .start(1.0 - 0.01) // animate .start property of the state
-                        .curve(.easeOut)
-                }
-                .duration(1)
+        WithMotion(_state) { value in
+            Circle()
+                .trim(from: value.start, to: value.end)
+                .stroke(
+                    Color.white,
+                    style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                )
+                .frame(width: 50, height: 50)
+                .rotationEffect(-.degrees(90), anchor: .center)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.green)
+        } motion: {
+            Sequential {
+                Parallel()
+                    .end(arcSize) // animate .end property of the state
+                    .curve(.cubicEaseIn)
+                To(Tween(1 - arcSize, 1.0)) // animate the whole state
+                    .duration(.relative((1 - arcSize) / (1 + arcSize))) // compute duration to
+                Parallel()
+                    .start(1.0 - 0.01) // animate .start property of the state
+                    .curve(.cubicEaseOut)
             }
+            .duration(1)
         }
         .onAppear {
             $state.play(repeat: true)
@@ -41,31 +40,28 @@ struct LoaderAnimation: View {
 struct DotsAnimation: View {
 
     @MotionState private var values: [CGFloat] = [0, 0, 0]
-    
+
     var body: some View {
-        VStack {
-            WithMotion(_values) { values in
-                HStack(spacing: 12) {
-                    ForEach(values, id: \.self) { value in
-                        Circle()
-                            .fill(.white)
-                            .frame(width: 12, height: 12)
-                            .offset(y: value)
-                        
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.blue)
-            } motion: {
-                Parallel { index in
-                    To(-10)
-                        .duration(0.3)
-                        .curve(.easeInOut)
-                        .autoreverse()
-                        .delay(.relative(Double(index) * 0.2))
+        WithMotion(_values) { values in
+            HStack(spacing: 12) {
+                ForEach(values, id: \.self) { value in
+                    Circle()
+                        .fill(.white)
+                        .frame(width: 12, height: 12)
+                        .offset(y: value)
                 }
             }
+        } motion: {
+            Parallel { index in
+                To(-10)
+                    .duration(0.3)
+                    .curve(.easeInOut)
+                    .autoreverse()
+                    .delay(.relative(Double(index) * 0.2))
+            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.blue)
         .onAppear {
             $values.play(repeat: true)
         }
@@ -149,7 +145,6 @@ final class UIKitExampleView: UIView {
     }
 }
 
-@available(iOS 15.0, *)
 enum Previews: PreviewProvider {
 
     static var previews: some View {

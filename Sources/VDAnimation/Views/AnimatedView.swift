@@ -127,11 +127,13 @@ public extension View {
 public struct Animated<Value, Modifier: ViewModifier>: View {
 
     let modifier: Modifier
-    
+
     /// The content of the `Animated` view
     public var body: some View {
-        EmptyView()
-            .modifier(modifier)
+        VStack {
+            EmptyView()
+                .modifier(modifier)
+        }
     }
 }
 

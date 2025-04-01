@@ -3,3 +3,4 @@
 .swiftpm
 .aider*
 .env
+.DS_Store

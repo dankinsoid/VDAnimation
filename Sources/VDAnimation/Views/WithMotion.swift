@@ -5,22 +5,20 @@ public extension View {
     ///
     /// - Parameters:
     ///   - state: The motion state to animate.
-    ///   - repeatForever: Whether the animation should repeat indefinitely.
     ///   - content: A closure that takes the view and current value to create the animated content.
     ///   - motion: A closure that returns the motion to apply.
     /// - Returns: A view with the motion animation applied.
     func withMotion<Value, Content: View>(
         _ state: MotionState<Value>,
-        repeat repeatForever: Bool = false,
         @ViewBuilder content: @escaping (AnyView, Value) -> Content,
         @MotionBuilder<Value> motion: () -> AnyMotion<Value>
     ) -> some View {
-        WithMotionModifier(
-            state: state,
-            child: self,
-            motion: motion(),
-            content: content,
-            repeatForever: repeatForever
+        modifier(
+            WithMotionModifier(
+                state: state,
+                motion: motion(),
+                content: content
+            )
         )
     }
 }
@@ -29,35 +27,35 @@ public extension View {
 public struct WithMotion<Value, Content: View>: View {
     let state: MotionState<Value>
     let content: (Value) -> Content
-    let repeatForever: Bool
     let motion: () -> AnyMotion<Value>
 
     /// Creates a new motion animated view.
     ///
     /// - Parameters:
     ///   - state: The motion state to animate.
-    ///   - repeatForever: Whether the animation should repeat indefinitely.
     ///   - content: A closure that takes the current value to create the animated content.
     ///   - motion: A closure that returns the motion to apply.
     public init(
         _ state: MotionState<Value>,
-        repeat repeatForever: Bool = false,
         @ViewBuilder content: @escaping (Value) -> Content,
         @MotionBuilder<Value> motion: @escaping () -> AnyMotion<Value>
     ) {
         self.state = state
         self.content = content
         self.motion = motion
-        self.repeatForever = repeatForever
     }
 
     public var body: some View {
-        EmptyView()
-            .withMotion(state, repeat: repeatForever) { _, value in
-                content(value)
-            } motion: {
-                motion()
-            }
+        VStack {
+            EmptyView()
+                .modifier(
+                    WithMotionModifier(
+                        state: state,
+                        motion: motion(),
+                        content: { _, value in content(value) }
+                    )
+                )
+        }
     }
 }
 
@@ -114,52 +112,49 @@ public extension MotionState where Value == Double {
 /// A view modifier that implements the motion animation.
 ///
 /// This is an internal implementation struct used by the `withMotion` view modifier.
-struct WithMotionModifier<Value, Child: View, Content: View>: View {
+struct WithMotionModifier<Value, Result: View>: ViewModifier {
     let state: MotionState<Value>
-    let child: Child
     let motion: AnyMotion<Value>
-    let content: (AnyView, Value) -> Content
-    let repeatForever: Bool
+    let content: (AnyView, Value) -> Result
     @State private var wrapper = Wrapper()
     @Environment(\.animationDuration)
     private var defaultDuration
 
-    var body: some View {
+    func body(content: Content) -> some View {
         let value = state.wrappedValue
-        return child
-            .modifier(
-                AnimatedModifier(
-                    controller: state.controller,
-                    duration: { [motion, wrapper, defaultDuration] in
-                        let info = motion.prepare(value, nil)
-                        let duration = info.duration?.seconds ?? defaultDuration
-                        wrapper.info = info
-                        return duration
-                    },
-                    lerp: { [wrapper] t in wrapper.info?.lerp(state.wrappedValue, t) ?? value },
-                    curve: .linear,
-                    result: content
-                ) { [wrapper] isAnimating, progress, value in
-                    if isAnimating {
-                        let last = wrapper.lastProgress
-                        if last != progress {
-                            wrapper.lastProgress = progress
-                            if let effects = wrapper.info?.sideEffects {
-                                DispatchQueue.main.async {
-                                    let last = last ?? progress
-                                    let range = min(last, progress) ... max(last, progress)
-                                    let active = effects(range)
-                                    for effect in active {
-                                        effect(value)
-                                    }
+        return content.modifier(
+            AnimatedModifier(
+                controller: state.controller,
+                duration: { [motion, wrapper, defaultDuration] in
+                    let info = motion.prepare(value, nil)
+                    let duration = info.duration?.seconds ?? defaultDuration
+                    wrapper.info = info
+                    return duration
+                },
+                lerp: { [wrapper] t in wrapper.info?.lerp(state.wrappedValue, t) ?? value },
+                curve: .linear,
+                result: self.content
+            ) { [wrapper] isAnimating, progress, value in
+                if isAnimating {
+                    let last = wrapper.lastProgress
+                    if last != progress {
+                        wrapper.lastProgress = progress
+                        if let effects = wrapper.info?.sideEffects {
+                            DispatchQueue.main.async {
+                                let last = last ?? progress
+                                let range = min(last, progress) ... max(last, progress)
+                                let active = effects(range)
+                                for effect in active {
+                                    effect(value)
                                 }
                             }
                         }
-                    } else {
-                        wrapper.lastProgress = nil
                     }
+                } else {
+                    wrapper.lastProgress = nil
                 }
-            )
+            }
+        )
     }
 
     /// A wrapper class to store animation data between view updates.
