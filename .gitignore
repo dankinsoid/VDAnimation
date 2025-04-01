@@ -4,3 +4,4 @@
 .aider*
 .env
 .DS_Store
+*.xcuserstate

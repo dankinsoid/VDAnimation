@@ -38,11 +38,13 @@ struct LoaderAnimation: View {
                 .background(Color.green)
         } motion: {
             Sequential {
-                Parallel()
+                Parallel() // Parallel allows to animate properties of the state independently
                     .end(arcSize) // animate .end property of the state
                     .curve(.cubicEaseIn)
+
                 To(Tween(1 - arcSize, 1.0)) // animate the whole state
-                    .duration(.relative((1 - arcSize) / (1 + arcSize))) // compute duration to
+                    .duration(.relative((1 - arcSize) / (1 + arcSize))) // compute duration to make speed of the animation constant
+
                 Parallel()
                     .start(1.0 - 0.01) // animate .start property of the state
                     .curve(.cubicEaseOut)
@@ -74,7 +76,7 @@ struct DotsAnimation: View {
                 }
             }
         } motion: {
-            Parallel { index in
+            Parallel { index in // Parallel allows to animate values of collections independently
                 To(-10)
                     .duration(0.3)
                     .curve(.easeInOut)
