@@ -143,6 +143,10 @@ motionDisplayLink(Value()) { [label] value in
 .play()
 ```
 
+## Usage
+
+### [Motion Guide](MOTION_GUIDE.md)
+
 ## Installation
 
 ### Swift Package Manager
