@@ -154,8 +154,6 @@ From(startValue) {
 
 The `Wait` motion pauses the animation for a specified duration or all available time.
 
-#### Syntax
-
 ```swift
 Wait(1.0)
 
@@ -282,6 +280,8 @@ motion.duration(1.0)  // In seconds
 motion.duration(.absolute(1.0))  // Absolute time
 motion.duration(.relative(0.5))  // Relative to parent motion
 ```
+
+**Note**: Duration doesn't guarantee the exact duration of the animation, because the animation may prefer it's own duration. For example, `Instant` motion will always be 0 duration.
 
 ### Delay
 
