@@ -300,7 +300,10 @@ motion.curve(.spring(damping: 0.7, velocity: 0.3))
 
 ## Animation Curves
 
-VDAnimation provides a rich set of animation curves:
+In VDAnimation, curve is a function that takes a progress value and returns a new progress value.
+So you can implement literally any curve you want.
+
+VDAnimation provides a rich set of built-in animation curves:
 
 ### Basic Curves
 
