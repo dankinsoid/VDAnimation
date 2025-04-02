@@ -69,7 +69,9 @@ public struct MotionState<Value>: DynamicProperty {
     public var wrappedValue: Value
 
     @State
-    fileprivate var controller = AnimationController()
+    fileprivate var controller: AnimationController
+    @ObservedObject
+    fileprivate var animating: Animating
 
     /// The animation controller associated with this state.
     public var projectedValue: AnimationController {
@@ -87,18 +89,19 @@ public struct MotionState<Value>: DynamicProperty {
     /// - Parameter wrappedValue: The initial value of the state.
     public init(wrappedValue: Value) {
         self.wrappedValue = wrappedValue
-        _progress = .constant(0)
-        _isAnimating = .constant(false)
-        _progress = Binding { [controller] in
+        let controller = AnimationController()
+        _controller = State(wrappedValue: controller)
+        _progress = Binding {
             controller.progress
-        } set: { [controller] newValue in
+        } set: { newValue in
             controller.progress = newValue
         }
-        _isAnimating = Binding { [controller] in
+        _isAnimating = Binding {
             controller.isAnimating
-        } set: { [controller] newValue in
+        } set: { newValue in
             controller.isAnimating = newValue
         }
+        _animating = ObservedObject(wrappedValue: controller.animating)
     }
 }
 
@@ -121,17 +124,15 @@ struct WithMotionModifier<Value, Result: View>: ViewModifier {
     private var defaultDuration
 
     func body(content: Content) -> some View {
-        let value = state.wrappedValue
-        return content.modifier(
+        content.modifier(
             AnimatedModifier(
                 controller: state.controller,
                 duration: { [motion, wrapper, defaultDuration] in
-                    let info = motion.prepare(value, nil)
+                    let info = info()
                     let duration = info.duration?.seconds ?? defaultDuration
-                    wrapper.info = info
                     return duration
                 },
-                lerp: { [wrapper] t in wrapper.info?.lerp(state.wrappedValue, t) ?? value },
+                lerp: { [wrapper] t in info().lerp(state.wrappedValue, t) },
                 curve: .linear,
                 result: self.content
             ) { [wrapper] isAnimating, progress, value in
@@ -157,6 +158,15 @@ struct WithMotionModifier<Value, Result: View>: ViewModifier {
         )
     }
 
+    private func info() -> MotionData<Value> {
+        if let info = wrapper.info {
+            return info
+        }
+        let info = motion.prepare(state.wrappedValue, nil)
+        wrapper.info = info
+        return info
+    }
+    
     /// A wrapper class to store animation data between view updates.
     private final class Wrapper {
         var info: MotionData<Value>?

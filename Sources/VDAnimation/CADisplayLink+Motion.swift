@@ -2,8 +2,17 @@ import UIKit
 
 public final class MotionDisplayLink<Value>: AnimationDriver {
 
-    public var initialValue: Value
-    public let motion: AnyMotion<Value>
+    public var initialValue: Value {
+        didSet {
+            info = nil
+        }
+    }
+
+    public var motion: AnyMotion<Value> {
+        didSet {
+            info = nil
+        }
+    }
 
     /// The current progress of the animation (between 0.0 and 1.0)
     public var progress: Double {

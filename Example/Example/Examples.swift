@@ -76,20 +76,23 @@ struct InteractiveAnimation: View {
     var body: some View {
         VStack {
             WithMotion(_animation) { progress in
-                Circle()
-                  .fill(Color(hue: progress / 5, saturation: 1, brightness: 1))
-                  .frame(width: 100, height: 100)
-                  .scaleEffect(Tween(0.001, 2).lerp(progress))
-                  .rotationEffect(.degrees(progress * 360))
+                Rectangle()
+                    .fill(Tween(Color.red, Color.blue).lerp(progress))
+                    .rotationEffect(Tween(Angle.zero, .degrees(360)).lerp(progress), anchor: .center)
+                    .offset(x: Tween(-120.0, 120).lerp(progress))
+                    .frame(width: 100, height: 100)
             } motion: {
-                To(1.0).duration(2.0).curve(.spring())
+                To(1.0).duration(2.0)
             }
 
             Slider(value: _animation.$progress, in: 0...1)
 
             HStack {
-                Button("Play") { $animation.play(from: 0) }
-                Button("Pause") { $animation.pause() }
+                if $animation.isAnimating {
+                    Button("Pause") { $animation.pause() }
+                } else {
+                    Button("Play") { $animation.play() }
+                }
                 Button("Reverse") { $animation.reverse() }
             }
         }

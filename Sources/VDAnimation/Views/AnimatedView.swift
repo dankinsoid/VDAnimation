@@ -236,13 +236,13 @@ public final class AnimationController: ObservableObject, AnimationDriver {
     /// The target progress value the animation is moving toward
     @Published
     fileprivate(set) public var targetProgress = 0.0
-    @Published
     fileprivate var state = AnimationControllerState() {
         didSet {
             updateState()
         }
     }
     fileprivate var repeatForever = false
+    fileprivate var isFirst = true
 
     /// The current progress of the animation (between 0.0 and 1.0)
     public var progress: Double {
@@ -255,7 +255,7 @@ public final class AnimationController: ObservableObject, AnimationDriver {
 
     /// Indicates whether an animation is currently in progress
     public var isAnimating: Bool {
-        get { _isAnimating }
+        get { animating.isAnimating }
         set {
             if newValue {
                 play()
@@ -265,7 +265,7 @@ public final class AnimationController: ObservableObject, AnimationDriver {
         }
     }
 
-    fileprivate var _isAnimating = false
+    let animating = Animating()
     var duration: () -> TimeInterval = { .defaultAnimationDuration }
     var onBreak: (Double) -> Void = { _ in }
     
@@ -310,7 +310,7 @@ public final class AnimationController: ObservableObject, AnimationDriver {
     public func toggle() {
         state = AnimationControllerState(
             tween: Tween(currentProgress, state.tween.end),
-            needAnimate: !_isAnimating
+            needAnimate: !isAnimating
         )
     }
 
@@ -318,7 +318,7 @@ public final class AnimationController: ObservableObject, AnimationDriver {
     /// - Parameter progress: The progress value to set (between 0.0 and 1.0)
     private func set(progress: Double) {
         state = AnimationControllerState(
-            tween: Tween(progress, progress),
+            tween: Tween(progress, state.tween.end),
             needAnimate: false
         )
     }
@@ -342,8 +342,9 @@ public final class AnimationController: ObservableObject, AnimationDriver {
     }
 
     private func updateState() {
-        if _isAnimating {
-            _isAnimating = false
+        let wasAnimating = isAnimating
+        if isAnimating {
+            animating.isAnimating = false
             withAnimation(.easeOut(duration: 0.0)) {
                 targetProgress = state.tween.start
             }
@@ -351,7 +352,9 @@ public final class AnimationController: ObservableObject, AnimationDriver {
             targetProgress = state.tween.start
         }
         guard state.needAnimate else {
-            onBreak(currentProgress)
+            if wasAnimating {
+                onBreak(currentProgress)
+            }
             return
         }
         var animation: Animation = .linear(
@@ -360,7 +363,8 @@ public final class AnimationController: ObservableObject, AnimationDriver {
         if repeatForever {
             animation = animation.repeatForever(autoreverses: false)
         }
-        _isAnimating = true
+        animating.isAnimating = true
+        isFirst = false
         withAnimation(animation) {
             targetProgress = state.tween.end
         }
@@ -370,6 +374,11 @@ public final class AnimationController: ObservableObject, AnimationDriver {
         completions.forEach { $0() }
         completions = []
     }
+}
+
+final class Animating: ObservableObject {
+
+    @Published var isAnimating = false
 }
 
 private struct AnimationControllerState: Equatable {
@@ -420,7 +429,7 @@ public struct AnimatedTweenModifier<Value: Equatable, Result: View>: ViewModifie
                 )
             )
             .onChange(of: value) { newValue in
-                if controller._isAnimating {
+                if controller.isAnimating {
                     controller.pause()
                 }
                 props.start = lerp(props.start, props.end, controller.currentProgress)
@@ -473,12 +482,12 @@ public struct AnimatedModifier<Value, Result: View>: ViewModifier {
                     lerp: { lerp(curve($0)) },
                     result: result
                 ) { progress, value in
-                    let wasAnimating = controller._isAnimating
+                    let wasAnimating = controller.isAnimating
                     controller.currentProgress = progress
                     guard wasAnimating else { return }
                     observer(true, progress, value)
                     if progress == controller.state.tween.end, !controller.repeatForever {
-                        controller._isAnimating = false
+                        controller.animating.isAnimating = false
                         observer(false, progress, value)
                         DispatchQueue.main.async {
                             controller.notifyCompletions()
