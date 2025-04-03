@@ -106,7 +106,7 @@ public extension View {
     ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that takes the view and current animated value
     /// - Returns: A view with animation applied
-    func animated<Value, Content: View>(
+    func animated<Value: Tweenable, Content: View>(
         _ controller: AnimationController,
         tween: Tween<Value>,
         duration: TimeInterval? = nil,
@@ -124,7 +124,7 @@ public extension View {
 }
 
 /// A view that renders animated content with various animation configurations
-public struct Animated<Value, Modifier: ViewModifier>: View {
+public struct Animated<Modifier: ViewModifier>: View {
 
     let modifier: Modifier
 
@@ -146,7 +146,7 @@ extension Animated  {
     ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
     ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that produces content from the animated value
-    public init<Result: View>(
+    public init<Value, Result: View>(
         _ controller: AnimationController,
         tween: Tween<Value>,
         duration: TimeInterval? = nil,
@@ -168,7 +168,7 @@ extension Animated  {
     ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
     ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that produces content from the animated value
-    public init<Result: View>(
+    public init<Value, Result: View>(
         _ controller: AnimationController,
         lerp: @escaping (Double) -> Value,
         duration: TimeInterval? = nil,
@@ -182,6 +182,26 @@ extension Animated  {
             curve: curve
         ) { _, value in content(value) }
     }
+
+    /// Creates an animated view using an animation controlle.
+    /// - Parameters:
+    ///   - controller: The animation controller to manage animation state
+    ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
+    ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
+    ///   - content: A closure that produces content from the animated value
+    public init<Result: View>(
+        _ controller: AnimationController,
+        duration: TimeInterval? = nil,
+        curve: Curve? = nil,
+        @ViewBuilder content: @escaping (Double) -> Result
+    ) where Modifier == AnimatedModifier<Double, Result> {
+        modifier = AnimatedModifier(
+            controller: controller,
+            duration: { duration },
+            lerp: { $0 },
+            curve: curve
+        ) { _, value in content(value) }
+    }
 }
 
 extension Animated  {
@@ -192,7 +212,7 @@ extension Animated  {
     ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
     ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that produces content from the animated value
-    public init<Result: View>(
+    public init<Value, Result: View>(
         _ value: Value,
         duration: TimeInterval? = nil,
         curve: Curve? = nil,
@@ -213,7 +233,7 @@ extension Animated  {
     ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
     ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that produces content from the animated value
-    public init<Result: View>(
+    public init<Value, Result: View>(
         _ value: Value,
         lerp: @escaping (Value, Value, Double) -> Value,
         duration: TimeInterval? = nil,

@@ -223,14 +223,33 @@ extension EdgeInsets: Tweenable {
 }
 
 extension Angle: Tweenable {
+
+    /// Linearly interpolates between two Angle values
+    /// - Example:
+    ///   - lhs = 10°, rhs = 20°, t = 0.5
+    ///   - Result: 15°
+    ///   - lhs = 10°, rhs = 300°, t = 0.5
+    ///   - Result: 155°
     public static func lerp(_ lhs: Angle, _ rhs: Angle, _ t: Double) -> Angle {
         .radians(.lerp(lhs.radians, rhs.radians, t))
     }
 
+    /// Linearly interpolates between two Angle values, using the shortest path
+    /// - Example:
+    ///   - lhs = 10°, rhs = 20°, t = 0.5
+    ///   - Result: 15°
+    ///   - lhs = 10°, rhs = 300°, t = 0.5
+    ///   - Result: 335°
     public static func shortestLerp(_ lhs: Angle, _ rhs: Angle, _ t: Double) -> Angle {
         .degrees(cycleLerp(lhs.degrees, rhs.degrees, t))
     }
 
+    /// Linearly interpolates between two Angle values, using the longest path
+    /// - Example:
+    ///   - lhs = 10°, rhs = 20°, t = 0.5
+    ///   - Result: 195°
+    ///   - lhs = 10°, rhs = 300°, t = 0.5
+    ///   - Result: 155°
     public static func longestLerp(_ lhs: Angle, _ rhs: Angle, _ t: Double) -> Angle {
         .degrees(longestCycleLerp(lhs.degrees, rhs.degrees, t))
     }
@@ -277,21 +296,7 @@ extension Date: Tweenable {
         ///   - t: Interpolation factor (typically between 0 and 1)
         /// - Returns: Interpolated UIColor
         public static func lerp(_ lhs: UIColor, _ rhs: UIColor, _ t: Double) -> Self {
-            // Get components from both colors in same color space (RGB)
-            var lhsR: CGFloat = 0, lhsG: CGFloat = 0, lhsB: CGFloat = 0, lhsA: CGFloat = 0
-            var rhsR: CGFloat = 0, rhsG: CGFloat = 0, rhsB: CGFloat = 0, rhsA: CGFloat = 0
-
-            lhs.getRed(&lhsR, green: &lhsG, blue: &lhsB, alpha: &lhsA)
-            rhs.getRed(&rhsR, green: &rhsG, blue: &rhsB, alpha: &rhsA)
-
-            // Linearly interpolate each component
-            let t = CGFloat(max(0, min(1, t))) // Clamp t between 0 and 1
-            let r = lhsR + (rhsR - lhsR) * t
-            let g = lhsG + (rhsG - lhsG) * t
-            let b = lhsB + (rhsB - lhsB) * t
-            let a = lhsA + (rhsA - lhsA) * t
-
-            return Self(red: r, green: g, blue: b, alpha: a)
+            return colorLerp(lhs, rhs, t) as! Self
         }
     }
 
@@ -409,7 +414,7 @@ extension CGColor: Tweenable {
         ///   - t: Interpolation factor (typically between 0 and 1)
         /// - Returns: Interpolated NSColor
         public static func lerp(_ lhs: NSColor, _ rhs: NSColor, _ t: Double) -> Self {
-            return colorLerp(lhs, rhs, t)
+            return colorLerp(lhs, rhs, t) as! Self
         }
     }
 

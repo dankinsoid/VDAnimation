@@ -46,15 +46,21 @@ public struct WithMotion<Value, Content: View>: View {
     }
 
     public var body: some View {
-        VStack {
-            EmptyView()
-                .modifier(
-                    WithMotionModifier(
-                        state: state,
-                        motion: motion(),
-                        content: { _, value in content(value) }
-                    )
+        _VariadicView.Tree(Wrapper(base: self)) {}
+    }
+
+    private struct Wrapper: _VariadicView.UnaryViewRoot {
+
+        let base: WithMotion
+
+        func body(children: _VariadicView.Children) -> some View {
+            Group{}.modifier(
+                WithMotionModifier(
+                    state: base.state,
+                    motion: base.motion(),
+                    content: { _, value in base.content(value) }
                 )
+            )
         }
     }
 }
@@ -78,10 +84,10 @@ public struct MotionState<Value>: DynamicProperty {
         controller
     }
 
-    @Binding
+    @BindingRef
     public var progress: Double
 
-    @Binding
+    @BindingRef
     public var isAnimating: Bool
 
     /// Creates a new motion state with an initial value.
@@ -91,17 +97,38 @@ public struct MotionState<Value>: DynamicProperty {
         self.wrappedValue = wrappedValue
         let controller = AnimationController()
         _controller = State(wrappedValue: controller)
-        _progress = Binding {
+        _progress = BindingRef {
             controller.progress
-        } set: { newValue in
+        } setter: { newValue in
             controller.progress = newValue
         }
-        _isAnimating = Binding {
+        _isAnimating = BindingRef {
             controller.isAnimating
-        } set: { newValue in
+        } setter: { newValue in
             controller.isAnimating = newValue
         }
         _animating = ObservedObject(wrappedValue: controller.animating)
+    }
+}
+
+// This type is needed bacause Binding caches values that leads to unpredictable behaviuor so Binding itself should be a computed property
+@propertyWrapper
+public struct BindingRef<Value> {
+    
+    let getter: () -> Value
+    let setter: (Value) -> Void
+    
+    public var wrappedValue: Value {
+        get { getter() }
+        nonmutating set { setter(newValue) }
+    }
+    
+    public var projectedValue: Binding<Value> {
+        Binding {
+            wrappedValue
+        } set: {
+            wrappedValue = $0
+        }
     }
 }
 

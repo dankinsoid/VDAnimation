@@ -1,6 +1,7 @@
 import SwiftUI
 
 enum ColorIterpolationType: CaseIterable, Hashable {
+
     public static var `default` = ColorIterpolationType.linearRGB
 
     case sRGB

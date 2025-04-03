@@ -23,8 +23,10 @@ struct LoaderAnimation: View {
                 Parallel()
                     .end(arcSize) // animate .end property of the state
                     .curve(.cubicEaseIn)
+    
                 To(Tween(1 - arcSize, 1.0)) // animate the whole state
                     .duration(.relative((1 - arcSize) / (1 + arcSize))) // compute duration to
+    
                 Parallel()
                     .start(1.0 - 0.01) // animate .start property of the state
                     .curve(.cubicEaseOut)
@@ -70,30 +72,49 @@ struct DotsAnimation: View {
 
 struct InteractiveAnimation: View {
 
-    @MotionState private var animation = 0.0
+    @MotionState private var animation = Props()
     @State private var color: Color = .blue
     
+    @Tweenable
+    struct Props {
+        var color: Color = .red
+        var angle: Angle = .zero
+        var offset: CGFloat = -120
+    }
+    
     var body: some View {
-        VStack {
-            WithMotion(_animation) { progress in
+        VStack(spacing: 30) {
+            WithMotion(_animation) { props in
                 Rectangle()
-                    .fill(Tween(Color.red, Color.blue).lerp(progress))
-                    .rotationEffect(Tween(Angle.zero, .degrees(360)).lerp(progress), anchor: .center)
-                    .offset(x: Tween(-120.0, 120).lerp(progress))
+                    .fill(props.color)
+                    .rotationEffect(props.angle, anchor: .center)
+                    .offset(x: props.offset)
                     .frame(width: 100, height: 100)
+                Slider(value: _animation.$progress, in: 0...1)
+                    .padding(.horizontal)
             } motion: {
-                To(1.0).duration(2.0)
+                To(
+                    Props(
+                        color: .blue,
+                        angle: .degrees(360),
+                        offset: 120
+                    )
+                )
+                .duration(2.0)
             }
-
-            Slider(value: _animation.$progress, in: 0...1)
 
             HStack {
                 if $animation.isAnimating {
                     Button("Pause") { $animation.pause() }
                 } else {
-                    Button("Play") { $animation.play() }
+                    Button("Play") {
+                        if $animation.progress == 1.0 || $animation.progress == 0.0 {
+                            $animation.reverse()
+                        } else {
+                            $animation.play()
+                        }
+                    }
                 }
-                Button("Reverse") { $animation.reverse() }
             }
         }
     }

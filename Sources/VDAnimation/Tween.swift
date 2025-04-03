@@ -1,17 +1,17 @@
-import Foundation
+import SwiftUI
 
 /// A struct representing an interpolation between two values of the same type
 ///
 /// Tween encapsulates start and end values of a type that conforms to `Tweenable`,
 /// providing a convenient way to perform interpolation between those values.
-public struct Tween<Bound: Tweenable>: Tweenable, CustomStringConvertible {
+public struct Tween<Bound>: CustomStringConvertible {
 
     /// The starting value of the tween (when t=0)
     public var start: Bound
-    
+
     /// The ending value of the tween (when t=1)
     public var end: Bound
-    
+
     public var description: String {
         "(\(start) -> \(end))"
     }
@@ -24,6 +24,13 @@ public struct Tween<Bound: Tweenable>: Tweenable, CustomStringConvertible {
         self.start = start
         self.end = end
     }
+
+    public func map<T>(_ transform: (Bound) -> T) -> Tween<T> {
+        Tween<T>(transform(start), transform(end))
+    }
+}
+
+extension Tween: Tweenable where Bound: Tweenable {
 
     /// Interpolates between the start and end values
     /// - Parameter t: The interpolation factor (typically between 0 and 1)
@@ -40,6 +47,56 @@ public struct Tween<Bound: Tweenable>: Tweenable, CustomStringConvertible {
     /// - Returns: A new tween with interpolated start and end values
     public static func lerp(_ lhs: Tween<Bound>, _ rhs: Tween<Bound>, _ t: Double) -> Tween<Bound> {
         Tween(.lerp(lhs.start, rhs.start, t), .lerp(lhs.end, rhs.end, t))
+    }
+}
+
+extension Tween: RangeExpression where Bound: Comparable {
+
+    public var range: Range<Bound> {
+        min(start, end)..<max(start, end)
+    }
+
+    public var closedRange: ClosedRange<Bound> {
+        min(start, end)...max(start, end)
+    }
+
+    public func relative<C>(to collection: C) -> Range<Bound> where C : Collection, Bound == C.Index {
+        closedRange.relative(to: collection)
+    }
+
+    public func contains(_ element: Bound) -> Bool {
+        closedRange.contains(element)
+    }
+}
+
+extension Tween: AdditiveArithmetic where Bound: AdditiveArithmetic {
+
+    public static var zero: Tween<Bound> {
+        Tween(.zero, .zero)
+    }
+
+    public var difference: Bound {
+        end - start
+    }
+
+    public static func +(_ lhs: Tween, _ rhs: Tween) -> Tween {
+        Tween(lhs.start + rhs.start, lhs.end + rhs.end)
+    }
+
+    public static func -(lhs: Tween<Bound>, rhs: Tween<Bound>) -> Tween<Bound> {
+        Tween(lhs.start - rhs.start, lhs.end - rhs.end)
+    }
+}
+
+extension Tween: VectorArithmetic where Bound: VectorArithmetic {
+
+    public mutating func scale(by rhs: Double) {
+        start.scale(by: rhs)
+        end.scale(by: rhs)
+    }
+
+    public var magnitudeSquared: Double {
+        AnimatablePair(start, end).magnitudeSquared
     }
 }
 
