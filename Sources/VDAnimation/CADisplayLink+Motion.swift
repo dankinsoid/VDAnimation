@@ -322,9 +322,7 @@ extension CADisplayLinkSource {
         _ apply: @escaping (Value) -> Void,
         @MotionBuilder<Value> motion: () -> AnyMotion<Value>
     ) -> MotionDisplayLink<Value> {
-        let link = MotionDisplayLink(for: self, initialValue, apply, motion: motion)
-        links[ObjectIdentifier(link)] = link
-        return link
+       MotionDisplayLink(for: self, initialValue, apply, motion: motion)
     }
 }
 #endif
