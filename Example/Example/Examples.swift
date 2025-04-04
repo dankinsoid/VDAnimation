@@ -133,9 +133,9 @@ struct UIKitExample: UIViewRepresentable {
 final class UIKitExampleView: UIView {
 
     let label = UILabel()
-    
+
+    @Tweenable
     struct Value {
-        
         var amount: Int = 0
         var color: UIColor = .systemRed
     }
@@ -157,9 +157,7 @@ final class UIKitExampleView: UIView {
             label.text = "\(value.amount) USD"
             label.textColor = value.color
         } motion: {
-            Parallel()
-                .amount(1000)
-                .color(.systemGreen)
+            To(Value(amount: 1000, color: .systemGreen))
                 .delay(.relative(0.2))
                 .duration(2)
         }

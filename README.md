@@ -154,9 +154,7 @@ motionDisplayLink(Value()) { [label] value in
     label.text = "\(value.amount) USD"
     label.textColor = value.color
 } motion: {
-    Parallel()
-        .amount(1000)
-        .color(.systemGreen)
+    To(Value(amount: 1000, color: .systemGreen))
         .delay(.relative(0.2))
         .duration(2)
 }

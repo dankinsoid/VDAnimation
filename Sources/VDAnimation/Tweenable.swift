@@ -4,6 +4,8 @@ import SwiftUI
 ///
 /// Conforming types must implement a `lerp` method that performs linear interpolation
 /// between two values using a factor `t` (between 0.0 and 1.0).
+///
+/// - Tip: Use `@Tweenable` macro to autoimplement `Tweenable`
 public protocol Tweenable {
     /// Linearly interpolates between two values of the same type
     /// - Parameters:
@@ -38,6 +40,7 @@ public extension Tweenable where Self: BinaryInteger {
 
 /// Default Tweenable implementation for vector arithmetic types
 public extension Tweenable where Self: VectorArithmetic {
+
     /// Linearly interpolates between two vector values
     /// - Parameters:
     ///   - lhs: Starting value when t=0
@@ -45,9 +48,7 @@ public extension Tweenable where Self: VectorArithmetic {
     ///   - t: Interpolation factor (typically between 0 and 1)
     /// - Returns: An interpolated vector
     static func lerp(_ lhs: Self, _ rhs: Self, _ t: Double) -> Self {
-        var result = rhs - lhs
-        result.scale(by: t)
-        return result + lhs
+        lhs.interpolated(towards: rhs, amount: t)
     }
 }
 
@@ -399,8 +400,48 @@ extension CATransform3D: Tweenable {
 }
 
 extension CGColor: Tweenable {
+
     public static func lerp(_ lhs: CGColor, _ rhs: CGColor, _ t: Double) -> Self {
         return colorLerp(lhs, rhs, t) as! Self
+    }
+}
+
+extension PartialRangeFrom: Tweenable where Bound: Tweenable {
+
+    public static func lerp(_ lhs: PartialRangeFrom<Bound>, _ rhs: PartialRangeFrom<Bound>, _ t: Double) -> PartialRangeFrom<Bound> {
+        Bound.lerp(lhs.lowerBound, rhs.lowerBound, t)...
+    }
+}
+
+extension PartialRangeThrough: Tweenable where Bound: Tweenable {
+
+    public static func lerp(_ lhs: PartialRangeThrough<Bound>, _ rhs: PartialRangeThrough<Bound>, _ t: Double) -> PartialRangeThrough<Bound> {
+        ...Bound.lerp(lhs.upperBound, rhs.upperBound, t)
+    }
+}
+
+extension PartialRangeUpTo: Tweenable where Bound: Tweenable {
+
+    public static func lerp(_ lhs: PartialRangeUpTo<Bound>, _ rhs: PartialRangeUpTo<Bound>, _ t: Double) -> PartialRangeUpTo<Bound> {
+        ..<Bound.lerp(lhs.upperBound, rhs.upperBound, t)
+    }
+}
+
+extension Range: Tweenable where Bound: Tweenable {
+
+    public static func lerp(_ lhs: Range<Bound>, _ rhs: Range<Bound>, _ t: Double) -> Range<Bound> {
+        let l = Bound.lerp(lhs.lowerBound, rhs.lowerBound, t)
+        let r = Bound.lerp(lhs.upperBound, rhs.upperBound, t)
+        return Swift.min(l, r)..<Swift.max(l, r)
+    }
+}
+
+extension ClosedRange: Tweenable where Bound: Tweenable {
+
+    public static func lerp(_ lhs: ClosedRange<Bound>, _ rhs: ClosedRange<Bound>, _ t: Double) -> ClosedRange<Bound> {
+        let l = Bound.lerp(lhs.lowerBound, rhs.lowerBound, t)
+        let r = Bound.lerp(lhs.upperBound, rhs.upperBound, t)
+        return Swift.min(l, r)...Swift.max(l, r)
     }
 }
 

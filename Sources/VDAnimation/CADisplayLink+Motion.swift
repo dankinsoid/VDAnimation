@@ -1,4 +1,4 @@
-import UIKit
+import SwiftUI
 
 public final class MotionDisplayLink<Value>: AnimationDriver {
 
@@ -204,8 +204,31 @@ public final class MotionDisplayLink<Value>: AnimationDriver {
     }
 }
 
+extension MotionDisplayLink where Value == Double {
+
+    public convenience init(
+        _ apply: @escaping (Value) -> Void
+    ) {
+        self.init(0, apply) {
+            Lerp {
+                $0.interpolated(towards: 1, amount: $1)
+            }
+        }
+    }
+}
+
 extension UIView {
-    
+
+    public func motionDisplayLink(
+        _ apply: @escaping (Double) -> Void
+    ) -> MotionDisplayLink<Double> {
+        motionDisplayLink(0, apply) {
+            Lerp {
+                $0.interpolated(towards: 1, amount: $1)
+            }
+        }
+    }
+
     public func motionDisplayLink<Value>(
         _ initialValue: Value,
         _ apply: @escaping (Value) -> Void,
@@ -215,15 +238,15 @@ extension UIView {
         links[ObjectIdentifier(link)] = link
         return link
     }
-    
+
     public func removeMotion<Value>(_ motion: MotionDisplayLink<Value>) {
         links.removeValue(forKey: ObjectIdentifier(motion))
     }
-    
+
     public func removeAllMotions() {
         links.removeAll()
     }
-    
+
     private var links: [ObjectIdentifier: Any] {
         get {
             (objc_getAssociatedObject(self, &motionsKey) as? [ObjectIdentifier: Any]) ?? [:]

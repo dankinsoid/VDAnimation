@@ -1,9 +1,6 @@
 import SwiftUI
 
-/// A struct representing an interpolation between two values of the same type
-///
-/// Tween encapsulates start and end values of a type that conforms to `Tweenable`,
-/// providing a convenient way to perform interpolation between those values.
+/// A struct representing a bidirectional range.
 public struct Tween<Bound>: CustomStringConvertible {
 
     /// The starting value of the tween (when t=0)
@@ -23,6 +20,10 @@ public struct Tween<Bound>: CustomStringConvertible {
     public init(_ start: Bound, _ end: Bound) {
         self.start = start
         self.end = end
+    }
+
+    public var reversed: Tween {
+        Tween(end, start)
     }
 
     public func map<T>(_ transform: (Bound) -> T) -> Tween<T> {
@@ -51,6 +52,14 @@ extension Tween: Tweenable where Bound: Tweenable {
 }
 
 extension Tween: RangeExpression where Bound: Comparable {
+
+    public init(_ range: Range<Bound>) {
+        self.init(range.lowerBound, range.upperBound)
+    }
+
+    public init(_ range: ClosedRange<Bound>) {
+        self.init(range.lowerBound, range.upperBound)
+    }
 
     public var range: Range<Bound> {
         min(start, end)..<max(start, end)

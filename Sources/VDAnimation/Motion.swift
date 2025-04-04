@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 /// Protocol defining a motion animation for a specific value type
 ///
@@ -732,7 +732,42 @@ extension To where Value: Tweenable {
     }
 }
 
+extension To where Value: Tweenable & VectorArithmetic {
+
+    /// Creates a "to" motion using the default lerp function
+    /// - Parameter values: The target values to animate toward
+    public init(_ values: [Value]) {
+        self.init(values, lerp: Value.lerp)
+    }
+
+    /// Creates a "to" motion using the default lerp function and variadic values
+    /// - Parameter values: The target values to animate toward
+    public init(_ value: Value, _ rest: Value...) {
+        self.init([value] + rest, lerp: Value.lerp)
+    }
+}
+
+extension To where Value: VectorArithmetic {
+
+    /// Creates a "to" motion using the default lerp function
+    /// - Parameter values: The target values to animate toward
+    public init(_ values: [Value]) {
+        self.init(values) {
+            $0.interpolated(towards: $1, amount: $2)
+        }
+    }
+
+    /// Creates a "to" motion using the default lerp function and variadic values
+    /// - Parameter values: The target values to animate toward
+    public init(_ value: Value, _ rest: Value...) {
+        self.init([value] + rest) {
+            $0.interpolated(towards: $1, amount: $2)
+        }
+    }
+}
+
 extension To where Value: Codable {
+
     /// Creates a "to" motion for Codable values
     /// - Parameter values: The target values to animate toward
     @_disfavoredOverload
@@ -748,11 +783,31 @@ extension To where Value: Codable {
     }
 }
 
-public struct TransforTo<Value>: Motion {
-    
+public struct Lerp<Value>: Motion {
+
+    public let lerp: (Value, Double) -> Value
+
+    public init(lerp: @escaping (Value, Double) -> Value) {
+        self.lerp = lerp
+    }
+
+    public init(lerp: @escaping (Double) -> Value) {
+        self.init { _, t in lerp(t) }
+    }
+
+    /// Converts to a type-erased motion
+    public var anyMotion: AnyMotion<Value> {
+        AnyMotion { _, dur in
+            MotionData(duration: dur, lerp: lerp)
+        }
+    }
+}
+
+public struct TransformTo<Value>: Motion {
+
     /// The target values to animate toward
     public let transform: (Value) -> Value
-    
+
     /// The interpolation function to use
     public let lerp: (Value, Value, Double) -> Value
 
@@ -779,7 +834,7 @@ public struct TransforTo<Value>: Motion {
     }
 }
 
-extension TransforTo where Value: Tweenable {
+extension TransformTo where Value: Tweenable {
 
     /// Creates a "to" motion using the default lerp function
     /// - Parameter values: The target values to animate toward
@@ -788,7 +843,28 @@ extension TransforTo where Value: Tweenable {
     }
 }
 
-extension TransforTo where Value: Codable {
+extension TransformTo where Value: VectorArithmetic {
+
+    /// Creates a "to" motion using the default lerp function
+    /// - Parameter values: The target values to animate toward
+    public init(_ transform: @escaping (Value) -> Value) {
+        self.init(transform) {
+            $0.interpolated(towards: $1, amount: $2)
+        }
+    }
+}
+
+extension TransformTo where Value: Tweenable & VectorArithmetic {
+
+    /// Creates a "to" motion using the default lerp function
+    /// - Parameter values: The target values to animate toward
+    public init(_ transform: @escaping (Value) -> Value) {
+        self.init(transform, lerp: Value.lerp)
+    }
+}
+
+extension TransformTo where Value: Codable {
+
     /// Creates a "to" motion for Codable values
     /// - Parameter values: The target values to animate toward
     @_disfavoredOverload
@@ -1287,6 +1363,15 @@ extension Motion {
                 lerp(value, curve(t))
             }
             return result
+        }
+    }
+}
+
+extension Tween: Motion where Bound: Tweenable {
+
+    public var anyMotion: AnyMotion<Bound> {
+        AnyMotion { _, duration in
+            MotionData(duration: duration, lerp: { _, t in lerp(t) })
         }
     }
 }

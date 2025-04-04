@@ -1,6 +1,7 @@
 import SwiftUI
 
 public extension View {
+
     /// Applies motion animation to a view with a given state.
     ///
     /// - Parameters:
@@ -17,6 +18,25 @@ public extension View {
             WithMotionModifier(
                 state: state,
                 motion: motion(),
+                content: content
+            )
+        )
+    }
+
+    /// Applies motion animation to a view with a given state.
+    ///
+    /// - Parameters:
+    ///   - state: The motion state to animate.
+    ///   - content: A closure that takes the view and current value to create the animated content.
+    /// - Returns: A view with the motion animation applied.
+    func withMotion<Content: View>(
+        _ state: MotionState<Double>,
+        @ViewBuilder content: @escaping (AnyView, Double) -> Content
+    ) -> some View {
+        modifier(
+            WithMotionModifier(
+                state: state,
+                motion: Lerp { $0.interpolated(towards: 1, amount: $1) }.anyMotion,
                 content: content
             )
         )
@@ -61,6 +81,25 @@ public struct WithMotion<Value, Content: View>: View {
                     content: { _, value in base.content(value) }
                 )
             )
+        }
+    }
+}
+
+extension WithMotion where Value == Double {
+
+    /// Creates a new motion animated view.
+    ///
+    /// - Parameters:
+    ///   - state: The motion state to animate.
+    ///   - content: A closure that takes the current value to create the animated content.
+    public init(
+        _ state: MotionState<Value>,
+        @ViewBuilder content: @escaping (Value) -> Content
+    ) {
+        self.init(state, content: content) {
+            Lerp {
+                $0.interpolated(towards: 1, amount: $1)
+            }
         }
     }
 }
@@ -132,10 +171,10 @@ public struct BindingRef<Value> {
     }
 }
 
-public extension MotionState where Value == Double {
+public extension MotionState where Value: AdditiveArithmetic {
     /// Creates a new motion state with an initial value of 0.0.
     init() {
-        self.init(wrappedValue: 0.0)
+        self.init(wrappedValue: .zero)
     }
 }
 
