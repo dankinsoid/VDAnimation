@@ -193,12 +193,12 @@ struct WithMotionModifier<Value, Result: View>: ViewModifier {
         content.modifier(
             AnimatedModifier(
                 controller: state.controller,
-                duration: { [motion, wrapper, defaultDuration] in
+                duration: { [defaultDuration] in
                     let info = info()
                     let duration = info.duration?.seconds ?? defaultDuration
                     return duration
                 },
-                lerp: { [wrapper] t in info().lerp(state.wrappedValue, t) },
+                lerp: { t in info().lerp(state.wrappedValue, t) },
                 curve: .linear,
                 result: self.content
             ) { [wrapper] isAnimating, progress, value in

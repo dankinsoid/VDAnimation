@@ -1,5 +1,7 @@
 import SwiftUI
 
+@available(iOS 14.0, macOS 14.0, tvOS 14.0, watchOS 6.0, *)
+@MainActor
 public final class MotionDisplayLink<Value>: AnimationDriver {
 
     public var initialValue: Value {
@@ -43,13 +45,31 @@ public final class MotionDisplayLink<Value>: AnimationDriver {
     private var repeatForever = false
 
     private lazy var weakSelf = WeakTarget(self)
-    private lazy var link = createLink()
+    private lazy var link = deinitLink.link
+    private lazy var deinitLink = Deiniter(createLink())
     private var isStopped = true
     private var lastRenderTimestamp: CFTimeInterval = 0
     private var animationStartTime: CFTimeInterval = 0
     private var progressTween = Tween(0.0, 1.0)
     private var completions: [() -> Void] = []
+    #if canImport(AppKit)
+    private weak var source: CADisplayLinkSource?
+    #endif
 
+    #if canImport(AppKit)
+    public init(
+        for source: CADisplayLinkSource,
+        _ initialValue: Value,
+        _ apply: @escaping (Value) -> Void,
+        @MotionBuilder<Value> motion: () -> AnyMotion<Value>
+    ) {
+        self.apply = apply
+        self.initialValue = initialValue
+        self.motion = motion()
+        self.source = source
+        source.links[ObjectIdentifier(self)] = self
+    }
+    #else
     public init(
         _ initialValue: Value,
         _ apply: @escaping (Value) -> Void,
@@ -59,6 +79,7 @@ public final class MotionDisplayLink<Value>: AnimationDriver {
         self.initialValue = initialValue
         self.motion = motion()
     }
+    #endif
 
     /// Plays the animation from a specified progress value to another
     /// - Parameters:
@@ -177,7 +198,13 @@ public final class MotionDisplayLink<Value>: AnimationDriver {
     }
 
     private func createLink() -> CADisplayLink {
-        CADisplayLink(target: weakSelf, selector: #selector(WeakTarget.tick))
+        #if canImport(UIKit)
+        let link = CADisplayLink(target: weakSelf, selector: #selector(WeakTarget.tick))
+        link.preferredFramesPerSecond = 60
+        return link
+        #elseif canImport(AppKit)
+        return source?.displayLink(target: weakSelf, selector: #selector(WeakTarget.tick)) ?? CADisplayLink()
+        #endif
     }
 
     private func notifyCompletions() {
@@ -185,11 +212,7 @@ public final class MotionDisplayLink<Value>: AnimationDriver {
         completions.removeAll()
     }
 
-    deinit {
-        link.isPaused = true
-        link.invalidate()
-    }
-
+    @MainActor
     private final class WeakTarget: NSObject {
 
         weak var link: MotionDisplayLink?
@@ -204,6 +227,23 @@ public final class MotionDisplayLink<Value>: AnimationDriver {
     }
 }
 
+@available(iOS 14.0, macOS 14.0, tvOS 14.0, watchOS 6.0, *)
+private final class Deiniter {
+
+    let link: CADisplayLink
+
+    init(_ link: CADisplayLink) {
+        self.link = link
+    }
+
+    deinit {
+        link.isPaused = true
+        link.invalidate()
+    }
+}
+
+#if canImport(UIKit)
+@available(iOS 14.0, macOS 14.0, tvOS 14.0, watchOS 6.0, *)
 extension MotionDisplayLink where Value == Double {
 
     public convenience init(
@@ -217,8 +257,11 @@ extension MotionDisplayLink where Value == Double {
     }
 }
 
-extension UIView {
+@available(iOS 14.0, macOS 14.0, tvOS 14.0, watchOS 6.0, *)
+@MainActor
+extension NSObject {
 
+    @available(iOS 14.0, macOS 14.0, tvOS 14.0, watchOS 6.0, *)
     public func motionDisplayLink(
         _ apply: @escaping (Double) -> Void
     ) -> MotionDisplayLink<Double> {
@@ -229,6 +272,7 @@ extension UIView {
         }
     }
 
+    @available(iOS 14.0, macOS 14.0, tvOS 14.0, watchOS 6.0, *)
     public func motionDisplayLink<Value>(
         _ initialValue: Value,
         _ apply: @escaping (Value) -> Void,
@@ -238,16 +282,67 @@ extension UIView {
         links[ObjectIdentifier(link)] = link
         return link
     }
+}
+#endif
 
+#if canImport(AppKit)
+@available(iOS 14.0, macOS 14.0, tvOS 14.0, watchOS 6.0, *)
+extension MotionDisplayLink where Value == Double {
+
+    public convenience init(
+        for source: CADisplayLinkSource,
+        _ apply: @escaping (Value) -> Void
+    ) {
+        self.init(for: source, 0, apply) {
+            Lerp {
+                $0.interpolated(towards: 1, amount: $1)
+            }
+        }
+    }
+}
+
+@available(iOS 14.0, macOS 14.0, tvOS 14.0, watchOS 6.0, *)
+@MainActor
+extension CADisplayLinkSource {
+
+    @available(iOS 14.0, macOS 14.0, tvOS 14.0, watchOS 6.0, *)
+    public func motionDisplayLink(
+        _ apply: @escaping (Double) -> Void
+    ) -> MotionDisplayLink<Double> {
+        motionDisplayLink(0, apply) {
+            Lerp {
+                $0.interpolated(towards: 1, amount: $1)
+            }
+        }
+    }
+
+    @available(iOS 14.0, macOS 14.0, tvOS 14.0, watchOS 6.0, *)
+    public func motionDisplayLink<Value>(
+        _ initialValue: Value,
+        _ apply: @escaping (Value) -> Void,
+        @MotionBuilder<Value> motion: () -> AnyMotion<Value>
+    ) -> MotionDisplayLink<Value> {
+        let link = MotionDisplayLink(for: self, initialValue, apply, motion: motion)
+        links[ObjectIdentifier(link)] = link
+        return link
+    }
+}
+#endif
+
+@available(iOS 14.0, macOS 14.0, tvOS 14.0, watchOS 6.0, *)
+extension NSObject {
+
+    @available(iOS 14.0, macOS 14.0, tvOS 14.0, watchOS 6.0, *)
     public func removeMotion<Value>(_ motion: MotionDisplayLink<Value>) {
         links.removeValue(forKey: ObjectIdentifier(motion))
     }
 
+    @available(iOS 14.0, macOS 14.0, tvOS 14.0, watchOS 6.0, *)
     public func removeAllMotions() {
         links.removeAll()
     }
 
-    private var links: [ObjectIdentifier: Any] {
+    fileprivate var links: [ObjectIdentifier: Any] {
         get {
             (objc_getAssociatedObject(self, &motionsKey) as? [ObjectIdentifier: Any]) ?? [:]
         }
@@ -259,19 +354,14 @@ extension UIView {
 
 private var motionsKey = 0
 
-func test() {
-    let view = UILabel()
-    let link = view.motionDisplayLink(view.textColor) { color in
-        view.textColor = color
-    } motion: {
-        Sequential {
-            To(.blue, .purple, .red)
-            SideEffect {
-                UISelectionFeedbackGenerator().selectionChanged()
-            }
-        }
-        .autoreverse()
-        .repeat(3)
-    }
-    link.play()
+#if canImport(AppKit)
+@available(macOS 14.0, *)
+public protocol CADisplayLinkSource: NSObject {
+    @MainActor
+    func displayLink(target: Any, selector: Selector) -> CADisplayLink
 }
+
+extension NSView: CADisplayLinkSource {}
+extension NSWindow: CADisplayLinkSource {}
+extension NSScreen: CADisplayLinkSource {}
+#endif

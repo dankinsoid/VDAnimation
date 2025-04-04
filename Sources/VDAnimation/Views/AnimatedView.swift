@@ -251,6 +251,7 @@ extension Animated  {
 
 
 /// Controller that manages animation state and exposes methods to control animations
+@MainActor
 public final class AnimationController: ObservableObject, AnimationDriver {
 
     /// The target progress value the animation is moving toward

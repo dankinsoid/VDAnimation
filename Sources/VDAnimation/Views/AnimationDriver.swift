@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 public protocol AnimationDriver {
     
     var progress: Double { get nonmutating set }

@@ -113,7 +113,7 @@ extension Color: AnyColor {
         }
     }
 
-    extension NSColor {
+    extension NSColor: AnyColor {
         var rgba: WithOpacity<sRGB> {
             var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
             getRed(&r, green: &g, blue: &b, alpha: &a)
