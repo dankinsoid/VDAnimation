@@ -1,7 +1,5 @@
 # VDAnimation
 
-[![CI Status](https://img.shields.io/travis/dankinsoid/VDAnimation.svg?style=flat)](https://travis-ci.org/dankinsoid/VDAnimation)
-
 ## Declarative Animations for SwiftUI
 
 VDAnimation provides a powerful, declarative way to create complex animations in SwiftUI with minimal code. Compose animations sequentially, in parallel, with custom timing and curves.
@@ -17,6 +15,8 @@ VDAnimation provides a powerful, declarative way to create complex animations in
 ## Examples
 
 ### Animating Complex Types
+
+<img src="https://github.com/dankinsoid/Resources/blob/main/VDAnimation/loader.gif?raw=true" width="100">
 
 ```swift
 struct LoaderAnimation: View {
@@ -60,6 +60,8 @@ struct LoaderAnimation: View {
 ```
 
 ### Animating Collections
+
+<img src="https://github.com/dankinsoid/Resources/blob/main/VDAnimation/dots.gif?raw=true" width="100">
 
 ```swift
 struct DotsAnimation: View {
