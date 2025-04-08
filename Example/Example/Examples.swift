@@ -25,13 +25,14 @@ struct LoaderAnimation: View {
                     .curve(.cubicEaseIn)
     
                 To(Tween(1 - arcSize, 1.0)) // animate the whole state
-                    .duration(.relative((1 - arcSize) / (1 + arcSize))) // compute duration to
+                    .duration(.relative((1 - arcSize) / (1 + arcSize))) // compute duration to keep movement speed constant
     
                 Parallel()
                     .start(1.0 - 0.01) // animate .start property of the state
                     .curve(.cubicEaseOut)
             }
             .duration(1)
+            .sync() // synchronize all loaders across the app
         }
         .onAppear {
             $state.play(repeat: true)
@@ -46,11 +47,11 @@ struct DotsAnimation: View {
     var body: some View {
         WithMotion(_values) { values in
             HStack(spacing: 12) {
-                ForEach(values, id: \.self) { value in
+                ForEach(Array(values.enumerated()), id: \.offset) { value in
                     Circle()
                         .fill(.white)
                         .frame(width: 12, height: 12)
-                        .offset(y: value)
+                        .offset(y: value.element)
                 }
             }
         } motion: {
@@ -59,8 +60,9 @@ struct DotsAnimation: View {
                     .duration(0.3)
                     .curve(.easeInOut)
                     .autoreverse()
-                    .delay(.relative(Double(index) * 0.2))
+                    .delay(.relative(Double(index) / Double(values.count * 2 - 1)))
             }
+            .sync() // synchronize all loaders across the app
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.blue)
@@ -73,7 +75,6 @@ struct DotsAnimation: View {
 struct InteractiveAnimation: View {
 
     @MotionState private var animation = Props()
-    @State private var color: Color = .blue
     
     @Tweenable
     struct Props {
@@ -83,15 +84,17 @@ struct InteractiveAnimation: View {
     }
     
     var body: some View {
-        VStack(spacing: 30) {
+        VStack(spacing: 0) {
             WithMotion(_animation) { props in
-                Rectangle()
-                    .fill(props.color)
-                    .rotationEffect(props.angle, anchor: .center)
-                    .offset(x: props.offset)
-                    .frame(width: 100, height: 100)
-                Slider(value: _animation.$progress, in: 0...1)
-                    .padding(.horizontal)
+                VStack(spacing: 10) {
+                    Rectangle()
+                        .fill(props.color)
+                        .rotationEffect(props.angle, anchor: .center)
+                        .offset(x: props.offset)
+                        .frame(width: 100, height: 100)
+                    Slider(value: _animation.$progress, in: 0...1)
+                        .padding(.horizontal)
+                }
             } motion: {
                 To(
                     Props(
@@ -102,21 +105,51 @@ struct InteractiveAnimation: View {
                 )
                 .duration(2.0)
             }
-
-            HStack {
-                if $animation.isAnimating {
-                    Button("Pause") { $animation.pause() }
-                } else {
-                    Button("Play") {
-                        if $animation.progress == 1.0 || $animation.progress == 0.0 {
-                            $animation.reverse()
-                        } else {
-                            $animation.play()
-                        }
+            
+            if $animation.isAnimating {
+                Button("Pause") { $animation.pause() }
+            } else {
+                Button("Play") {
+                    if $animation.progress == 1.0 || $animation.progress == 0.0 {
+                        $animation.reverse()
+                    } else {
+                        $animation.play()
                     }
                 }
             }
         }
+    }
+}
+
+struct ComplexMovement: View {
+
+    @MotionState var location = CGPoint(x: -100, y: 0)
+
+    var body: some View {
+        Circle()
+            .fill(Color.white)
+            .withMotion(_location) {
+                $0.position($1)
+            } motion: {
+                Lerp { t in
+                    CGPoint(
+                        x: cos(Double.lerp(0, .pi * 2, t)) * 100,
+                        y: sin(Double.lerp(0, .pi * 6, t)) * 40
+                    )
+                }
+                .duration(2)
+            }
+            .offset(y: 10)
+            .frame(width: 40, height: 40)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.red)
+            .onTapGesture {
+                if $location.isAnimating {
+                    $location.stop()
+                } else {
+                    $location.play(repeat: true)
+                }
+            }
     }
 }
 
@@ -144,7 +177,7 @@ final class UIKitExampleView: UIView {
         super.didMoveToWindow()
         guard window != nil else { return }
         
-        backgroundColor = .white
+        backgroundColor = .clear
         addSubview(label)
         label.font = .monospacedDigitSystemFont(ofSize: 40, weight: .bold)
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -174,6 +207,8 @@ enum Previews: PreviewProvider {
             .previewDisplayName("Dots loader")
         InteractiveAnimation()
             .previewDisplayName("Interactive")
+        ComplexMovement()
+            .previewDisplayName("Complex movement")
         UIKitExample()
             .previewDisplayName("UIKit")
     }

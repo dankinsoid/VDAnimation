@@ -252,7 +252,7 @@ extension Animated  {
 
 /// Controller that manages animation state and exposes methods to control animations
 @MainActor
-public final class AnimationController: ObservableObject, AnimationDriver {
+public final class AnimationController: ObservableObject, AnimationDriver, Identifiable {
 
     /// The target progress value the animation is moving toward
     @Published
@@ -263,7 +263,6 @@ public final class AnimationController: ObservableObject, AnimationDriver {
         }
     }
     fileprivate var repeatForever = false
-    fileprivate var isFirst = true
 
     /// The current progress of the animation (between 0.0 and 1.0)
     public var progress: Double {
@@ -379,13 +378,12 @@ public final class AnimationController: ObservableObject, AnimationDriver {
             return
         }
         var animation: Animation = .linear(
-            duration: duration() * abs(state.tween.end - state.tween.start)
+            duration: duration() * abs(state.tween.difference)
         )
         if repeatForever {
             animation = animation.repeatForever(autoreverses: false)
         }
         animating.isAnimating = true
-        isFirst = false
         withAnimation(animation) {
             targetProgress = state.tween.end
         }
@@ -438,7 +436,7 @@ public struct AnimatedTweenModifier<Value: Equatable, Result: View>: ViewModifie
 
     /// Modifies the view content by applying animation
     public func body(content: Content) -> some View {
-        return content
+        content
             .modifier(
                 AnimatedModifier(
                     controller: controller,
@@ -496,37 +494,50 @@ public struct AnimatedModifier<Value, Result: View>: ViewModifier {
         let curve = self.curve ?? defaultCurve
         controller.duration = { duration() ?? defaultDuration }
         controller.onBreak = { observer(false, $0, lerp($0)) }
-        return content
-            .modifier(
+        return _VariadicView.Tree(Wrapper(curve: curve, content: content, base: self)) {}
+    }
+
+    private struct Wrapper: _VariadicView.UnaryViewRoot {
+
+        let curve: Curve
+        let content: Content
+        let base: AnimatedModifier
+
+        func body(children: _VariadicView.Children) -> some View {
+            content.modifier(
                 AnimationModifier(
-                    animatableData: controller.targetProgress,
-                    lerp: { lerp(curve($0)) },
-                    result: result
+                    animatableData: base.controller.targetProgress,
+                    lerp: { base.lerp(curve($0)) },
+                    result: base.result
                 ) { progress, value in
-                    let wasAnimating = controller.isAnimating
-                    controller.currentProgress = progress
+                    let wasAnimating = base.controller.isAnimating
+                    base.controller.currentProgress = progress
                     guard wasAnimating else { return }
-                    observer(true, progress, value)
-                    if progress == controller.state.tween.end, !controller.repeatForever {
-                        controller.animating.isAnimating = false
-                        observer(false, progress, value)
-                        DispatchQueue.main.async {
-                            controller.notifyCompletions()
+                    base.observer(true, progress, value)
+                    if progress == base.controller.state.tween.end {
+                        if !base.controller.repeatForever {
+                            DispatchQueue.main.async {
+                                base.controller.animating.isAnimating = false
+                                base.observer(false, progress, value)
+                                base.controller.notifyCompletions()
+                            }
+                        } else {
                         }
                     }
                 }
             )
+        }
     }
 }
 
-struct AnimationModifier<Value, Body: View>: AnimatableModifier {
+struct AnimationModifier<Value, Result: View>: AnimatableModifier {
 
     var animatableData: Double
     let lerp: (Double) -> Value
-    let result: (AnyView, Value) -> Body
+    let result: (AnyView, Value) -> Result
     let observer: (Double, Value) -> Void
 
-    func body(content: Content) -> Body {
+    func body(content: Content) -> Result {
         let currentValue = lerp(animatableData)
         observer(animatableData, currentValue)
         return result(AnyView(content), currentValue)

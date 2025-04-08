@@ -1,62 +1,61 @@
 import SwiftUI
 
-enum ColorIterpolationType: CaseIterable, Hashable {
+public enum ColorInterpolationType: CaseIterable, Hashable {
 
-    public static var `default` = ColorIterpolationType.linearRGB
+    public static var `default` = ColorInterpolationType.okLAB
 
-    case sRGB
-    case linearRGB
-    case oklab
-    case oklch
+    /// Most efficient
+    case displayP3
+
+    /// Most popular; used by SwiftUI under the hood for animations and gradients. A bit inefficient.
+    case okLAB
+
+    /// Most beautiful and most inefficient; inefficiency is close to `okLAB` but slightly worse.
+    ///
+    /// - Note: This is the OKLCH color space, but I apply a hue interpolation correction based on the chroma component to avoid overly saturated intermediate colors when interpolating between saturated and desaturated colors.
+    case okLCH
 }
 
 protocol AnyColor {
-    var rgba: WithOpacity<sRGB> { get }
-    init(rgba: WithOpacity<sRGB>)
+    var rgba: WithOpacity<DisplayP3> { get }
+    init(rgba: WithOpacity<DisplayP3>)
 }
 
-func colorLerp<C: AnyColor & Hashable>(_ lhs: C, _ rhs: C, _ t: Double) -> C {
+func colorLerp<C: AnyColor & Hashable>(_ lhs: C, _ rhs: C, _ t: Double, type: ColorInterpolationType = .default) -> C {
     let l = lhs.rgba
     let r = rhs.rgba
-    switch ColorIterpolationType.default {
-    case .sRGB:
+    switch type {
+    case .displayP3:
         return C(
-            rgba: WithOpacity<sRGB>(
-                sRGB.lerp(l.color, r.color, t),
+            rgba: WithOpacity<DisplayP3>(
+                DisplayP3.lerp(l.color, r.color, t),
                 opacity: .lerp(l.opacity, r.opacity, t)
             )
         )
-    case .linearRGB:
-        return C(
-            rgba: WithOpacity<sRGB>(
-                .fromLinear(.lerp(l.color.linear, r.color.linear, t)),
-                opacity: .lerp(l.opacity, r.opacity, t)
-            )
-        )
-    case .oklch:
+    case .okLCH:
         let lo = oklch(for: l.color)
         let ro = oklch(for: r.color)
         let value = OKLCH.lerp(lo, ro, t)
         return C(
-            rgba: WithOpacity<sRGB>(
-                sRGB(xyz: value.xyz),
+            rgba: WithOpacity<DisplayP3>(
+                DisplayP3(xyz: value.xyz),
                 opacity: .lerp(l.opacity, r.opacity, t)
             )
         )
-    case .oklab:
+    case .okLAB:
         let lo = OKLab(xyz: l.color.xyz)
         let ro = OKLab(xyz: r.color.xyz)
         let value = OKLab.lerp(lo, ro, t)
         return C(
-            rgba: WithOpacity<sRGB>(
-                sRGB(xyz: value.xyz),
+            rgba: WithOpacity<DisplayP3>(
+                DisplayP3(xyz: value.xyz),
                 opacity: .lerp(l.opacity, r.opacity, t)
             )
         )
     }
 }
 
-private func oklch(for rgb: sRGB) -> OKLCH {
+private func oklch(for rgb: DisplayP3) -> OKLCH {
     if Thread.isMainThread, let value = cache[rgb] {
         return value
     }
@@ -70,76 +69,99 @@ private func oklch(for rgb: sRGB) -> OKLCH {
     return result
 }
 
-private var cache: [sRGB: OKLCH] = Dictionary(minimumCapacity: 500)
+private var cache: [DisplayP3: OKLCH] = Dictionary(minimumCapacity: 500)
 
 extension Color: AnyColor {
-    init(rgba: WithOpacity<sRGB>) {
-        self.init(.sRGB, red: rgba.color.r, green: rgba.color.g, blue: rgba.color.b, opacity: rgba.opacity)
+    init(rgba: WithOpacity<DisplayP3>) {
+        self.init(.displayP3, red: rgba.color.r, green: rgba.color.g, blue: rgba.color.b, opacity: rgba.opacity)
     }
 }
 
 #if canImport(UIKit)
-    extension Color {
-        var rgba: WithOpacity<sRGB> {
-            UIColor(self).rgba
-        }
+extension Color {
+    var rgba: WithOpacity<DisplayP3> {
+        UIColor(self).rgba
     }
+}
 
-    extension AnyColor where Self: UIColor {
-        init(rgba: WithOpacity<sRGB>) {
-            self.init(red: rgba.color.r, green: rgba.color.g, blue: rgba.color.b, alpha: rgba.opacity)
-        }
+extension AnyColor where Self: UIColor {
+    init(rgba: WithOpacity<DisplayP3>) {
+        self.init(
+            displayP3Red: clamp(rgba.color.r),
+            green: clamp(rgba.color.g),
+            blue: clamp(rgba.color.b),
+            alpha: clamp(rgba.opacity)
+        )
     }
+}
 
-    extension UIColor: AnyColor {
-        var rgba: WithOpacity<sRGB> {
-            var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-            getRed(&r, green: &g, blue: &b, alpha: &a)
-            return WithOpacity(sRGB(r: r, g: g, b: b), opacity: a)
-        }
+extension UIColor: AnyColor {
+    var rgba: WithOpacity<DisplayP3> {
+        cgColor.rgba
     }
+}
 #endif
 
 #if canImport(AppKit)
-    extension Color {
-        var rgba: WithOpacity<sRGB> {
-            NSColor(self).rgba
-        }
+extension Color {
+    var rgba: WithOpacity<DisplayP3> {
+        NSColor(self).rgba
     }
+}
 
-    extension AnyColor where Self: NSColor {
-        init(rgba: WithOpacity<sRGB>) {
-            self.init(red: rgba.color.r, green: rgba.color.g, blue: rgba.color.b, alpha: rgba.opacity)
-        }
+extension AnyColor where Self: NSColor {
+    init(rgba: WithOpacity<DisplayP3>) {
+        self.init(
+            displayP3Red: clamp(rgba.color.r),
+            green: clamp(rgba.color.g),
+            blue: clamp(rgba.color.b),
+            alpha: clamp(rgba.opacity)
+        )
     }
+}
 
-    extension NSColor: AnyColor {
-        var rgba: WithOpacity<sRGB> {
-            var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-            getRed(&r, green: &g, blue: &b, alpha: &a)
-            return WithOpacity(sRGB(r: r, g: g, b: b), opacity: a)
-        }
+extension NSColor: AnyColor {
+    var rgba: WithOpacity<DisplayP3> {
+        cgColor.rgba
     }
+}
 #endif
 
 extension AnyColor where Self: CGColor {
-    init(rgba: WithOpacity<sRGB>) {
+    init(rgba: WithOpacity<DisplayP3>) {
         self.init(red: rgba.color.r, green: rgba.color.g, blue: rgba.color.b, alpha: rgba.opacity)
     }
 }
 
 extension CGColor: AnyColor {
-    var rgba: WithOpacity<sRGB> {
+    var rgba: WithOpacity<DisplayP3> {
+        if let p3 = CGColorSpace(name: CGColorSpace.displayP3),
+           let rgb = converted(to: p3, intent: .defaultIntent, options: nil)?.components,
+           rgb.count > 2 {
+            return WithOpacity(
+                DisplayP3(
+                    r: Double(rgb[0]),
+                    g: Double(rgb[1]),
+                    b: Double(rgb[2])
+                ),
+                opacity: rgb.count > 3 ? Double(rgb[3]) : 1.0
+            )
+        }
         let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
-        let rgb = converted(to: rgbColorSpace, intent: .defaultIntent, options: nil)
-        return WithOpacity(
-            sRGB(
-                r: Double(rgb?.components?[0] ?? 0),
-                g: Double(rgb?.components?[1] ?? 0),
-                b: Double(rgb?.components?[2] ?? 0)
-            ),
-            opacity: Double(rgb?.components?[3] ?? 1)
-        )
+        if let rgb = converted(to: rgbColorSpace, intent: .defaultIntent, options: nil)?.components,
+           rgb.count > 2 {
+            return WithOpacity(
+                DisplayP3(
+                    xyz: sRGB(
+                        r: Double(rgb[0]),
+                        g: Double(rgb[1]),
+                        b: Double(rgb[2])
+                    ).xyz
+                ),
+                opacity: rgb.count > 3 ? Double(rgb[3]) : 1.0
+            )
+        }
+        return WithOpacity(DisplayP3(r: 0, g: 0, b: 0), opacity: 1)
     }
 }
 
@@ -338,6 +360,39 @@ struct OKLab: Tweenable {
     }
 }
 
+struct DisplayP3: Tweenable, Hashable {
+    public var r: Double
+    public var g: Double
+    public var b: Double
+
+    public var xyz: XYZ {
+        let x = 0.4865709 * r + 0.2656676 * g + 0.1982173 * b
+        let y = 0.2289745 * r + 0.6917385 * g + 0.0792869 * b
+        let z = 0.0000000 * r + 0.0451134 * g + 1.0439443 * b
+        return XYZ(x: x, y: y, z: z)
+    }
+
+    public init(xyz: XYZ) {
+        r = 2.4934969 * xyz.x - 0.9313836 * xyz.y - 0.4027108 * xyz.z
+        g = -0.8294889 * xyz.x + 1.7626641 * xyz.y + 0.0236247 * xyz.z
+        b = 0.0358458 * xyz.x - 0.0761724 * xyz.y + 0.9568845 * xyz.z
+    }
+
+    public init(r: Double, g: Double, b: Double) {
+        self.r = r
+        self.g = g
+        self.b = b
+    }
+
+    public static func lerp(_ from: DisplayP3, _ to: DisplayP3, _ t: Double) -> DisplayP3 {
+        return DisplayP3(
+            r: .lerp(from.r, to.r, t),
+            g: .lerp(from.g, to.g, t),
+            b: .lerp(from.b, to.b, t)
+        )
+    }
+}
+
 struct OKLCH: Tweenable {
     public var l: Double
     public var c: Double
@@ -404,4 +459,8 @@ func longestCycleLerp(_ l: Double, _ r: Double, _ t: Double, period: Double = 36
         fh += period
     }
     return .lerp(fh, th, t).truncatingRemainder(dividingBy: period)
+}
+
+private func clamp(_ x: Double) -> CGFloat {
+    CGFloat(max(0, min(1, x)))
 }

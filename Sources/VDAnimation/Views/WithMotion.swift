@@ -66,22 +66,13 @@ public struct WithMotion<Value, Content: View>: View {
     }
 
     public var body: some View {
-        _VariadicView.Tree(Wrapper(base: self)) {}
-    }
-
-    private struct Wrapper: _VariadicView.UnaryViewRoot {
-
-        let base: WithMotion
-
-        func body(children: _VariadicView.Children) -> some View {
-            Group{}.modifier(
-                WithMotionModifier(
-                    state: base.state,
-                    motion: base.motion(),
-                    content: { _, value in base.content(value) }
-                )
+        Group{}.modifier(
+            WithMotionModifier(
+                state: state,
+                motion: motion(),
+                content: { _, value in content(value) }
             )
-        }
+        )
     }
 }
 
@@ -108,10 +99,22 @@ extension WithMotion where Value == Double {
 ///
 /// Use this to create state that can be animated with motion animations.
 @propertyWrapper
-public struct MotionState<Value>: DynamicProperty {
+public struct MotionState<Value>: DynamicProperty, Identifiable {
+
     /// The underlying value that will be animated.
+    public var wrappedValue: Value {
+        get { value }
+        nonmutating set {
+            value = newValue
+        }
+    }
+
+    public var id: ObjectIdentifier {
+        controller.id
+    }
+
     @State
-    public var wrappedValue: Value
+    private var value: Value
 
     @State
     fileprivate var controller: AnimationController
@@ -133,7 +136,7 @@ public struct MotionState<Value>: DynamicProperty {
     ///
     /// - Parameter wrappedValue: The initial value of the state.
     public init(wrappedValue: Value) {
-        self.wrappedValue = wrappedValue
+        _value = State(wrappedValue: wrappedValue)
         let controller = AnimationController()
         _controller = State(wrappedValue: controller)
         _progress = BindingRef {

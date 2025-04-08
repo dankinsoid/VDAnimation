@@ -1,4 +1,5 @@
 import SwiftUI
+import VDAnimation
 
 struct ContentView: View {
 
@@ -7,9 +8,13 @@ struct ContentView: View {
             LoaderAnimation()
             DotsAnimation()
             InteractiveAnimation()
+            ComplexMovement()
             UIKitExample()
         }
         .padding()
+        .onAppear {
+            ColorInterpolationType.default = .okLCH
+        }
     }
 }
 
