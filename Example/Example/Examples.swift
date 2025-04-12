@@ -82,11 +82,11 @@ struct PathAnimation: View {
                 Path(path).fill()
             } motion: {
                 Sequential {
-                    Wait(1)
+                    Wait()
                     To(Self.starPath)
-                        .duration(1)
-                    Wait(1)
+                    Wait()
                 }
+                .duration(1)
                 .autoreverse()
             }
             .frame(width: 100, height: 100)
