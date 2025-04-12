@@ -32,11 +32,14 @@ struct PathSegment: Hashable, Tweenable, CustomStringConvertible {
     let start: CGPoint
     let end: CGPoint
     let cpt: Tween<CGPoint>
+
     var cpt0: CGPoint { cpt.start }
     var cpt1: CGPoint { cpt.end }
+
     var isLine: Bool {
         start == cpt.start && end == cpt.end
     }
+    
     var description: String {
         if isLine {
             return String(format: "((%.3f, %.3f), (%.3f, %.3f))", start.x, start.y, end.x, end.y)
@@ -45,6 +48,10 @@ struct PathSegment: Hashable, Tweenable, CustomStringConvertible {
             format: "((%.3f, %.3f), (%.3f, %.3f), (%.3f, %.3f), (%.3f, %.3f))",
             start.x, start.y, cpt0.x, cpt0.y, cpt1.x, cpt1.y, end.x, end.y
         )
+    }
+
+    var reversed: PathSegment {
+        PathSegment(start: end, end: start, cpt: (cpt1, cpt0))
     }
 
     var distance: CGFloat {
@@ -176,17 +183,40 @@ struct PathSegment: Hashable, Tweenable, CustomStringConvertible {
     }
 }
 
+struct PathShape {
+    var segments: [PathSegment]
+}
+
 extension CGPath: Tweenable {
-    
+
     func toSegments() -> [[PathSegment]] {
         var segments: [[PathSegment]] = []
         var lastPoint: CGPoint = .zero
+        var mostLeft: (Int, KeyPath<PathSegment, CGPoint>)?
+        var mostZero: (Int, KeyPath<PathSegment, CGPoint>)?
         
         func append(_ segment: PathSegment) {
             guard segment.start != segment.end || !segment.isLine else { return }
             if segments.isEmpty {
                 segments.append([])
             }
+            
+            let last = segments[segments.count - 1]
+            
+            func small(_ kp: KeyPath<CGPoint, CGFloat>, to value: inout (Int, KeyPath<PathSegment, CGPoint>)?) {
+                let current: KeyPath<PathSegment, CGPoint> = segment.start[keyPath: kp] < segment.end[keyPath: kp] ? \.start : \.end
+                if let v = value {
+                    if segment[keyPath: current][keyPath: kp] < last[v.0][keyPath: v.1][keyPath: kp] {
+                        value = (last.count, current)
+                    }
+                } else {
+                    value = (last.count, current)
+                }
+            }
+    
+            small(\.x, to: &mostLeft)
+            small(\.zeronest, to: &mostZero)
+
             segments[segments.count - 1].append(segment)
         }
 
@@ -215,9 +245,28 @@ extension CGPath: Tweenable {
                 let end = e.points[1]
                 append(PathSegment(start: lastPoint, end: end, cpt: cp))
             case .closeSubpath:
-                if lastPoint != segments.last?.first?.start {
-                    append(PathSegment(start: lastPoint, end: lastPoint))
+                if let first = segments.last?.first?.start, lastPoint != first {
+                    append(PathSegment(start: lastPoint, end: first))
                 }
+                var last = segments[segments.count - 1]
+                if let mostZero, last.count > 1 {
+                    segments[segments.count - 1] = Array(last[mostZero.0...] + last[0..<mostZero.0])
+                    last = segments[segments.count - 1]
+                    if let ml = mostLeft {
+                        mostLeft?.0 = (ml.0 + last.count - mostZero.0) % last.count
+                    }
+                }
+                if let mostLeft, last.count > 1 {
+                    let point = last[mostLeft.0][keyPath: mostLeft.1]
+                    let next = mostLeft.1 == \.start ? last[mostLeft.0].end : last[(mostLeft.0 + 1) % last.count].end
+                    let prev = mostLeft.1 == \.end ? last[mostLeft.0].start : last[(mostLeft.0 + last.count - 1) % last.count].start
+                    let isClockwise = tg(point, next) > tg(point, prev)
+                    if !isClockwise {
+                        segments[segments.count - 1] = last.reversed().map(\.reversed)
+                    }
+                }
+                mostLeft = nil
+                mostZero = nil
             @unknown default:
                 break
             }
@@ -336,7 +385,7 @@ extension CGPoint {
 
 struct PathAnimation: View {
 
-    @MotionState var path = Self.makeRectPath(rect: CGRect(origin: .zero, size: CGSize(width: 60, height: 150)))
+    @MotionState var path = Self.makeRectPath(rect: CGRect(origin: .zero, size: CGSize(width: 100, height: 100)))
 
     var body: some View {
         VStack {
@@ -376,11 +425,12 @@ struct PathAnimation: View {
 
     
     static func makeRectPath(rect: CGRect) -> CGPath {
+        return CGPath(roundedRect: rect, cornerWidth: 30, cornerHeight: 30, transform: nil)
         let path = CGMutablePath()
         path.move(to: .zero)
-        path.addLine(to: CGPoint(x: rect.maxX, y: 0))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
         path.addLine(to: CGPoint(x: 0, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: 0))
         path.addLine(to: .zero)
         path.closeSubpath()
         return path
@@ -402,4 +452,16 @@ extension CGPoint {
     var length: CGFloat {
         return sqrt(x*x + y*y)
     }
+
+    var zeronest: CGFloat {
+        abs(x) + abs(y)
+    }
+}
+
+private func tg(_ p0: CGPoint, _ p1: CGPoint) -> CGFloat {
+    let dy = p1.y - p0.y
+    if p1.x == p0.x {
+        return dy < 0 ? -.infinity : .infinity
+    }
+    return dy / (p1.x - p0.x)
 }
