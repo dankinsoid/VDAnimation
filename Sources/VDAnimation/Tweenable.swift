@@ -298,7 +298,7 @@ extension UIColor: Tweenable {
     /// - Returns: Interpolated UIColor
     /// - Tip: Change `ColorInterpolationType.default` to switch the interpolation algorithm. The default is `okLAB` for consistency with SwiftUI.
     public static func lerp(_ lhs: UIColor, _ rhs: UIColor, _ t: Double) -> Self {
-        return lerp(lhs, rhs, t, type: .default) as! Self
+        return lerp(lhs, rhs, t, type: .default) 
     }
 
     /// Linearly interpolates between two `UIColor` values using the specified color interpolation type
@@ -477,7 +477,7 @@ extension NSColor: Tweenable {
     /// - Returns: Interpolated `NSColor`
     /// - Tip: Change `ColorInterpolationType.default` to switch the interpolation algorithm. The default is `okLAB` for consistency with SwiftUI.
     public static func lerp(_ lhs: NSColor, _ rhs: NSColor, _ t: Double) -> Self {
-        return lerp(lhs, rhs, t, type: .default) as! Self
+        return lerp(lhs, rhs, t, type: .default)
     }
 
     /// Linearly interpolates between two `NSColor` values using the specified color interpolation type
