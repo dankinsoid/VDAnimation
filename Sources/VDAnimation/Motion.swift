@@ -16,7 +16,6 @@ import SwiftUI
 ///     .curve(.easeInOut)
 /// ```
 public protocol Motion<Value> {
-
     /// The type of value being animated
     associatedtype Value
 
@@ -26,19 +25,18 @@ public protocol Motion<Value> {
 
 /// Describes the duration of an animation
 ///
-/// Duration can be either absolute (in seconds) or relative 
+/// Duration can be either absolute (in seconds) or relative
 /// (as a fraction of a parent animation's duration)
 public enum Duration {
-
     /// An absolute duration in seconds
     case absolute(Double)
-    
+
     /// A relative duration (fraction of the parent animation's duration)
     case relative(Double)
-    
+
     /// A duration of zero seconds
     public static let zero = Duration.absolute(0)
-    
+
     /// The duration in seconds if this is an absolute duration, nil otherwise
     public var seconds: Double? {
         if case let .absolute(double) = self {
@@ -46,7 +44,7 @@ public enum Duration {
         }
         return nil
     }
-    
+
     /// The relative duration value if this is a relative duration, nil otherwise
     public var relative: Double? {
         if case let .relative(double) = self {
@@ -54,17 +52,17 @@ public enum Duration {
         }
         return nil
     }
-    
+
     /// Divides a duration by a scalar value
     /// - Parameters:
     ///   - lhs: The duration to divide
     ///   - rhs: The scalar divisor
     /// - Returns: A new duration with the value divided by the scalar
-    public static func /(_ lhs: Duration, _ rhs: Double) -> Duration {
+    public static func / (_ lhs: Duration, _ rhs: Double) -> Duration {
         switch lhs {
-        case .absolute(let double):
+        case let .absolute(double):
             return .absolute(double / rhs)
-        case .relative(let double):
+        case let .relative(double):
             return .relative(double / rhs)
         }
     }
@@ -74,11 +72,11 @@ public enum Duration {
     ///   - lhs: The duration to multiply
     ///   - rhs: The scalar multiplier
     /// - Returns: A new duration with the value multiplied by the scalar
-    public static func *(_ lhs: Duration, _ rhs: Double) -> Duration {
+    public static func * (_ lhs: Duration, _ rhs: Double) -> Duration {
         switch lhs {
-        case .absolute(let double):
+        case let .absolute(double):
             return .absolute(double * rhs)
-        case .relative(let double):
+        case let .relative(double):
             return .relative(double * rhs)
         }
     }
@@ -86,7 +84,6 @@ public enum Duration {
 
 /// A type-erased motion for animating values of type Value
 public struct AnyMotion<Value>: Motion {
-
     /// Function to prepare motion data based on initial value and duration
     public let prepare: (Value, Duration?) -> MotionData<Value>
 
@@ -104,16 +101,15 @@ public struct AnyMotion<Value>: Motion {
 
 /// Contains the data needed to perform a motion animation
 public struct MotionData<Value> {
-
     /// The duration of the motion
     public var duration: Duration?
-    
+
     /// Function to interpolate from the initial value to the target value based on time
     public var lerp: (Value, Double) -> Value
-    
+
     /// Optional function to provide side effects at specific points in the animation
     public var sideEffects: ((ClosedRange<Double>) -> [(Value) -> Void])?
-    
+
     /// Creates a new MotionData instance
     /// - Parameters:
     ///   - duration: The duration of the motion
@@ -149,10 +145,9 @@ public struct MotionData<Value> {
 /// }
 /// ```
 public struct From<Value>: Motion {
-
     /// The starting value for the animation
     public let value: Value
-    
+
     /// The motion to apply starting from the specified value
     public let motion: AnyMotion<Value>
 
@@ -190,10 +185,10 @@ public struct From<Value>: Motion {
 ///     Parallel { value in
 ///         value.opacity(To(1.0).duration(0.3))
 ///     }
-///     
+///
 ///     // Then wait for 0.5 seconds
 ///     Wait(Duration.absolute(0.5))
-///     
+///
 ///     // Finally move to a new position over 0.7 seconds
 ///     Parallel { value in
 ///         value.position(To(CGPoint(x: 200, y: 200)).duration(0.7))
@@ -201,31 +196,30 @@ public struct From<Value>: Motion {
 /// }
 /// ```
 public struct Sequential<Value>: Motion {
-    
     /// Function that provides an array of motions to run in sequence
     public let motions: () -> [AnyMotion<Value>]
-    
+
     /// Creates a sequential motion from an array of motions
     /// - Parameter motions: The motions to run in sequence
     public init(@MotionsArrayBuilder<Value> _ motions: @escaping () -> [AnyMotion<Value>]) {
         self.motions = motions
     }
-    
+
     /// Converts to a type-erased motion
     public var anyMotion: AnyMotion<Value> {
         AnyMotion { initialValue, expDur in
             // Accumulation state structure
-            
+
             // Reduce over all motions to prepare them
             var state = MotionState(lastValue: initialValue)
-            
+
             for motion in motions() {
                 var info = motion.prepare(state.lastValue, nil)
                 let nextValue = info.lerp(state.lastValue, 1.0)
                 let duration = info.duration?.seconds
                 let relative = (info.duration?.relative).map(clamp)
                 info.duration = relative.map(Duration.relative) ?? info.duration
-                
+
                 // Update state
                 state.lastValue = nextValue
                 if let duration = duration {
@@ -240,7 +234,7 @@ public struct Sequential<Value>: Motion {
                 state.items.append(info)
                 state.effectsCnt += info.sideEffects != nil ? 1 : 0
             }
-            
+
             // Process timing calculations
             let relK = state.sumRel > 1 ? 1.0 / state.sumRel : 1.0
             let sumRel = clamp(state.sumRel)
@@ -250,9 +244,9 @@ public struct Sequential<Value>: Motion {
             } else {
                 minDur = state.sumAbs
             }
-            
+
             let expDurMcs = expDur?.seconds
-            
+
             // Calculate resulting duration
             var possibleDurations: [Double] = []
             if let expDurMcs = expDurMcs {
@@ -264,9 +258,9 @@ public struct Sequential<Value>: Motion {
             if state.cntAny == 0, let minDur = minDur {
                 possibleDurations.append(minDur)
             }
-            
+
             let resDur = possibleDurations.isEmpty ? nil : possibleDurations.max()
-            
+
             // Calculate duration for motions without explicit duration
             let anyDur: Double
             if state.cntAny > 0 {
@@ -278,14 +272,14 @@ public struct Sequential<Value>: Motion {
             } else {
                 anyDur = 0.0
             }
-            
+
             // Process all items with timing info
             var allItems: [Item] = []
-            var t: Double = 0.0
-            
+            var t = 0.0
+
             for info in state.items {
                 var item = Item(data: info)
-                
+
                 let relDur: Double
                 if let relativeDuration = info.duration?.relative {
                     relDur = relativeDuration * relK
@@ -302,21 +296,21 @@ public struct Sequential<Value>: Motion {
                 } else {
                     relDur = anyDur
                 }
-                
+
                 item.start = t
                 item.relDur = relDur
                 item.end = t + relDur
                 allItems.append(item)
                 t = item.end
             }
-            
+
             return MotionData(
                 duration: resDur.map(Duration.absolute),
                 lerp: { initial, T in
                     var result = initial
-                    
+
                     for item in allItems {
-                        if item.relDur > 0 && (item.start <= T && T <= item.end || T <= 0) {
+                        if item.relDur > 0, item.start <= T && T <= item.end || T <= 0 {
                             let t = item.relDur == 0 ? 1.0 : (T - item.start) / item.relDur
                             var animT = t
                             if item.end < 1 {
@@ -337,7 +331,7 @@ public struct Sequential<Value>: Motion {
                             result = item.data.lerp(result, 1.0)
                         }
                     }
-                    
+
                     return result
                 },
                 sideEffects: state.effectsCnt > 0 ? { range in
@@ -347,21 +341,21 @@ public struct Sequential<Value>: Motion {
                             let bounds = [range.lowerBound, range.upperBound].map {
                                 transformEffectT($0, item.start, item.end, item.relDur)
                             }
-                            results.append(contentsOf: sideEffects(bounds[0]...bounds[1]))
+                            results.append(contentsOf: sideEffects(bounds[0] ... bounds[1]))
                         }
                     }
-                    
+
                     return results
                 } : nil
             )
         }
     }
-    
+
     /// Clamps a value between 0.0 and 1.0
     func clamp(_ value: Double) -> Double {
         min(1.0, max(0.0, value))
     }
-    
+
     /// Internal state for processing sequential motions
     private struct MotionState {
         var lastValue: Value
@@ -406,21 +400,20 @@ public struct Sequential<Value>: Motion {
 /// ```
 @dynamicMemberLookup
 public struct Parallel<Value>: Motion {
-    
     /// Function that generates motions to run in parallel for a given value
     private var motions: (Value) -> [AnyMotion<Value>]
-    
+
     /// Internal representation of a motion item
     private struct Item {
         let data: MotionData<Value>
         var relative: Double
     }
-    
+
     /// Creates an empty parallel motion
     public init() {
         self.motions = { _ in [] }
     }
-    
+
     /// Creates a parallel motion that animates multiple children of a value
     /// - Parameters:
     ///   - children: Function that provides child motions with identifiers
@@ -467,24 +460,24 @@ public struct Parallel<Value>: Motion {
             var maxDur: Double? = nil
             var items: [Item] = []
             var sideEffectsCnt = 0
-            
+
             for motion in motions(value) {
                 let preparedMotion = motion.anyMotion.prepare(value, expDur)
-                
+
                 let duration = preparedMotion.duration?.seconds
-                
+
                 let relativeDuration = preparedMotion.duration?.relative
                 let lerp = preparedMotion.lerp
                 let sideEffects = preparedMotion.sideEffects
-                
+
                 let durAbs: Double? = duration ?? ((relativeDuration != nil && expDurInS != nil) ? (expDurInS! * relativeDuration!) : nil)
-                
+
                 if let durAbs = durAbs {
                     maxDur = max(durAbs, maxDur ?? 0.0)
                 }
-                
+
                 let relDur = relativeDuration ?? ((durAbs != nil && expDurInS != nil && expDurInS! > 0) ? (durAbs! / expDurInS!) : 1.0)
-                
+
                 items.append(
                     Item(
                         data: MotionData<Value>(
@@ -495,26 +488,26 @@ public struct Parallel<Value>: Motion {
                         relative: relDur
                     )
                 )
-                
+
                 if sideEffects != nil {
                     sideEffectsCnt += 1
                 }
             }
-            
+
             let fullDur = (expDurInS != nil && maxDur != nil) ? max(expDurInS!, maxDur!) : (expDurInS ?? maxDur)
-            
+
             if let fullDur, fullDur != expDurInS, fullDur > 0 {
                 for i in items.indices {
                     items[i].relative = (items[i].data.duration?.seconds).map { $0 / fullDur } ?? 1.0
                 }
             }
-            
+
             // Return the result
             return MotionData(
                 duration: fullDur.map(Duration.absolute),
                 lerp: { from, T in
                     var result = from
-                    
+
                     for item in items {
                         let transformT: (Double) -> Double = { t in
                             if item.relative == 0 {
@@ -525,23 +518,23 @@ public struct Parallel<Value>: Motion {
                                 return min(1.0, t / item.relative)
                             }
                         }
-                        
+
                         let t = transformT(T)
                         result = item.data.lerp(result, t)
                     }
                     return result
                 },
                 sideEffects: sideEffectsCnt > 0 ? { range in
-                        var effects: [(Value) -> Void] = []
-                        for item in items {
-                            if let sideEffects = item.data.sideEffects {
-                                let transform: (Double) -> Double = { t in
-                                    transformEffectT(t, 0.0, item.relative, item.relative)
-                                }
-                                effects += sideEffects(transform(range.lowerBound)...transform(range.upperBound))
+                    var effects: [(Value) -> Void] = []
+                    for item in items {
+                        if let sideEffects = item.data.sideEffects {
+                            let transform: (Double) -> Double = { t in
+                                transformEffectT(t, 0.0, item.relative, item.relative)
                             }
+                            effects += sideEffects(transform(range.lowerBound) ... transform(range.upperBound))
                         }
-                        return effects
+                    }
+                    return effects
                 } : nil
             )
         }
@@ -569,7 +562,6 @@ public struct Parallel<Value>: Motion {
     /// Helper struct for creating animations for a specific path
     @dynamicMemberLookup
     public struct Path<Child> {
-
         let base: Parallel<Value>
         let keyPath: WritableKeyPath<Value, Child>
 
@@ -604,13 +596,12 @@ public struct Parallel<Value>: Motion {
     }
 }
 
-extension Parallel {
-
+public extension Parallel {
     /// Creates a parallel motion that animates a single property
     /// - Parameters:
     ///   - keyPath: The key path to the property to animate
     ///   - motion: The motion to apply to the property
-    public init<Child>(
+    init<Child>(
         _ keyPath: WritableKeyPath<Value, Child>,
         @MotionBuilder<Child> _ motion: @escaping () -> AnyMotion<Child>
     ) {
@@ -623,7 +614,7 @@ extension Parallel {
 
     /// Creates a parallel motion that animates dictionary values
     /// - Parameter motion: A function that provides a motion for each dictionary key
-    public init<Key: Hashable, Child>(
+    init<Key: Hashable, Child>(
         @MotionBuilder<Child> _ motion: @escaping (Key) -> AnyMotion<Child>
     ) where Value == [Key: Child] {
         self.init(
@@ -634,10 +625,10 @@ extension Parallel {
     }
 }
 
-extension Parallel where Value: MutableCollection {
+public extension Parallel where Value: MutableCollection {
     /// Creates a parallel motion that animates collection elements
     /// - Parameter motion: A function that provides a motion for each collection index
-    public init(
+    init(
         @MotionBuilder<Value.Element> _ motion: @escaping (Value.Index) -> AnyMotion<Value.Element>
     ) {
         self.init(
@@ -671,10 +662,9 @@ extension Parallel where Value: MutableCollection {
 ///     .curve(.easeInOut)
 /// ```
 public struct To<Value>: Motion {
-
     /// The target values to animate toward
     public let values: [Value]
-    
+
     /// The interpolation function to use
     public let lerp: (Value, Value, Double) -> Value
 
@@ -698,18 +688,18 @@ public struct To<Value>: Motion {
     /// Converts to a type-erased motion
     public var anyMotion: AnyMotion<Value> {
         AnyMotion { _, dur in
-            return MotionData(duration: dur) { first, t in
+            MotionData(duration: dur) { first, t in
                 let allValues = [first] + values
                 guard t != 0 else { return allValues[0] }
                 guard t != 1 else { return allValues[allValues.count - 1] }
-                
+
                 // Calculate which segment we're in
                 let segments = allValues.count - 1
                 let segmentSize = 1.0 / Double(segments)
                 let segment = max(0, min(allValues.count - 1, min(segments - 1, Int(t / segmentSize))))
                 let nextSegment = max(0, min(allValues.count - 1, segment + 1))
                 let segmentT = (t - Double(segment) * segmentSize) / segmentSize
-                
+
                 // Lerp between the values in this segment
                 return lerp(allValues[segment], allValues[nextSegment], segmentT)
             }
@@ -717,41 +707,38 @@ public struct To<Value>: Motion {
     }
 }
 
-extension To where Value: Tweenable {
-
+public extension To where Value: Tweenable {
     /// Creates a "to" motion using the default lerp function
     /// - Parameter values: The target values to animate toward
-    public init(_ values: [Value]) {
+    init(_ values: [Value]) {
         self.init(values, lerp: Value.lerp)
     }
 
     /// Creates a "to" motion using the default lerp function and variadic values
     /// - Parameter values: The target values to animate toward
-    public init(_ value: Value, _ rest: Value...) {
+    init(_ value: Value, _ rest: Value...) {
         self.init([value] + rest, lerp: Value.lerp)
     }
 }
 
-extension To where Value: Tweenable & VectorArithmetic {
-
+public extension To where Value: Tweenable & VectorArithmetic {
     /// Creates a "to" motion using the default lerp function
     /// - Parameter values: The target values to animate toward
-    public init(_ values: [Value]) {
+    init(_ values: [Value]) {
         self.init(values, lerp: Value.lerp)
     }
 
     /// Creates a "to" motion using the default lerp function and variadic values
     /// - Parameter values: The target values to animate toward
-    public init(_ value: Value, _ rest: Value...) {
+    init(_ value: Value, _ rest: Value...) {
         self.init([value] + rest, lerp: Value.lerp)
     }
 }
 
-extension To where Value: VectorArithmetic {
-
+public extension To where Value: VectorArithmetic {
     /// Creates a "to" motion using the default lerp function
     /// - Parameter values: The target values to animate toward
-    public init(_ values: [Value]) {
+    init(_ values: [Value]) {
         self.init(values) {
             $0.interpolated(towards: $1, amount: $2)
         }
@@ -759,32 +746,30 @@ extension To where Value: VectorArithmetic {
 
     /// Creates a "to" motion using the default lerp function and variadic values
     /// - Parameter values: The target values to animate toward
-    public init(_ value: Value, _ rest: Value...) {
+    init(_ value: Value, _ rest: Value...) {
         self.init([value] + rest) {
             $0.interpolated(towards: $1, amount: $2)
         }
     }
 }
 
-extension To where Value: Codable {
-
+public extension To where Value: Codable {
     /// Creates a "to" motion for Codable values
     /// - Parameter values: The target values to animate toward
     @_disfavoredOverload
-    public init(_ values: [Value]) {
+    init(_ values: [Value]) {
         self.init(values, lerp: Value.lerp)
     }
 
     /// Creates a "to" motion for Codable values with variadic syntax
     /// - Parameter values: The target values to animate toward
     @_disfavoredOverload
-    public init(_ values: Value...) {
+    init(_ values: Value...) {
         self.init(values, lerp: Value.lerp)
     }
 }
 
 public struct Lerp<Value>: Motion {
-
     public let lerp: (Value, Double) -> Value
 
     public init(lerp: @escaping (Value, Double) -> Value) {
@@ -804,7 +789,6 @@ public struct Lerp<Value>: Motion {
 }
 
 public struct TransformTo<Value>: Motion {
-
     /// The target values to animate toward
     public let transform: (Value) -> Value
 
@@ -823,7 +807,7 @@ public struct TransformTo<Value>: Motion {
     /// Converts to a type-erased motion
     public var anyMotion: AnyMotion<Value> {
         AnyMotion { _, dur in
-            return MotionData(duration: dur) { first, t in
+            MotionData(duration: dur) { first, t in
                 let value = transform(first)
                 guard t != 0 else { return first }
                 guard t != 1 else { return value }
@@ -834,41 +818,37 @@ public struct TransformTo<Value>: Motion {
     }
 }
 
-extension TransformTo where Value: Tweenable {
-
+public extension TransformTo where Value: Tweenable {
     /// Creates a "to" motion using the default lerp function
     /// - Parameter values: The target values to animate toward
-    public init(_ transform: @escaping (Value) -> Value) {
+    init(_ transform: @escaping (Value) -> Value) {
         self.init(transform, lerp: Value.lerp)
     }
 }
 
-extension TransformTo where Value: VectorArithmetic {
-
+public extension TransformTo where Value: VectorArithmetic {
     /// Creates a "to" motion using the default lerp function
     /// - Parameter values: The target values to animate toward
-    public init(_ transform: @escaping (Value) -> Value) {
+    init(_ transform: @escaping (Value) -> Value) {
         self.init(transform) {
             $0.interpolated(towards: $1, amount: $2)
         }
     }
 }
 
-extension TransformTo where Value: Tweenable & VectorArithmetic {
-
+public extension TransformTo where Value: Tweenable & VectorArithmetic {
     /// Creates a "to" motion using the default lerp function
     /// - Parameter values: The target values to animate toward
-    public init(_ transform: @escaping (Value) -> Value) {
+    init(_ transform: @escaping (Value) -> Value) {
         self.init(transform, lerp: Value.lerp)
     }
 }
 
-extension TransformTo where Value: Codable {
-
+public extension TransformTo where Value: Codable {
     /// Creates a "to" motion for Codable values
     /// - Parameter values: The target values to animate toward
     @_disfavoredOverload
-    public init(_ transform: @escaping (Value) -> Value) {
+    init(_ transform: @escaping (Value) -> Value) {
         self.init(transform, lerp: Value.lerp)
     }
 }
@@ -895,7 +875,6 @@ extension TransformTo where Value: Codable {
 /// }
 /// ```
 public struct Wait<Value>: Motion {
-
     /// The duration to wait
     public let duration: Duration?
 
@@ -946,7 +925,6 @@ public struct Wait<Value>: Motion {
 /// }
 /// ```
 public struct Instant<Value>: Motion {
-
     /// The value to change to
     public let value: Value
 
@@ -994,16 +972,15 @@ public struct Instant<Value>: Motion {
 /// }
 /// ```
 public struct SideEffect<Value>: Motion {
-
     /// The action to perform
     public let action: (Value) -> Void
-    
+
     /// Creates a side effect motion with a simple action
     /// - Parameter action: The action to perform
     public init(_ action: @escaping () -> Void) {
         self.init { _ in action() }
     }
-    
+
     /// Creates a side effect motion with an action that receives the current value
     /// - Parameter action: The action to perform
     public init(_ action: @escaping (Value) -> Void) {
@@ -1013,7 +990,7 @@ public struct SideEffect<Value>: Motion {
     /// Converts to a type-erased motion
     public var anyMotion: AnyMotion<Value> {
         AnyMotion { value, _ in
-            MotionData(duration: .zero) { value, t in
+            MotionData(duration: .zero) { value, _ in
                 value
             } sideEffects: { range in
                 if range.contains(1.0) {
@@ -1052,10 +1029,10 @@ public struct SideEffect<Value>: Motion {
 public struct Repeat<Value>: Motion {
     /// The number of times to repeat the motion
     public let count: Int
-    
+
     /// The motion to repeat
     public let motion: AnyMotion<Value>
-    
+
     /// Creates a repeat motion
     /// - Parameters:
     ///   - count: The number of times to repeat
@@ -1064,7 +1041,7 @@ public struct Repeat<Value>: Motion {
         self.count = count
         self.motion = motion()
     }
-    
+
     /// Converts to a type-erased motion
     public var anyMotion: AnyMotion<Value> {
         guard count > 0 else {
@@ -1072,11 +1049,11 @@ public struct Repeat<Value>: Motion {
                 MotionData(duration: .zero) { value, _ in value }
             }
         }
-        
+
         guard count > 1 else {
             return motion
         }
-        
+
         return AnyMotion { value, dur in
             let motionData = motion.prepare(value, dur.map { $0 / Double(count) })
 
@@ -1084,30 +1061,30 @@ public struct Repeat<Value>: Motion {
                 duration: motionData.duration.map { $0 * Double(count) },
                 lerp: { value, t in
                     // Calculate which repeat and the time within that repeat
-                    let repeatT = t == 1.0 ? 1.0 : (t *  Double(count)).truncatingRemainder(dividingBy: 1.0)
+                    let repeatT = t == 1.0 ? 1.0 : (t * Double(count)).truncatingRemainder(dividingBy: 1.0)
                     return motionData.lerp(value, repeatT)
                 },
                 sideEffects: motionData.sideEffects.map { sideEffects in
                     { range in
                         let start = range.lowerBound * Double(count)
                         let end = range.upperBound * Double(count)
-                        
+
                         // Map to individual repeat ranges
                         var effects: [(Value) -> Void] = []
-                        for i in 0..<count {
+                        for i in 0 ..< count {
                             let repeatStart = Double(i)
                             let repeatEnd = Double(i + 1)
-                            
-                            if start < repeatEnd && end > repeatStart {
-                                let segmentStart = max(0, (start - repeatStart))
-                                let segmentEnd = min(1, (end - repeatStart))
-                                
+
+                            if start < repeatEnd, end > repeatStart {
+                                let segmentStart = max(0, start - repeatStart)
+                                let segmentEnd = min(1, end - repeatStart)
+
                                 if segmentStart < segmentEnd {
-                                    effects.append(contentsOf: sideEffects(segmentStart...segmentEnd))
+                                    effects.append(contentsOf: sideEffects(segmentStart ... segmentEnd))
                                 }
                             }
                         }
-                        
+
                         return effects
                     }
                 }
@@ -1135,16 +1112,15 @@ public struct Repeat<Value>: Motion {
 /// }
 /// ```
 public struct Sync<Value>: Motion {
-    
     /// The child motion to synchronize
     let child: AnyMotion<Value>
-    
+
     /// Creates a synchronized motion
     /// - Parameter child: The motion to synchronize
     public init(@MotionBuilder<Value> _ child: () -> AnyMotion<Value>) {
         self.child = child()
     }
-    
+
     /// Converts to a type-erased motion
     public var anyMotion: AnyMotion<Value> {
         AnyMotion { value, dur in
@@ -1180,34 +1156,33 @@ public struct Sync<Value>: Motion {
 /// ).duration(2.0)
 /// ```
 public struct Steps<Value>: Motion {
-    
     /// The values to step through
     public let values: [Value]
-    
+
     /// Creates a steps motion with an array of values
     /// - Parameter values: The values to step through
     public init(_ values: [Value]) {
         self.values = values
     }
-    
+
     /// Creates a steps motion with variadic values
     /// - Parameter values: The values to step through
     public init(_ values: Value...) {
         self.init(values)
     }
-    
+
     /// Converts to a type-erased motion
     public var anyMotion: AnyMotion<Value> {
         AnyMotion { _, dur in
             MotionData(duration: dur) { first, t in
                 guard !values.isEmpty else { return first }
-                
+
                 // Use first value at the beginning
                 if t == 0 { return first }
-                
+
                 // Use last value at the end
                 if t >= 1.0 { return values.last! }
-                
+
                 // For intermediate values, calculate the index based on time
                 // If we have N values, we have N-1 intervals
                 // The index is calculated as floor(t * (values.count))
@@ -1240,10 +1215,9 @@ public struct Steps<Value>: Motion {
 /// let pulse2 = To(1.0).duration(0.5).curve(.easeInOut).autoreverse()
 /// ```
 public struct AutoReverse<Value>: Motion {
-
     /// The motion to auto-reverse
     public let motion: AnyMotion<Value>
-    
+
     /// Creates an auto-reverse motion
     /// - Parameter motion: The motion to play forward and then reverse
     public init(@MotionBuilder<Value> _ motion: () -> AnyMotion<Value>) {
@@ -1254,7 +1228,7 @@ public struct AutoReverse<Value>: Motion {
     public var anyMotion: AnyMotion<Value> {
         AnyMotion { value, dur in
             let motionData = motion.prepare(value, dur.map { $0 / 2.0 })
-    
+
             return MotionData(
                 duration: motionData.duration.map { $0 * 2 },
                 lerp: { value, t in
@@ -1266,23 +1240,23 @@ public struct AutoReverse<Value>: Motion {
                     { range in
                         let start = range.lowerBound
                         let end = range.upperBound
-                        
+
                         var effects: [(Value) -> Void] = []
-                        
+
                         // Forward part (0-0.5)
-                        if start < 0.5 && end > 0 {
+                        if start < 0.5, end > 0 {
                             let forwardStart = max(0, start) * 2
                             let forwardEnd = min(0.5, end) * 2
-                            effects.append(contentsOf: sideEffects(forwardStart...forwardEnd))
+                            effects.append(contentsOf: sideEffects(forwardStart ... forwardEnd))
                         }
-                        
+
                         // Reverse part (0.5-1.0)
-                        if start < 1.0 && end > 0.5 {
+                        if start < 1.0, end > 0.5 {
                             let reverseStart = 2.0 - min(1.0, end) * 2
                             let reverseEnd = 2.0 - max(0.5, start) * 2
-                            effects.append(contentsOf: sideEffects(reverseStart...reverseEnd))
+                            effects.append(contentsOf: sideEffects(reverseStart ... reverseEnd))
                         }
-                        
+
                         return effects
                     }
                 }
@@ -1291,42 +1265,41 @@ public struct AutoReverse<Value>: Motion {
     }
 }
 
-extension Motion {
-    
+public extension Motion {
     /// Creates an auto-reverse motion that plays this motion forward then in reverse
     /// - Returns: An auto-reverse motion
-    public func autoreverse() -> AutoReverse<Value> {
+    func autoreverse() -> AutoReverse<Value> {
         AutoReverse { self }
     }
 
     /// Repeats this motion a specified number of times
     /// - Parameter count: The number of times to repeat
     /// - Returns: A repeat motion
-    public func `repeat`(_ count: Int) -> Repeat<Value> {
+    func `repeat`(_ count: Int) -> Repeat<Value> {
         Repeat(count) { self }
     }
 
     /// Sets an absolute duration for this motion
     /// - Parameter duration: The duration in seconds
     /// - Returns: A type-erased motion with the specified duration
-    public func duration(_ duration: TimeInterval) -> AnyMotion<Value> {
+    func duration(_ duration: TimeInterval) -> AnyMotion<Value> {
         self.duration(.absolute(duration))
     }
 
     /// Sets an absolute duration for this motion
     /// - Parameter duration: The duration.
     /// - Returns: A type-erased motion with the specified duration
-    public func duration(_ duration: Duration) -> AnyMotion<Value> {
+    func duration(_ duration: Duration) -> AnyMotion<Value> {
         AnyMotion { value, _ in
             anyMotion.prepare(value, duration)
         }
     }
-    
+
     /// Sets an absolute delay for this motion
     /// - Parameter delay: The delay in seconds
     /// - Returns: A type-erased motion with the specified duration
     @MotionBuilder<Value>
-    public func delay(_ delay: TimeInterval) -> AnyMotion<Value> {
+    func delay(_ delay: TimeInterval) -> AnyMotion<Value> {
         self.delay(.absolute(delay))
     }
 
@@ -1334,10 +1307,32 @@ extension Motion {
     /// - Parameter delay: The delay.
     /// - Returns: A type-erased motion with the specified duration
     @MotionBuilder<Value>
-    public func delay(_ delay: Duration) -> AnyMotion<Value> {
+    func delay(_ delay: Duration) -> AnyMotion<Value> {
         Sequential {
             Wait(delay)
             self
+        }
+    }
+
+    /// Sets a delay after this motion
+    /// - Parameter delay: The delay in seconds
+    /// - Returns: A type-erased motion with the specified delay
+    @MotionBuilder<Value>
+    func delayAfter(_ delay: TimeInterval) -> AnyMotion<Value> {
+        Sequential {
+            self
+            Wait(delay)
+        }
+    }
+
+    /// Sets a delay after this motion
+    /// - Parameter delay: The delay
+    /// - Returns: A type-erased motion with the specified delay
+    @MotionBuilder<Value>
+    func delayAfter(_ delay: Duration) -> AnyMotion<Value> {
+        Sequential {
+            self
+            Wait(delay)
         }
     }
 
@@ -1348,14 +1343,14 @@ extension Motion {
     /// that should always be in sync with the system clock such as a spinner.
     ///
     /// - Returns: A synchronized motion
-    public func sync() -> Sync<Value> {
+    func sync() -> Sync<Value> {
         Sync { self }
     }
 
     /// Applies an animation curve to this motion
     /// - Parameter curve: The animation curve to apply
     /// - Returns: A type-erased motion with the curve applied
-    public func curve(_ curve: Curve) -> AnyMotion<Value> {
+    func curve(_ curve: Curve) -> AnyMotion<Value> {
         AnyMotion { value, duration in
             var result = anyMotion.prepare(value, duration)
             let lerp = result.lerp
@@ -1368,7 +1363,6 @@ extension Motion {
 }
 
 extension Tween: Motion where Bound: Tweenable {
-
     public var anyMotion: AnyMotion<Bound> {
         AnyMotion { _, duration in
             MotionData(duration: duration, lerp: { _, t in lerp(t) })

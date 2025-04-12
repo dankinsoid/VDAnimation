@@ -74,12 +74,12 @@ struct DotsAnimation: View {
 
 struct PathAnimation: View {
 
-    @MotionState var path = Self.heartPath
+    @MotionState var path: Path = Self.heartPath
 
     var body: some View {
         VStack {
             WithMotion(_path) { path in
-                Path(path).fill()
+                path.fill()
             } motion: {
                 Sequential {
                     Wait()
@@ -102,7 +102,7 @@ struct PathAnimation: View {
     private static let starPath = makeStarPath(center: CGPoint(x: 50, y: 50), radius: 50, points: 5)
     private static let heartPath = makeHeartPath(in: CGRect(origin: .zero, size: CGSize(width: 100, height: 100)))
 
-    private static func makeStarPath(center: CGPoint, radius: CGFloat, points: Int) -> CGPath {
+    private static func makeStarPath(center: CGPoint, radius: CGFloat, points: Int) -> Path {
         let path = CGMutablePath()
         let angle = CGFloat.pi * 2 / CGFloat(points * 2)
 
@@ -118,10 +118,10 @@ struct PathAnimation: View {
         }
 
         path.closeSubpath()
-        return path
+        return Path(path)
     }
 
-    private static func makeHeartPath(in rect: CGRect) -> CGPath {
+    private static func makeHeartPath(in rect: CGRect) -> Path {
         let path = UIBezierPath()
         
         // Calculate Radius of Arcs using Pythagoras
@@ -144,7 +144,7 @@ struct PathAnimation: View {
         // Left Bottom Line
         path.close()
         
-        return path.cgPath
+        return Path(path.cgPath)
     }
 }
 
@@ -268,9 +268,10 @@ final class UIKitExampleView: UIView {
         } motion: {
             To(Value(amount: 1000, color: .systemGreen))
                 .delay(.relative(0.2))
+                .delayAfter(.relative(0.4))
                 .duration(2)
         }
-        .play()
+        .play(repeat: true)
     }
 }
 
