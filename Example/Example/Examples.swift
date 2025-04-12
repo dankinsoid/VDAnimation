@@ -72,6 +72,86 @@ struct DotsAnimation: View {
     }
 }
 
+struct PathAnimation: View {
+
+    @MotionState var path = Self.heartPath
+
+    var body: some View {
+        VStack {
+            WithMotion(_path) { path in
+                Path(path).fill()
+            } motion: {
+                Sequential {
+                    Wait(1)
+                    To(Self.starPath)
+                        .duration(1)
+                    Wait(1)
+                }
+                .autoreverse()
+            }
+            .frame(width: 100, height: 100)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.purple)
+            .foregroundColor(.white)
+        }
+        .onAppear {
+            $path.play(repeat: true)
+        }
+    }
+
+    private static let starPath = makeStarPath(center: CGPoint(x: 50, y: 50), radius: 50, points: 5)
+    private static let heartPath = makeHeartPath(in: CGRect(origin: .zero, size: CGSize(width: 100, height: 100)))
+
+    private static func makeStarPath(center: CGPoint, radius: CGFloat, points: Int) -> CGPath {
+        let path = CGMutablePath()
+        let angle = CGFloat.pi * 2 / CGFloat(points * 2)
+
+        for i in 0 ..< points * 2 {
+            let r = i.isMultiple(of: 2) ? radius : radius * 0.4
+            let x = center.x + r * cos(angle * CGFloat(i) - .pi / 2)
+            let y = center.y + r * sin(angle * CGFloat(i) - .pi / 2)
+            if i == 0 {
+                path.move(to: CGPoint(x: x, y: y))
+            } else {
+                path.addLine(to: CGPoint(x: x, y: y))
+            }
+        }
+
+        path.closeSubpath()
+        return path
+    }
+
+    private static func makeHeartPath(in rect: CGRect) -> CGPath {
+        let path = UIBezierPath()
+        
+        // Calculate Radius of Arcs using Pythagoras
+        let sideOne = rect.width * 0.4
+        let sideTwo = rect.height * 0.3
+        let arcRadius = sqrt(sideOne * sideOne + sideTwo * sideTwo) / 2
+        
+        // Left Hand Curve
+        path.addArc(withCenter: CGPoint(x: rect.width * 0.3, y: rect.height * 0.35), radius: arcRadius, startAngle: 135.degreesToRadians, endAngle: 315.degreesToRadians, clockwise: true)
+        
+        // Top Centre Dip
+        path.addLine(to: CGPoint(x: rect.width / 2, y: rect.height * 0.2))
+        
+        // Right Hand Curve
+        path.addArc(withCenter: CGPoint(x: rect.width * 0.7, y: rect.height * 0.35), radius: arcRadius, startAngle: 225.degreesToRadians, endAngle: 45.degreesToRadians, clockwise: true)
+        
+        // Right Bottom Line
+        path.addLine(to: CGPoint(x: rect.width * 0.5, y: rect.height * 0.95))
+        
+        // Left Bottom Line
+        path.close()
+        
+        return path.cgPath
+    }
+}
+
+extension Int {
+    var degreesToRadians: CGFloat { return CGFloat(self) * .pi / 180 }
+}
+
 struct InteractiveAnimation: View {
 
     @MotionState private var animation = Props()
@@ -143,12 +223,8 @@ struct ComplexMovement: View {
             .frame(width: 40, height: 40)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.red)
-            .onTapGesture {
-                if $location.isAnimating {
-                    $location.stop()
-                } else {
-                    $location.play(repeat: true)
-                }
+            .onAppear {
+                $location.play(repeat: true)
             }
     }
 }
@@ -205,6 +281,8 @@ enum Previews: PreviewProvider {
             .previewDisplayName("Circle loader")
         DotsAnimation()
             .previewDisplayName("Dots loader")
+        PathAnimation()
+            .previewDisplayName("Path morphing")
         InteractiveAnimation()
             .previewDisplayName("Interactive")
         ComplexMovement()

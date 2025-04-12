@@ -7,6 +7,7 @@ struct ContentView: View {
         VStack {
             LoaderAnimation()
             DotsAnimation()
+            PathAnimation()
             InteractiveAnimation()
             ComplexMovement()
             UIKitExample()
