@@ -11,7 +11,7 @@ VDAnimation provides a powerful, declarative way to create complex animations in
 - 🎚 Interactive animation control
 - 🎯 Side effects
 - 🏗 Built-in support for custom value interpolation
-- 📱 Working on iOS 14 and macOS 11 or later
+- 📱 Working on iOS 13 and macOS 10.15 or later
 
 ## Examples
 

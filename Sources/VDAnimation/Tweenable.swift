@@ -169,6 +169,7 @@ extension Double: Tweenable { public static func lerp(_ lhs: Self, _ rhs: Self, 
 /// Float implementation of Tweenable
 extension Float: Tweenable { public static func lerp(_ lhs: Self, _ rhs: Self, _ t: Double) -> Self { (rhs - lhs) * Self(t) + lhs } }
 /// Float16 implementation of Tweenable
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 extension Float16: Tweenable { public static func lerp(_ lhs: Self, _ rhs: Self, _ t: Double) -> Self { (rhs - lhs) * Self(t) + lhs } }
 /// CGFloat implementation of Tweenable
 extension CGFloat: Tweenable { public static func lerp(_ lhs: Self, _ rhs: Self, _ t: Double) -> Self { (rhs - lhs) * Self(t) + lhs } }

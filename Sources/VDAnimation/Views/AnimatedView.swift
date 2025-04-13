@@ -10,6 +10,7 @@ public extension View {
     ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that takes the view and current animated value
     /// - Returns: A view with animation applied
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     func animated<Value: Equatable & Tweenable, Content: View>(
         _ value: Value,
         duration: TimeInterval? = nil,
@@ -26,6 +27,7 @@ public extension View {
     ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that takes the view and current animated value
     /// - Returns: A view with animation applied
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     func animated<Value: Equatable & Tweenable, Content: View>(
         _ value: Value,
         duration: TimeInterval? = nil,
@@ -42,6 +44,7 @@ public extension View {
     ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that takes the view and current animated value
     /// - Returns: A view with animation applied
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     @_disfavoredOverload
     func animated<Value: Equatable & Codable, Content: View>(
         _ value: Value,
@@ -60,6 +63,7 @@ public extension View {
     ///   - lerp: Custom interpolation function for the value
     ///   - content: A closure that takes the view and current animated value
     /// - Returns: A view with animation applied
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     func animated<Value: Equatable, Content: View>(
         _ value: Value,
         duration: TimeInterval? = nil,
@@ -212,6 +216,7 @@ extension Animated  {
     ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
     ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that produces content from the animated value
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public init<Value, Result: View>(
         _ value: Value,
         duration: TimeInterval? = nil,
@@ -233,6 +238,7 @@ extension Animated  {
     ///   - duration: Animation duration in seconds, when nil EnvironmentValue.animationDuration is used, that's equal to 0.25 by default
     ///   - curve: Animation curve to use when nil EnvironmentValue.curve is used, that's equal to .easeInOut by default
     ///   - content: A closure that produces content from the animated value
+    @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
     public init<Value, Result: View>(
         _ value: Value,
         lerp: @escaping (Value, Value, Double) -> Value,
@@ -407,6 +413,7 @@ private struct AnimationControllerState: Equatable {
 }
 
 /// A view modifier that animates between values using tweening
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 public struct AnimatedTweenModifier<Value: Equatable, Result: View>: ViewModifier {
 
     @State private var props: Props
