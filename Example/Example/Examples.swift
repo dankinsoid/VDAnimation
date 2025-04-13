@@ -79,22 +79,23 @@ struct PathAnimation: View {
                 path.fill()
             } motion: {
                 Sequential {
-                    Wait()
+//                    Wait()
                     To(Self.dropPath)
-                    Wait()
+//                    Wait()
                     To(Self.starPath)
-                    Wait()
-                    To(Self.heartPath)
+//                    Wait()
+//                    To(Self.heartPath)
                 }
-                .duration(2)
+                .duration(5)
             }
             .frame(width: 100, height: 100)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.purple)
             .foregroundColor(.white)
+            Slider(value: _path.$progress)
         }
         .onAppear {
-            $path.play(repeat: true)
+//            $path.play(repeat: true)
         }
     }
 

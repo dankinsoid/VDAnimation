@@ -45,15 +45,12 @@ extension CGPath: Tweenable {
                     }
                 }
 
-                let t1 = s1.segments.map { ($0, $0.length) }
-                let t2 = s2.segments.map { ($0, $0.length) }
+                s1.normalizeStart()
+                s2.normalizeStart()
 
-                let total1 = t1.reduce(0.0) { $0 + $1.1 }
-                let total2 = t2.reduce(0.0) { $0 + $1.1 }
-                let count = max(50, s1.segments.count, s2.segments.count, Int(total1 / 3), Int(total2 / 3))
-
-                s1.unifySegments(t1, total: total1, count: count)
-                s2.unifySegments(t2, total: total2, count: count)
+                let s11 = s1
+                s1.unifyWith(s2)
+                s2.unifyWith(s11)
 
                 result.start.append(s1)
                 result.end.append(s2)
@@ -74,7 +71,11 @@ extension CGPath: Tweenable {
                 if j == 0 {
                     path.move(to: segment.start)
                 }
-                path.addLine(to: segment.end)
+                if segment.isLine {
+                    path.addLine(to: segment.end)
+                } else {
+                    path.addCurve(to: segment.end, control1: segment.cpt0, control2: segment.cpt1)
+                }
             }
             if result.start[i].isClosed || result.end[i].isClosed {
                 path.closeSubpath()
@@ -132,7 +133,7 @@ extension CGPath: Tweenable {
             if close, let first = shapes.last?.segments.first?.start, lastPoint != first {
                 append(PathSegment(start: lastPoint, end: first))
             }
-            let last = shapes[shapes.count - 1].segments
+            var last = shapes[shapes.count - 1].segments
             if let mostLeftStart = mostLeftStart?.0, last.count > 1 {
                 let point = last[mostLeftStart].start
                 let next = last[mostLeftStart].end
@@ -140,16 +141,21 @@ extension CGPath: Tweenable {
                 let isClockwise = tg(point, next) > tg(point, prev)
                 if !isClockwise {
                     shapes[shapes.count - 1].reverse()
+                    last = shapes[shapes.count - 1].segments
                 }
             }
+            let origin = CGPoint(
+                x: mostLeft.map { last[$0.0][keyPath: $0.1].x } ?? 0,
+                y: mostTop.map { last[$0.0][keyPath: $0.1].y } ?? 0
+            )
             shapes[shapes.count - 1].bounds = boundingBox
-//            CGRect(
-//                origin: origin,
-//                size: CGSize(
-//                    width: mostRight.map { last[$0.0][keyPath: $0.1].x - origin.x } ?? boundingBox.width,
-//                    height: mostBottom.map { last[$0.0][keyPath: $0.1].y - origin.y } ?? boundingBox.height
-//                )
-//            )
+            CGRect(
+                origin: origin,
+                size: CGSize(
+                    width: mostRight.map { last[$0.0][keyPath: $0.1].x - origin.x } ?? boundingBox.width,
+                    height: mostBottom.map { last[$0.0][keyPath: $0.1].y - origin.y } ?? boundingBox.height
+                )
+            )
             mostLeftStart = nil
             mostLeft = nil
             mostTop = nil
@@ -201,6 +207,7 @@ struct PathShape {
     }
 
     mutating func unifySegments(_ segments: [(PathSegment, CGFloat)], total: CGFloat, count: Int) {
+        normalizeStart()
         guard segments.count < count else { return }
         var result: [PathSegment] = []
         let needAdd = count - segments.count
@@ -212,11 +219,74 @@ struct PathShape {
             result += segments[i].0.split(into: cnt)
         }
         self.segments = result
-        normalizeStart()
+    }
+
+    mutating func unifyWith(_ shape: PathShape) {
+        var lengths0 = segments.map(\.length)
+        var lengths1 = shape.segments.map(\.length)
+        let total0 = lengths0.reduce(0, +)
+        let total1 = lengths1.reduce(0, +)
+        lengths0 = lengths0.map { $0 / total0 }
+        lengths1 = lengths1.map { $0 / total1 }
+
+        let points1: [CGFloat] = lengths1.reduce(into: []) {
+            $0.append($1 + ($0.last ?? 0))
+        }
+        .dropLast()
+
+        var offset: CGFloat = 0
+        var p1 = 0
+        var newSegments: [PathSegment] = []
+        for i0 in 0 ..< segments.count {
+            let newOffset = offset + lengths0[i0]
+            var locations: [CGFloat] = []
+            while p1 < points1.count, points1[p1] < newOffset {
+                let t = (points1[p1] - offset) / lengths0[i0]
+                if t > 0.01, t < 0.99 {
+                    locations.append(t)
+                }
+                p1 += 1
+            }
+            if !locations.isEmpty {
+                newSegments.append(contentsOf: segments[i0].split(at: locations))
+            } else {
+                newSegments.append(segments[i0])
+            }
+            offset = newOffset
+        }
+        segments = newSegments
     }
 
     mutating func normalizeStart() {
         guard isClosed, segments.count > 1 else { return }
+
+        // let centerX = bounds.midX
+        // var centerSegment: Int?
+        // for i in 0 ..< segments.count {
+        //     if segments[i].xRange.contains(centerX) {
+        //         if let j = centerSegment {
+        //             if segments[i].yRange.lowerBound < segments[j].yRange.lowerBound {
+        //                 centerSegment = i
+        //             }
+        //         } else {
+        //             centerSegment = i
+        //         }
+        //     }
+        // }
+        // if let centerSegment, centerSegment > 0 {
+        //     segments = Array(segments[centerSegment...] + segments[0 ..< centerSegment])
+        // }
+        // let start = segments[0]
+        // let t = start.approximateT(forX: centerX)
+        // if t > 0.01, t < 0.99 {
+        //     let tween = start.divide(at: t)
+        //     segments[0] = tween.end
+        //     segments.append(segments[0])
+        // } else if t > 0.01 {
+        //     segments.removeFirst()
+        //     segments.append(start)
+        // }
+
         var mostZero: Int?
 
         for i in 0 ..< segments.count {
@@ -269,6 +339,14 @@ struct PathSegment: Hashable, Tweenable, CustomStringConvertible {
         let chord = (end - start).length
         let cont_net = (start - cpt0).length + (cpt1 - cpt0).length + (end - cpt1).length
         return (cont_net + chord) / 2
+    }
+
+    var xRange: ClosedRange<CGFloat> {
+        min(start.x, end.x, cpt0.x, cpt1.x) ... max(start.x, end.x, cpt0.x, cpt1.x)
+    }
+
+    var yRange: ClosedRange<CGFloat> {
+        min(start.y, end.y, cpt0.y, cpt1.y) ... max(start.y, end.y, cpt0.y, cpt1.y)
     }
 
     init(
@@ -347,6 +425,23 @@ struct PathSegment: Hashable, Tweenable, CustomStringConvertible {
         return CGPoint(x: x, y: y)
     }
 
+    func approximateT(forX x: CGFloat, iterations: Int = 10) -> CGFloat {
+        var current = self
+        var range = Tween<CGFloat>(0, 1)
+        for _ in 0 ..< iterations {
+            let mid = (range.start + range.end) / 2
+            let tween = current.divide(at: 0.5)
+            if tween.start.xRange.contains(x) {
+                current = tween.start
+                range = Tween(range.start, mid)
+            } else {
+                current = tween.end
+                range = Tween(mid, range.end)
+            }
+        }
+        return (range.start + range.end) / 2
+    }
+
     @inlinable
     func divide(at t: Double) -> Tween<PathSegment> {
         let t = max(0, min(1, t))
@@ -395,6 +490,24 @@ struct PathSegment: Hashable, Tweenable, CustomStringConvertible {
             let tween = current.divide(at: t)
             segments.append(tween.start)
             current = tween.end
+        }
+        segments.append(current)
+        return segments
+    }
+
+    // assumes ts is sorted
+    func split(at ts: [CGFloat]) -> [PathSegment] {
+        guard !ts.isEmpty else { return [self] }
+        var segments: [PathSegment] = []
+        var current = self
+        var divided: CGFloat = 0
+        for t in ts {
+            let t = max(divided, min(1, t))
+            guard t < 1 else { break }
+            let tween = current.divide(at: (t - divided) / (1 - divided))
+            segments.append(tween.start)
+            current = tween.end
+            divided = t
         }
         segments.append(current)
         return segments
