@@ -193,7 +193,10 @@ struct WithMotionModifier<Value, Result: View>: ViewModifier {
     private var defaultDuration
 
     func body(content: Content) -> some View {
-        content.modifier(
+        if wrapper.needReset {
+            wrapper.info = nil
+        }
+        return content.modifier(
             AnimatedModifier(
                 controller: state.controller,
                 duration: { [defaultDuration] in
@@ -231,6 +234,12 @@ struct WithMotionModifier<Value, Result: View>: ViewModifier {
         if let info = wrapper.info {
             return info
         }
+        wrapper.needReset = false
+        DispatchQueue.main.async {
+            DispatchQueue.main.async {
+                wrapper.needReset = true
+            }
+        }
         let info = motion.prepare(state.wrappedValue, nil)
         wrapper.info = info
         return info
@@ -240,5 +249,6 @@ struct WithMotionModifier<Value, Result: View>: ViewModifier {
     private final class Wrapper {
         var info: MotionData<Value>?
         var lastProgress: Double?
+        var needReset = true
     }
 }
