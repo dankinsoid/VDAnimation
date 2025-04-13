@@ -2,7 +2,6 @@ import SwiftUI
 import VDAnimation
 
 struct LoaderAnimation: View {
-
     @MotionState private var state = Tween(0.0, 0.01)
     private let arcSize = 0.4
 
@@ -23,10 +22,10 @@ struct LoaderAnimation: View {
                 Parallel()
                     .end(arcSize) // animate .end property of the state
                     .curve(.cubicEaseIn)
-    
+
                 To(Tween(1 - arcSize, 1.0)) // animate the whole state
                     .duration(.relative((1 - arcSize) / (1 + arcSize))) // compute duration to keep movement speed constant
-    
+
                 Parallel()
                     .start(1.0 - 0.01) // animate .start property of the state
                     .curve(.cubicEaseOut)
@@ -41,7 +40,6 @@ struct LoaderAnimation: View {
 }
 
 struct DotsAnimation: View {
-
     @MotionState private var values: [CGFloat] = [0, 0, 0]
 
     var body: some View {
@@ -73,7 +71,6 @@ struct DotsAnimation: View {
 }
 
 struct PathAnimation: View {
-
     @MotionState var path: Path = Self.heartPath
 
     var body: some View {
@@ -83,11 +80,13 @@ struct PathAnimation: View {
             } motion: {
                 Sequential {
                     Wait()
+                    To(Self.dropPath)
+                    Wait()
                     To(Self.starPath)
                     Wait()
+                    To(Self.heartPath)
                 }
-                .duration(1)
-                .autoreverse()
+                .duration(2)
             }
             .frame(width: 100, height: 100)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -101,6 +100,7 @@ struct PathAnimation: View {
 
     private static let starPath = makeStarPath(center: CGPoint(x: 50, y: 50), radius: 50, points: 5)
     private static let heartPath = makeHeartPath(in: CGRect(origin: .zero, size: CGSize(width: 100, height: 100)))
+    private static let dropPath = makeDropPath(in: CGRect(origin: .zero, size: CGSize(width: 100, height: 100)))
 
     private static func makeStarPath(center: CGPoint, radius: CGFloat, points: Int) -> Path {
         let path = CGMutablePath()
@@ -123,27 +123,46 @@ struct PathAnimation: View {
 
     private static func makeHeartPath(in rect: CGRect) -> Path {
         let path = UIBezierPath()
-        
+
         // Calculate Radius of Arcs using Pythagoras
         let sideOne = rect.width * 0.4
         let sideTwo = rect.height * 0.3
         let arcRadius = sqrt(sideOne * sideOne + sideTwo * sideTwo) / 2
-        
+
         // Left Hand Curve
         path.addArc(withCenter: CGPoint(x: rect.width * 0.3, y: rect.height * 0.35), radius: arcRadius, startAngle: 135.degreesToRadians, endAngle: 315.degreesToRadians, clockwise: true)
-        
+
         // Top Centre Dip
         path.addLine(to: CGPoint(x: rect.width / 2, y: rect.height * 0.2))
-        
+
         // Right Hand Curve
         path.addArc(withCenter: CGPoint(x: rect.width * 0.7, y: rect.height * 0.35), radius: arcRadius, startAngle: 225.degreesToRadians, endAngle: 45.degreesToRadians, clockwise: true)
-        
+
         // Right Bottom Line
         path.addLine(to: CGPoint(x: rect.width * 0.5, y: rect.height * 0.95))
-        
+
         // Left Bottom Line
         path.close()
-        
+
+        return Path(path.cgPath)
+    }
+
+    private static func makeDropPath(in rect: CGRect) -> Path {
+        let path = UIBezierPath()
+        let dropRadius = rect.height * 0.3
+        let dropHeight = rect.height
+        let angle = atan(dropRadius / dropHeight)
+        let startAngle = -angle
+        let endAngle = CGFloat.pi - startAngle
+        path.addArc(
+            withCenter: CGPoint(x: rect.midX, y: dropHeight - dropRadius),
+            radius: dropRadius,
+            startAngle: startAngle,
+            endAngle: endAngle,
+            clockwise: true
+        )
+        path.addLine(to: CGPoint(x: rect.midX, y: 0))
+        path.close()
         return Path(path.cgPath)
     }
 }
@@ -153,16 +172,15 @@ extension Int {
 }
 
 struct InteractiveAnimation: View {
-
     @MotionState private var animation = Props()
-    
+
     @Tweenable
     struct Props {
         var color: Color = .red
         var angle: Angle = .zero
         var offset: CGFloat = -120
     }
-    
+
     var body: some View {
         VStack(spacing: 0) {
             WithMotion(_animation) { props in
@@ -172,7 +190,7 @@ struct InteractiveAnimation: View {
                         .rotationEffect(props.angle, anchor: .center)
                         .offset(x: props.offset)
                         .frame(width: 100, height: 100)
-                    Slider(value: _animation.$progress, in: 0...1)
+                    Slider(value: _animation.$progress, in: 0 ... 1)
                         .padding(.horizontal)
                 }
             } motion: {
@@ -185,7 +203,7 @@ struct InteractiveAnimation: View {
                 )
                 .duration(2.0)
             }
-            
+
             if $animation.isAnimating {
                 Button("Pause") { $animation.pause() }
             } else {
@@ -202,7 +220,6 @@ struct InteractiveAnimation: View {
 }
 
 struct ComplexMovement: View {
-
     @MotionState var location = CGPoint(x: -100, y: 0)
 
     var body: some View {
@@ -220,7 +237,7 @@ struct ComplexMovement: View {
                 .duration(2)
             }
             .offset(y: 10)
-            .frame(width: 40, height: 40)
+            .frame(width: 20, height: 20)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.red)
             .onAppear {
@@ -230,17 +247,14 @@ struct ComplexMovement: View {
 }
 
 struct UIKitExample: UIViewRepresentable {
-    
-    func makeUIView(context: Context) -> UIKitExampleView {
+    func makeUIView(context _: Context) -> UIKitExampleView {
         UIKitExampleView()
     }
 
-    func updateUIView(_ uiView: UIKitExampleView, context: Context) {
-    }
+    func updateUIView(_: UIKitExampleView, context _: Context) {}
 }
 
 final class UIKitExampleView: UIView {
-
     let label = UILabel()
 
     @Tweenable
@@ -248,11 +262,11 @@ final class UIKitExampleView: UIView {
         var amount: Int = 0
         var color: UIColor = .systemRed
     }
-    
+
     override func didMoveToWindow() {
         super.didMoveToWindow()
         guard window != nil else { return }
-        
+
         backgroundColor = .clear
         addSubview(label)
         label.font = .monospacedDigitSystemFont(ofSize: 40, weight: .bold)
@@ -276,7 +290,6 @@ final class UIKitExampleView: UIView {
 }
 
 enum Previews: PreviewProvider {
-
     static var previews: some View {
         LoaderAnimation()
             .previewDisplayName("Circle loader")

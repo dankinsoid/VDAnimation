@@ -97,7 +97,44 @@ struct DotsAnimation: View {
 }
 ```
 
+### Animating Paths Morphing
+
+<img src="https://github.com/dankinsoid/Resources/blob/main/VDAnimation/path.gif?raw=true" width="100">
+
+```swift
+struct PathAnimation: View {
+    @MotionState var path: Path = Self.heartPath
+
+    var body: some View {
+        VStack {
+            WithMotion(_path) { path in
+                path.fill()
+            } motion: {
+                Sequential {
+                    Wait()
+                    To(Self.dropPath)
+                    Wait()
+                    To(Self.starPath)
+                    Wait()
+                    To(Self.heartPath)
+                }
+                .duration(2)
+            }
+            .frame(width: 100, height: 100)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.purple)
+            .foregroundColor(.white)
+        }
+        .onAppear {
+            $path.play(repeat: true)
+        }
+    }
+}
+```
+
 ### Interactive Animation Control
+
+<img src="https://github.com/dankinsoid/Resources/blob/main/VDAnimation/interactive.gif?raw=true" height="120">
 
 ```swift
 struct InteractiveAnimation: View {
@@ -152,6 +189,8 @@ struct InteractiveAnimation: View {
 
 ### Complex movement
 
+<img src="https://github.com/dankinsoid/Resources/blob/main/VDAnimation/movement.gif?raw=true" height="100">
+
 ```swift
 struct ComplexMovement: View {
 
@@ -187,6 +226,8 @@ struct ComplexMovement: View {
 ```
 
 ### UIKit CADisplayLink wrapper
+
+<img src="https://github.com/dankinsoid/Resources/blob/main/VDAnimation/uikit.gif?raw=true" height="80">
 
 ```swift
 motionDisplayLink(Value()) { [label] value in
