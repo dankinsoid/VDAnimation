@@ -2,7 +2,6 @@ import CoreGraphics
 import SwiftUI
 
 extension Path: Tweenable {
-
     public static func lerp(_ lhs: Path, _ rhs: Path, _ t: Double) -> Path {
         Path(CGPath.lerp(lhs.cgPath, rhs.cgPath, t))
     }
@@ -26,7 +25,6 @@ extension Path: Tweenable {
 #endif
 
 extension CGPath: Tweenable {
-
     public static func lerp(_ p1: CGPath, _ p2: CGPath, _ t: Double) -> Self {
         var result: Tween<[PathShape]>
 
@@ -84,7 +82,7 @@ extension CGPath: Tweenable {
         }
         return path as! Self
     }
-    
+
     private func toSegments() -> [PathShape] {
         var shapes: [PathShape] = []
         var lastPoint: CGPoint = .zero
@@ -118,7 +116,7 @@ extension CGPath: Tweenable {
                     }
                 }
             }
-            
+
             most(<, \.x, [\.start], to: &mostLeftStart)
             most(<, \.x, to: &mostLeft)
             most(<, \.y, to: &mostTop)
@@ -128,10 +126,10 @@ extension CGPath: Tweenable {
             shapes[shapes.count - 1].segments.append(segment)
         }
 
-        func close() {
+        func close(_ close: Bool) {
             guard !closed else { return }
             defer { closed = true }
-            if let first = shapes.last?.segments.first?.start, lastPoint != first {
+            if close, let first = shapes.last?.segments.first?.start, lastPoint != first {
                 append(PathSegment(start: lastPoint, end: first))
             }
             let last = shapes[shapes.count - 1].segments
@@ -144,10 +142,6 @@ extension CGPath: Tweenable {
                     shapes[shapes.count - 1].reverse()
                 }
             }
-            let origin = CGPoint(
-                x: mostLeft.map { last[$0.0][keyPath: $0.1].x } ?? 0,
-                y: mostTop.map { last[$0.0][keyPath: $0.1].y } ?? 0
-            )
             shapes[shapes.count - 1].bounds = boundingBox
 //            CGRect(
 //                origin: origin,
@@ -185,16 +179,15 @@ extension CGPath: Tweenable {
                 let end = e.points[1]
                 append(PathSegment(start: lastPoint, end: end, cpt: cp))
             case .closeSubpath:
-                close()
+                close(true)
             @unknown default:
                 break
             }
         }
-        close()
+        close(false)
 
         return shapes.filter { !$0.segments.isEmpty }
     }
-
 
     private static var cache: [Tween<CGPath>: Tween<[PathShape]>] = [:]
 }
@@ -235,7 +228,7 @@ struct PathShape {
                 mostZero = i
             }
         }
-        
+
         if let mostZero {
             segments = Array(segments[mostZero...] + segments[0 ..< mostZero])
         }
@@ -409,7 +402,6 @@ struct PathSegment: Hashable, Tweenable, CustomStringConvertible {
 }
 
 extension CGPoint {
-
     static func - (lhs: CGPoint, rhs: CGPoint) -> CGPoint {
         return CGPoint(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
     }
