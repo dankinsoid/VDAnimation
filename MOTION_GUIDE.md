@@ -444,4 +444,19 @@ struct MyAnimatableType: Tweenable {
 }
 ```
 
+VDAnimation add `Tweenable` conformance to most common types:
+
+- All numeric types
+- CoreAnimation types: CGPoint, CGSize, CGRect, CGAffineTransform, CATransform3D, CGVector, CGAffineTransformComponents
+- Pathes: CGPath, UIBezierPath/NSBezierPath, Path.
+- Color types: UIColor/NSColor, CGColor, Color. Colors uses OKLab color space for lerp by default, but it can be configured to RGB or OKLCH.
+- EdgeInsets, UIEdgeInsets/NSEdgeInsets, NSDirectionalEdgeInsets
+- Collections of Tweenable: Array, Dictionary, ContiguousArray, ArraySlice
+- Range, ClosedRange, PartialRangeFrom, PartialRangeUpTo, PartialRangeThrough
+- AnimatablePair, EmptyAnimatablePair
+- Angle
+- SIMD types
+- VectorArithmetic types have default `Tweenable` conformance
+- Codable types have default `Tweenable` conformance
+
 **Note**: `Tweenable` is not required for motions to work, but it is required for `To` motion.

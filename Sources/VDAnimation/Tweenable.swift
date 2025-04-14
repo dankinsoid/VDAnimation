@@ -40,7 +40,6 @@ public extension Tweenable where Self: BinaryInteger {
 
 /// Default Tweenable implementation for vector arithmetic types
 public extension Tweenable where Self: VectorArithmetic {
-
     /// Linearly interpolates between two vector values
     /// - Parameters:
     ///   - lhs: Starting value when t=0
@@ -193,6 +192,21 @@ extension UInt16: Tweenable { public static func lerp(_ lhs: Self, _ rhs: Self, 
 extension UInt32: Tweenable { public static func lerp(_ lhs: Self, _ rhs: Self, _ t: Double) -> Self { Self(Double(rhs - lhs) * t) + lhs } }
 /// UInt64 implementation of Tweenable
 extension UInt64: Tweenable { public static func lerp(_ lhs: Self, _ rhs: Self, _ t: Double) -> Self { Self(Double(rhs - lhs) * t) + lhs } }
+/// Decimal implementation of Tweenable
+extension Decimal: Tweenable {
+    public static func lerp(_ lhs: Self, _ rhs: Self, _ t: Double) -> Self {
+        if t == 0 {
+            return lhs
+        } else if t == 1 {
+            return rhs
+        }
+        // Convert Decimal to Double for interpolation
+        let lhsDouble = NSDecimalNumber(decimal: lhs).doubleValue
+        let rhsDouble = NSDecimalNumber(decimal: rhs).doubleValue
+        let resultDouble = (rhsDouble - lhsDouble) * t + lhsDouble
+        return Decimal(resultDouble)
+    }
+}
 
 // Collection type Tweenable implementations
 /// Array implementation of Tweenable for elements that are Tweenable
@@ -225,7 +239,6 @@ extension EdgeInsets: Tweenable {
 }
 
 extension Angle: Tweenable {
-
     /// Linearly interpolates between two Angle values
     /// - Example:
     ///   - lhs = 10°, rhs = 20°, t = 0.5
@@ -289,51 +302,49 @@ extension Date: Tweenable {
 }
 
 #if canImport(UIKit)
-extension UIColor: Tweenable {
+    extension UIColor: Tweenable {
+        /// Linearly interpolates between two UIColor values using the default color interpolation type
+        /// - Parameters:
+        ///   - lhs: Starting UIColor when t = 0
+        ///   - rhs: Ending UIColor when t = 1
+        ///   - t: Interpolation factor (typically between 0 and 1)
+        /// - Returns: Interpolated UIColor
+        /// - Tip: Change `ColorInterpolationType.default` to switch the interpolation algorithm. The default is `okLAB` for consistency with SwiftUI.
+        public static func lerp(_ lhs: UIColor, _ rhs: UIColor, _ t: Double) -> Self {
+            return lerp(lhs, rhs, t, type: .default)
+        }
 
-    /// Linearly interpolates between two UIColor values using the default color interpolation type
-    /// - Parameters:
-    ///   - lhs: Starting UIColor when t = 0
-    ///   - rhs: Ending UIColor when t = 1
-    ///   - t: Interpolation factor (typically between 0 and 1)
-    /// - Returns: Interpolated UIColor
-    /// - Tip: Change `ColorInterpolationType.default` to switch the interpolation algorithm. The default is `okLAB` for consistency with SwiftUI.
-    public static func lerp(_ lhs: UIColor, _ rhs: UIColor, _ t: Double) -> Self {
-        return lerp(lhs, rhs, t, type: .default) 
+        /// Linearly interpolates between two `UIColor` values using the specified color interpolation type
+        /// - Parameters:
+        ///   - lhs: Starting `UIColor` when t = 0
+        ///   - rhs: Ending `UIColor` when t = 1
+        ///   - t: Interpolation factor (typically between 0 and 1)
+        ///   - type: Interpolation type. SwiftUI uses `okLAB`. My favorites is `okLCH`.
+        /// - Returns: Interpolated `UIColor`
+        public static func lerp(_ lhs: UIColor, _ rhs: UIColor, _ t: Double, type: ColorInterpolationType) -> Self {
+            return colorLerp(lhs, rhs, t, type: type) as! Self
+        }
     }
 
-    /// Linearly interpolates between two `UIColor` values using the specified color interpolation type
-    /// - Parameters:
-    ///   - lhs: Starting `UIColor` when t = 0
-    ///   - rhs: Ending `UIColor` when t = 1
-    ///   - t: Interpolation factor (typically between 0 and 1)
-    ///   - type: Interpolation type. SwiftUI uses `okLAB`. My favorites is `okLCH`.
-    /// - Returns: Interpolated `UIColor`
-    public static func lerp(_ lhs: UIColor, _ rhs: UIColor, _ t: Double, type: ColorInterpolationType) -> Self {
-        return colorLerp(lhs, rhs, t, type: type) as! Self
+    extension UIEdgeInsets: Tweenable {
+        /// Linearly interpolates between two UIEdgeInsets values
+        /// - Parameters:
+        ///   - lhs: Starting UIEdgeInsets when t=0
+        ///   - rhs: Ending UIEdgeInsets when t=1
+        ///   - t: Interpolation factor (typically between 0 and 1)
+        /// - Returns: Interpolated UIEdgeInsets
+        public static func lerp(_ lhs: UIEdgeInsets, _ rhs: UIEdgeInsets, _ t: Double) -> UIEdgeInsets {
+            UIEdgeInsets(
+                top: .lerp(lhs.top, rhs.top, t),
+                left: .lerp(lhs.left, rhs.left, t),
+                bottom: .lerp(lhs.bottom, rhs.bottom, t),
+                right: .lerp(lhs.right, rhs.right, t)
+            )
+        }
     }
-}
-
-extension UIEdgeInsets: Tweenable {
-    /// Linearly interpolates between two UIEdgeInsets values
-    /// - Parameters:
-    ///   - lhs: Starting UIEdgeInsets when t=0
-    ///   - rhs: Ending UIEdgeInsets when t=1
-    ///   - t: Interpolation factor (typically between 0 and 1)
-    /// - Returns: Interpolated UIEdgeInsets
-    public static func lerp(_ lhs: UIEdgeInsets, _ rhs: UIEdgeInsets, _ t: Double) -> UIEdgeInsets {
-        UIEdgeInsets(
-            top: .lerp(lhs.top, rhs.top, t),
-            left: .lerp(lhs.left, rhs.left, t),
-            bottom: .lerp(lhs.bottom, rhs.bottom, t),
-            right: .lerp(lhs.right, rhs.right, t)
-        )
-    }
-}
 #endif
 
 extension Color: Tweenable {
-
     /// Linearly interpolates between two `Color` values using the default color interpolation type
     /// - Parameters:
     ///   - lhs: Starting `Color` when t = 0
@@ -386,6 +397,26 @@ extension CGRect: Tweenable {
     }
 }
 
+extension CGVector: Tweenable {
+    public static func lerp(_ lhs: CGVector, _ rhs: CGVector, _ t: Double) -> CGVector {
+        CGVector(
+            dx: CGFloat.lerp(lhs.dx, rhs.dx, t),
+            dy: CGFloat.lerp(lhs.dy, rhs.dy, t)
+        )
+    }
+}
+
+extension CGAffineTransformComponents: Tweenable {
+    public static func lerp(_ lhs: CGAffineTransformComponents, _ rhs: CGAffineTransformComponents, _ t: Double) -> CGAffineTransformComponents {
+        CGAffineTransformComponents(
+            scale: CGSize.lerp(lhs.scale, rhs.scale, t),
+            horizontalShear: CGFloat.lerp(lhs.horizontalShear, rhs.horizontalShear, t),
+            rotation: CGFloat.lerp(lhs.rotation, rhs.rotation, t),
+            translation: CGVector.lerp(lhs.translation, rhs.translation, t)
+        )
+    }
+}
+
 extension CGAffineTransform: Tweenable {
     public static func lerp(_ lhs: CGAffineTransform, _ rhs: CGAffineTransform, _ t: Double) -> CGAffineTransform {
         CGAffineTransform(
@@ -423,90 +454,150 @@ extension CATransform3D: Tweenable {
 }
 
 extension CGColor: Tweenable {
-
     public static func lerp(_ lhs: CGColor, _ rhs: CGColor, _ t: Double) -> Self {
         return colorLerp(lhs, rhs, t) as! Self
     }
 }
 
 extension PartialRangeFrom: Tweenable where Bound: Tweenable {
-
     public static func lerp(_ lhs: PartialRangeFrom<Bound>, _ rhs: PartialRangeFrom<Bound>, _ t: Double) -> PartialRangeFrom<Bound> {
         Bound.lerp(lhs.lowerBound, rhs.lowerBound, t)...
     }
 }
 
 extension PartialRangeThrough: Tweenable where Bound: Tweenable {
-
     public static func lerp(_ lhs: PartialRangeThrough<Bound>, _ rhs: PartialRangeThrough<Bound>, _ t: Double) -> PartialRangeThrough<Bound> {
         ...Bound.lerp(lhs.upperBound, rhs.upperBound, t)
     }
 }
 
 extension PartialRangeUpTo: Tweenable where Bound: Tweenable {
-
     public static func lerp(_ lhs: PartialRangeUpTo<Bound>, _ rhs: PartialRangeUpTo<Bound>, _ t: Double) -> PartialRangeUpTo<Bound> {
         ..<Bound.lerp(lhs.upperBound, rhs.upperBound, t)
     }
 }
 
 extension Range: Tweenable where Bound: Tweenable {
-
     public static func lerp(_ lhs: Range<Bound>, _ rhs: Range<Bound>, _ t: Double) -> Range<Bound> {
         let l = Bound.lerp(lhs.lowerBound, rhs.lowerBound, t)
         let r = Bound.lerp(lhs.upperBound, rhs.upperBound, t)
-        return Swift.min(l, r)..<Swift.max(l, r)
+        return Swift.min(l, r) ..< Swift.max(l, r)
     }
 }
 
 extension ClosedRange: Tweenable where Bound: Tweenable {
-
     public static func lerp(_ lhs: ClosedRange<Bound>, _ rhs: ClosedRange<Bound>, _ t: Double) -> ClosedRange<Bound> {
         let l = Bound.lerp(lhs.lowerBound, rhs.lowerBound, t)
         let r = Bound.lerp(lhs.upperBound, rhs.upperBound, t)
-        return Swift.min(l, r)...Swift.max(l, r)
+        return Swift.min(l, r) ... Swift.max(l, r)
     }
 }
 
 #if canImport(AppKit)
-extension NSColor: Tweenable {
-    /// Linearly interpolates between two `NSColor` values using the default color interpolation type
-    /// - Parameters:
-    ///   - lhs: Starting `NSColor` when t = 0
-    ///   - rhs: Ending `NSColor` when t = 1
-    ///   - t: Interpolation factor (typically between 0 and 1)
-    /// - Returns: Interpolated `NSColor`
-    /// - Tip: Change `ColorInterpolationType.default` to switch the interpolation algorithm. The default is `okLAB` for consistency with SwiftUI.
-    public static func lerp(_ lhs: NSColor, _ rhs: NSColor, _ t: Double) -> Self {
-        return lerp(lhs, rhs, t, type: .default)
+    extension NSColor: Tweenable {
+        /// Linearly interpolates between two `NSColor` values using the default color interpolation type
+        /// - Parameters:
+        ///   - lhs: Starting `NSColor` when t = 0
+        ///   - rhs: Ending `NSColor` when t = 1
+        ///   - t: Interpolation factor (typically between 0 and 1)
+        /// - Returns: Interpolated `NSColor`
+        /// - Tip: Change `ColorInterpolationType.default` to switch the interpolation algorithm. The default is `okLAB` for consistency with SwiftUI.
+        public static func lerp(_ lhs: NSColor, _ rhs: NSColor, _ t: Double) -> Self {
+            return lerp(lhs, rhs, t, type: .default)
+        }
+
+        /// Linearly interpolates between two `NSColor` values using the specified color interpolation type
+        /// - Parameters:
+        ///   - lhs: Starting `NSColor` when t = 0
+        ///   - rhs: Ending `NSColor` when t = 1
+        ///   - t: Interpolation factor (typically between 0 and 1)
+        ///   - type: Interpolation type. SwiftUI uses `okLAB`. My favorites is `okLCH`.
+        /// - Returns: Interpolated `NSColor`
+        public static func lerp(_ lhs: NSColor, _ rhs: NSColor, _ t: Double, type: ColorInterpolationType) -> Self {
+            return colorLerp(lhs, rhs, t, type: type) as! Self
+        }
     }
 
-    /// Linearly interpolates between two `NSColor` values using the specified color interpolation type
-    /// - Parameters:
-    ///   - lhs: Starting `NSColor` when t = 0
-    ///   - rhs: Ending `NSColor` when t = 1
-    ///   - t: Interpolation factor (typically between 0 and 1)
-    ///   - type: Interpolation type. SwiftUI uses `okLAB`. My favorites is `okLCH`.   
-    /// - Returns: Interpolated `NSColor`
-    public static func lerp(_ lhs: NSColor, _ rhs: NSColor, _ t: Double, type: ColorInterpolationType) -> Self {
-        return colorLerp(lhs, rhs, t, type: type) as! Self
+    extension NSEdgeInsets: Tweenable {
+        /// Linearly interpolates between two NSEdgeInsets values
+        /// - Parameters:
+        ///   - lhs: Starting NSEdgeInsets when t=0
+        ///   - rhs: Ending NSEdgeInsets when t=1
+        ///   - t: Interpolation factor (typically between 0 and 1)
+        /// - Returns: Interpolated NSEdgeInsets
+        public static func lerp(_ lhs: NSEdgeInsets, _ rhs: NSEdgeInsets, _ t: Double) -> NSEdgeInsets {
+            NSEdgeInsets(
+                top: .lerp(lhs.top, rhs.top, t),
+                left: .lerp(lhs.left, rhs.left, t),
+                bottom: .lerp(lhs.bottom, rhs.bottom, t),
+                right: .lerp(lhs.right, rhs.right, t)
+            )
+        }
     }
-}
+#endif
 
-extension NSEdgeInsets: Tweenable {
-    /// Linearly interpolates between two NSEdgeInsets values
-    /// - Parameters:
-    ///   - lhs: Starting NSEdgeInsets when t=0
-    ///   - rhs: Ending NSEdgeInsets when t=1
-    ///   - t: Interpolation factor (typically between 0 and 1)
-    /// - Returns: Interpolated NSEdgeInsets
-    public static func lerp(_ lhs: NSEdgeInsets, _ rhs: NSEdgeInsets, _ t: Double) -> NSEdgeInsets {
-        NSEdgeInsets(
-            top: .lerp(lhs.top, rhs.top, t),
-            left: .lerp(lhs.left, rhs.left, t),
-            bottom: .lerp(lhs.bottom, rhs.bottom, t),
-            right: .lerp(lhs.right, rhs.right, t)
+extension SIMD2: Tweenable where Scalar: Tweenable {
+    public static func lerp(_ lhs: SIMD2<Scalar>, _ rhs: SIMD2<Scalar>, _ t: Double) -> SIMD2<Scalar> {
+        SIMD2<Scalar>(
+            x: Scalar.lerp(lhs.x, rhs.x, t),
+            y: Scalar.lerp(lhs.y, rhs.y, t)
         )
     }
 }
-#endif
+
+extension SIMD3: Tweenable where Scalar: Tweenable {
+    public static func lerp(_ lhs: SIMD3<Scalar>, _ rhs: SIMD3<Scalar>, _ t: Double) -> SIMD3<Scalar> {
+        SIMD3<Scalar>(
+            x: Scalar.lerp(lhs.x, rhs.x, t),
+            y: Scalar.lerp(lhs.y, rhs.y, t),
+            z: Scalar.lerp(lhs.z, rhs.z, t)
+        )
+    }
+}
+
+extension SIMD4: Tweenable where Scalar: Tweenable {
+    public static func lerp(_ lhs: SIMD4<Scalar>, _ rhs: SIMD4<Scalar>, _ t: Double) -> SIMD4<Scalar> {
+        SIMD4<Scalar>(
+            x: Scalar.lerp(lhs.x, rhs.x, t),
+            y: Scalar.lerp(lhs.y, rhs.y, t),
+            z: Scalar.lerp(lhs.z, rhs.z, t),
+            w: Scalar.lerp(lhs.w, rhs.w, t)
+        )
+    }
+}
+
+extension SIMD8: Tweenable where Scalar: Tweenable {
+    public static func lerp(_ lhs: SIMD8<Scalar>, _ rhs: SIMD8<Scalar>, _ t: Double) -> SIMD8<Scalar> {
+        SIMD8<Scalar>(
+            lowHalf: SIMD4<Scalar>.lerp(lhs.lowHalf, rhs.lowHalf, t),
+            highHalf: SIMD4<Scalar>.lerp(lhs.highHalf, rhs.highHalf, t)
+        )
+    }
+}
+
+extension SIMD16: Tweenable where Scalar: Tweenable {
+    public static func lerp(_ lhs: SIMD16<Scalar>, _ rhs: SIMD16<Scalar>, _ t: Double) -> SIMD16<Scalar> {
+        SIMD16<Scalar>(
+            lowHalf: SIMD8<Scalar>.lerp(lhs.lowHalf, rhs.lowHalf, t),
+            highHalf: SIMD8<Scalar>.lerp(lhs.highHalf, rhs.highHalf, t)
+        )
+    }
+}
+
+extension SIMD32: Tweenable where Scalar: Tweenable {
+    public static func lerp(_ lhs: SIMD32<Scalar>, _ rhs: SIMD32<Scalar>, _ t: Double) -> SIMD32<Scalar> {
+        SIMD32<Scalar>(
+            lowHalf: SIMD16<Scalar>.lerp(lhs.lowHalf, rhs.lowHalf, t),
+            highHalf: SIMD16<Scalar>.lerp(lhs.highHalf, rhs.highHalf, t)
+        )
+    }
+}
+
+extension SIMD64: Tweenable where Scalar: Tweenable {
+    public static func lerp(_ lhs: SIMD64<Scalar>, _ rhs: SIMD64<Scalar>, _ t: Double) -> SIMD64<Scalar> {
+        SIMD64<Scalar>(
+            lowHalf: SIMD32<Scalar>.lerp(lhs.lowHalf, rhs.lowHalf, t),
+            highHalf: SIMD32<Scalar>.lerp(lhs.highHalf, rhs.highHalf, t)
+        )
+    }
+}
