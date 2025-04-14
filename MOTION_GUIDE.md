@@ -269,6 +269,22 @@ The `TransformTo` motion animates using a transformation function applied to the
 TransformTo { value in value * 2 }
 ```
 
+### Lerp
+
+The `Lerp` motion interpolates using a custom function.
+
+```swift
+Lerp { initial, t in
+    // Custom interpolation logic
+    return initial * t
+}
+
+Lerp { t in
+    // Custom interpolation logic
+    return sin(t * .pi)
+}
+```
+
 ## Common Modifiers
 
 All motion types support the following modifiers:
@@ -288,6 +304,13 @@ motion.duration(.relative(0.5))  // Relative to parent motion
 ```swift
 motion.delay(0.2)  // Delay in seconds
 motion.delay(.relative(0.1))  // Relative delay
+```
+
+### DelayAfter
+
+```swift
+motion.delayAfter(0.2)  // Delay after the motion ends  
+motion.delayAfter(.relative(0.1))  // Relative delay after the motion ends
 ```
 
 ### Curve
@@ -420,3 +443,5 @@ struct MyAnimatableType: Tweenable {
     }
 }
 ```
+
+**Note**: `Tweenable` is not required for motions to work, but it is required for `To` motion.

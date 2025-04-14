@@ -231,12 +231,13 @@ struct ComplexMovement: View {
 <img src="https://github.com/dankinsoid/Resources/blob/main/VDAnimation/uikit.gif?raw=true" height="80">
 
 ```swift
-motionDisplayLink(Value()) { [label] value in
+motionDisplayLink(Value(amount: 0, color: .systemRed)) { [label] value in
     label.text = "\(value.amount) USD"
     label.textColor = value.color
 } motion: {
     To(Value(amount: 1000, color: .systemGreen))
         .delay(.relative(0.2))
+        .delayAfter(.relative(0.2))
         .duration(2)
 }
 .play()
