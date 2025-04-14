@@ -45,12 +45,11 @@ struct SimpleAnimation: View {
         Circle()
             .fill(Color.blue)
             .withMotion(_scale) { view, value in
-               view
-                  .scaleEffect(value)
-                  .frame(width: 100, height: 100)
+               view.scaleEffect(value)
             } motion: {
                 To(2.0).duration(1.0).curve(.easeInOut).autoreverse()
             }
+            .frame(width: 100, height: 100)
             .onAppear {
                 $scale.play(repeat: true)
             }
