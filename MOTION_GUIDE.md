@@ -363,9 +363,17 @@ VDAnimation provides a rich set of built-in animation curves:
 @MotionState private var complexState = MyTweenable(initialValue: 0)
 ```
 
-### WithMotion View
+### withMotion modifier and WithMotion View
 
 ```swift
+Circle()
+    .withMotion(_state) { view, value in
+        view.opacity(value)
+    } motion: {
+        To(1.0).duration(0.5)
+    }
+
+// or
 WithMotion(_state) { value in
     // View using animated value
     Circle()
