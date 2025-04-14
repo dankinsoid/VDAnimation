@@ -442,6 +442,9 @@ struct MyAnimatableType: Tweenable {
         )
     }
 }
+
+// Method 3: Extending existing Codable type
+extension MyCodableType: Tweenable {}
 ```
 
 VDAnimation add `Tweenable` conformance to most common types:
