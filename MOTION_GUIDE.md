@@ -42,17 +42,18 @@ struct SimpleAnimation: View {
     @MotionState private var scale = 1.0
     
     var body: some View {
-        WithMotion(_scale) { value in
-            Circle()
-                .fill(Color.blue)
-                .scaleEffect(value)
-                .frame(width: 100, height: 100)
-        } motion: {
-            To(2.0).duration(1.0).curve(.easeInOut).autoreverse()
-        }
-        .onAppear {
-            $scale.play(repeat: true)
-        }
+        Circle()
+            .fill(Color.blue)
+            .withMotion(_scale) { view, value in
+               view
+                  .scaleEffect(value)
+                  .frame(width: 100, height: 100)
+            } motion: {
+                To(2.0).duration(1.0).curve(.easeInOut).autoreverse()
+            }
+            .onAppear {
+                $scale.play(repeat: true)
+            }
     }
 }
 ```
