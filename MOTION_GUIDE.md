@@ -19,6 +19,7 @@ This comprehensive guide demonstrates the capabilities of the VDAnimation librar
    - [Sync](#sync)
    - [Steps](#steps)
    - [TransformTo](#transformto)
+   - [Lerp](#lerp)
 - [Common Modifiers](#common-modifiers)
 - [Animation Curves](#animation-curves)
 - [Integration with SwiftUI](#integration-with-swiftui)
