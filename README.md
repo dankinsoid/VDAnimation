@@ -2,7 +2,7 @@
 
 ## Declarative Animations for SwiftUI
 
-VDAnimation provides a powerful, declarative way to create complex animations in SwiftUI with minimal code. Compose animations sequentially, in parallel, with custom timing and curves.
+VDAnimation provides a powerful, declarative way to create complex animations in Swift with minimal code. Compose animations sequentially, in parallel, with custom timing and curves.
 
 ## Features
 
@@ -12,6 +12,7 @@ VDAnimation provides a powerful, declarative way to create complex animations in
 - 🎯 Side effects
 - 🏗 Built-in support for custom value interpolation
 - 📱 Working on iOS 13 and macOS 10.15 or later
+- 🧩 SwiftUI and UIKit support
 
 ## Examples
 
