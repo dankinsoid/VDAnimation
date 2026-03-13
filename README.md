@@ -41,14 +41,14 @@ struct LoaderAnimation: View {
         } motion: {
             Sequential {
                 Parallel()
-                    .end(arcSize) // animate .end property of the state
+                    .end(arcSize) // animate .end property to 0.4
                     .curve(.cubicEaseIn)
     
-                To(Tween(1 - arcSize, 1.0)) // animate the whole state
+                To(Tween(1 - arcSize, 1.0)) // animate the whole state to (0.6, 1.0)
                     .duration(.relative((1 - arcSize) / (1 + arcSize))) // compute duration to keep movement speed constant
     
                 Parallel()
-                    .start(1.0 - 0.01) // animate .start property of the state
+                    .start(1.0 - 0.01) // animate .start property to 0.99
                     .curve(.cubicEaseOut)
             }
             .duration(1)
@@ -86,7 +86,7 @@ struct DotsAnimation: View {
                     .duration(0.3)
                     .curve(.easeInOut)
                     .autoreverse()
-                    .delay(.relative(Double(index) / Double(values.count * 2 - 1)))
+                    .delay(.relative(Double(index) / Double(values.count * 2 - 1))) // delay based on index
             }
             .sync() // synchronize all loaders across the app
         }
