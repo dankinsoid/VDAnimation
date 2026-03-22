@@ -244,6 +244,23 @@ motionDisplayLink(Value(amount: 0, color: .systemRed)) { [label] value in
 .play()
 ```
 
+## Color Interpolation
+
+VDAnimation interpolates colors in perceptually uniform color spaces for natural-looking transitions.
+
+| Mode | Description | Speed |
+|------|-------------|-------|
+| `displayP3` | Linear in gamma-encoded Display P3. Matches UIKit `CGGradient`. | Fastest |
+| `okLAB` (default) | Perceptually uniform, Cartesian. Matches SwiftUI `LinearGradient`. | Fast |
+| `okLCH` | Adaptive OKLCH/OKLab blend based on chroma difference. Best for static gradients. | Moderate |
+
+`okLCH` uses OKLCH hue path when chromas are similar and shifts toward OKLab when they diverge — avoiding artifacts from the polar coordinate singularity at low chroma.
+
+```swift
+// Set globally
+ColorInterpolationType.default = .okLCH
+```
+
 ## Usage
 
 ### [Motion Guide](MOTION_GUIDE.md)

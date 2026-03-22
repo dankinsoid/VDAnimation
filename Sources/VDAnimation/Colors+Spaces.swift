@@ -3,15 +3,19 @@ import SwiftUI
 public enum ColorInterpolationType: CaseIterable, Hashable {
     public static var `default` = ColorInterpolationType.okLAB
 
-    /// Most efficient
+    /// Fastest. Linear interpolation in gamma-encoded Display P3 components.
+    /// Matches UIKit's `CGGradient` behavior.
     case displayP3
 
-    /// Most popular; used by SwiftUI under the hood for animations and gradients. A bit inefficient.
+    /// Default. Perceptually uniform interpolation in OKLab (Cartesian).
+    /// Matches SwiftUI's `LinearGradient` behavior. Good balance of quality and performance.
     case okLAB
 
-    /// Most beautiful and most inefficient; inefficiency is close to `okLAB` but slightly worse.
-    ///
-    /// - Note: This is the OKLCH color space, but I apply a hue interpolation correction based on the chroma component to avoid overly saturated intermediate colors when interpolating between saturated and desaturated colors.
+    /// Adaptive blend of OKLCH and OKLab based on chroma difference (smootherstep).
+    /// Uses OKLCH hue path when chromas are similar, shifts toward OKLab when they
+    /// diverge — avoiding artifacts from the polar coordinate singularity at low chroma.
+    /// Best quality for static gradients; for animations the difference from `okLAB`
+    /// is rarely noticeable and the extra cost may not be worth it.
     case okLCH
 }
 
