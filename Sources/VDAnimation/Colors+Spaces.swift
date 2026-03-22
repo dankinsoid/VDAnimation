@@ -11,9 +11,10 @@ public enum ColorInterpolationType: CaseIterable, Hashable {
     /// Matches SwiftUI's `LinearGradient` behavior. Good balance of quality and performance.
     case okLAB
 
-    /// Adaptive blend of OKLCH and OKLab based on chroma difference (smootherstep).
-    /// Uses OKLCH hue path when chromas are similar, shifts toward OKLab when they
-    /// diverge — avoiding artifacts from the polar coordinate singularity at low chroma.
+    /// Adaptive blend of OKLCH and OKLab based on minimum chroma (smootherstep).
+    /// Uses OKLCH hue path when both colors are saturated, shifts toward OKLab when
+    /// either color is near-achromatic — avoiding artifacts from the polar coordinate
+    /// singularity at low chroma.
     /// Best quality for static gradients; for animations the difference from `okLAB`
     /// is rarely noticeable and the extra cost may not be worth it.
     case okLCH
@@ -464,9 +465,11 @@ struct OKLCH: Tweenable {
     }
 
     public static func mix(_ from: OKLCH, _ to: OKLCH, _ t: Double) -> OKLCH {
-        // Blend between OKLab (good L/C transitions) and OKLCH (good hue path)
-        // based on how different the chromas are.
-        let x = min(1.0, abs(from.c - to.c) / 0.3)
+        // Blend between OKLab and OKLCH based on minimum chroma:
+        // near-achromatic colors (low chroma) use OKLab to avoid hue singularity;
+        // saturated colors use OKLCH for correct hue interpolation.
+        // 0.25 is an empirically chosen threshold for "near-achromatic" — below this, the hue angle becomes unstable and can cause artifacts in interpolation. The smoothstep function creates a smooth transition between the two interpolation methods.
+        let x = 1.0 - min(1.0, min(from.c, to.c) / 0.25)
         let x3 = x * x * x
         let strength = x3 * (x * (6 * x - 15) + 10)
 
@@ -483,7 +486,7 @@ struct OKLCH: Tweenable {
             h: cycleLerp(from.h, to.h, t)
         )
 
-        // Blend two whole colors: at equal chroma → pure OKLCH; at large delta → OKLab
+        // Blend: high min chroma → pure OKLCH; near-achromatic → OKLab
         return OKLCH(
             l: .lerp(fromLCH.l, fromLab.l, strength),
             c: .lerp(fromLCH.c, fromLab.c, strength),

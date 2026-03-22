@@ -1,7 +1,6 @@
 import SwiftUI
 
 public extension View {
-
     /// Applies motion animation to a view with a given state.
     ///
     /// - Parameters:
@@ -66,7 +65,7 @@ public struct WithMotion<Value, Content: View>: View {
     }
 
     public var body: some View {
-        Group{}.modifier(
+        Group {}.modifier(
             WithMotionModifier(
                 state: state,
                 motion: motion(),
@@ -76,14 +75,13 @@ public struct WithMotion<Value, Content: View>: View {
     }
 }
 
-extension WithMotion where Value == Double {
-
+public extension WithMotion where Value == Double {
     /// Creates a new motion animated view.
     ///
     /// - Parameters:
     ///   - state: The motion state to animate.
     ///   - content: A closure that takes the current value to create the animated content.
-    public init(
+    init(
         _ state: MotionState<Value>,
         @ViewBuilder content: @escaping (Value) -> Content
     ) {
@@ -100,7 +98,6 @@ extension WithMotion where Value == Double {
 /// Use this to create state that can be animated with motion animations.
 @propertyWrapper
 public struct MotionState<Value>: DynamicProperty, Identifiable {
-
     /// The underlying value that will be animated.
     public var wrappedValue: Value {
         get { value }
@@ -156,15 +153,14 @@ public struct MotionState<Value>: DynamicProperty, Identifiable {
 // This type is needed bacause Binding caches values that leads to unpredictable behaviuor so Binding itself should be a computed property
 @propertyWrapper
 public struct BindingRef<Value> {
-    
     let getter: () -> Value
     let setter: (Value) -> Void
-    
+
     public var wrappedValue: Value {
         get { getter() }
         nonmutating set { setter(newValue) }
     }
-    
+
     public var projectedValue: Binding<Value> {
         Binding {
             wrappedValue
@@ -247,7 +243,7 @@ struct WithMotionModifier<Value, Result: View>: ViewModifier {
         wrapper.info = info
         return info
     }
-    
+
     /// A wrapper class to store animation data between view updates.
     private final class Wrapper {
         var info: MotionData<Value>?
