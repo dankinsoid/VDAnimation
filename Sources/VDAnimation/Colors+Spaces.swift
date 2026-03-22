@@ -462,7 +462,7 @@ struct OKLCH: Tweenable {
     public static func mix(_ from: OKLCH, _ to: OKLCH, _ t: Double) -> OKLCH {
         // Blend between OKLab (good L/C transitions) and OKLCH (good hue path)
         // based on how different the chromas are.
-        let x = abs(from.c - to.c) / 0.3
+        let x = min(1.0, abs(from.c - to.c) / 0.3)
         let x3 = x * x * x
         let strength = x3 * (x * (6 * x - 15) + 10)
 
