@@ -20,6 +20,7 @@ import SwiftUI
         ("DarkBlue→Cyan",     DisplayP3(r: 0.0, g: 0.0, b: 0.5), DisplayP3(r: 0.4, g: 0.9, b: 1.0)),
         ("Pink→Gold",         DisplayP3(r: 0.9, g: 0.3, b: 0.5), DisplayP3(r: 0.85, g: 0.7, b: 0.2)),
         ("Teal→Coral",        DisplayP3(r: 0.1, g: 0.7, b: 0.7), DisplayP3(r: 0.95, g: 0.4, b: 0.3)),
+        ("Purple→MintGreen",  DisplayP3(r: 0.6, g: 0.1, b: 0.9), DisplayP3(r: 0.4, g: 0.75, b: 0.55)),
     ]
     ScrollView {
         VStack(spacing: 16) {
@@ -32,6 +33,8 @@ import SwiftUI
                     let toLCH = OKLCH(xyz: toXYZ)
                     
                     Text(label)
+                    Text("from: \(fromLCH.c) \(toLCH.c)")
+                        
                        
                     ForEach(Array(colorSpaces.enumerated()), id: \.offset) { _, space in
                         let (name, lerp) = space

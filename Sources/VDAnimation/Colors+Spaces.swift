@@ -462,8 +462,9 @@ struct OKLCH: Tweenable {
     public static func mix(_ from: OKLCH, _ to: OKLCH, _ t: Double) -> OKLCH {
         // Blend between OKLab (good L/C transitions) and OKLCH (good hue path)
         // based on how different the chromas are.
-        let deltaC = abs(from.c - to.c)
-        let strength = min(1, deltaC / 0.3)
+        let x = abs(from.c - to.c) / 0.3
+        let x3 = x * x * x
+        let strength = x3 * (x * (6 * x - 15) + 10)
 
         // OKLab interpolation: natural L/C path
         let labFrom = from.okLab
@@ -545,8 +546,8 @@ enum sRGBTransfer {
         if c <= 0.0031308 { return 12.92 * c }
         // x^(1/2.4) ≈ x^(5/12) = (x^(1/4))^(5/3) = sqrt(sqrt(x))^(5/3)
         // Approximate via sqrt(sqrt(x)) * correction polynomial
-        let s = sqrt(c)        // c^0.5
-        let ss = sqrt(s)       // c^0.25
+        let s = sqrt(c) // c^0.5
+        let ss = sqrt(s) // c^0.25
         // c^(5/12) ≈ lerp between c^0.25 and c^0.5 with correction
         // 5/12 = 0.4167, between 0.25 and 0.5
         // weight = (5/12 - 1/4) / (1/2 - 1/4) = (5/12 - 3/12) / (6/12 - 3/12) = 2/3
@@ -589,8 +590,8 @@ func fastSinCos(_ degrees: Double) -> (sin: Double, cos: Double) {
 }
 
 private let sinCosLUTSize = 720
-private let sinLUT: [Double] = (0..<720).map { sin(Double($0) * .pi / 360) }
-private let cosLUT: [Double] = (0..<720).map { cos(Double($0) * .pi / 360) }
+private let sinLUT: [Double] = (0 ..< 720).map { sin(Double($0) * .pi / 360) }
+private let cosLUT: [Double] = (0 ..< 720).map { cos(Double($0) * .pi / 360) }
 
 private func clamp(_ x: Double) -> CGFloat {
     CGFloat(max(0, min(1, x)))
