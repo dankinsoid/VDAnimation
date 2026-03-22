@@ -195,6 +195,9 @@ struct WithMotionModifier<Value, Result: View>: ViewModifier {
     func body(content: Content) -> some View {
         if wrapper.needReset {
             wrapper.info = nil
+            DispatchQueue.main.async {
+                _ = info()
+            }
         }
         return content.modifier(
             AnimatedModifier(
