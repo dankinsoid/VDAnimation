@@ -503,10 +503,12 @@ struct OKLCH: Tweenable {
     public static func mix(_ from: OKLCH, _ to: OKLCH, _ t: Double) -> OKLCH {
         // Blend between OKLab and OKLCH based on chroma difference:
         // when colors have similar chroma, use OKLch for accurate hue interpolation; when chroma differs significantly, shift toward OKLab to avoid artifacts from the hue angle discontinuity at low chroma.
-        // 0.25 is an empirically chosen threshold.
-        let x = min(1.0, abs(from.c - to.c) / 0.25)
-        let x3 = x * x * x
-        let strength = x3 * (x * (6 * x - 15) + 10)
+        // also, when one of the colors is near-achromatic, shift toward OKLab to avoid artifacts from the polar coordinate singularity at low chroma.
+        let dif = abs(from.c - to.c)
+        let minSum = min(from.c, to.c) + dif + 0.0001
+        let x = dif / minSum
+        let x2 = x * x
+        let strength = 3 * x2 - 2 * x * x2 // x // x3 * (x * (6 * x - 15) + 10)
 
         // OKLab interpolation: natural L/C path
         let labFrom = from.okLab
