@@ -320,9 +320,10 @@ extension Date: Tweenable {
         ///   - rhs: Ending `UIColor` when t = 1
         ///   - t: Interpolation factor (typically between 0 and 1)
         ///   - type: Interpolation type. SwiftUI uses `okLAB`. My favorites is `okLCH`.
+        ///   - premultiplied: When `true` (default), transparent colors contribute less to the result hue.
         /// - Returns: Interpolated `UIColor`
-        public static func lerp(_ lhs: UIColor, _ rhs: UIColor, _ t: Double, type: ColorInterpolationType) -> Self {
-            return colorLerp(lhs, rhs, t, type: type) as! Self
+        public static func lerp(_ lhs: UIColor, _ rhs: UIColor, _ t: Double, type: ColorInterpolationType, premultiplied: Bool = true) -> Self {
+            return colorLerp(lhs, rhs, t, type: type, premultiplied: premultiplied) as! Self
         }
     }
 
@@ -362,9 +363,10 @@ extension Color: Tweenable {
     ///   - rhs: Ending `Color` when t = 1
     ///   - t: Interpolation factor (typically between 0 and 1)
     ///   - type: Interpolation type. SwiftUI uses `okLAB`. My favorites is `okLCH`.
+    ///   - premultiplied: When `true` (default), transparent colors contribute less to the result hue.
     /// - Returns: Interpolated `Color`
-    public static func lerp(_ lhs: Color, _ rhs: Color, _ t: Double, type: ColorInterpolationType) -> Color {
-        return colorLerp(lhs, rhs, t, type: type)
+    public static func lerp(_ lhs: Color, _ rhs: Color, _ t: Double, type: ColorInterpolationType, premultiplied: Bool = true) -> Color {
+        return colorLerp(lhs, rhs, t, type: type, premultiplied: premultiplied)
     }
 }
 
@@ -512,9 +514,10 @@ extension ClosedRange: Tweenable where Bound: Tweenable {
         ///   - rhs: Ending `NSColor` when t = 1
         ///   - t: Interpolation factor (typically between 0 and 1)
         ///   - type: Interpolation type. SwiftUI uses `okLAB`. My favorites is `okLCH`.
+        ///   - premultiplied: When `true` (default), transparent colors contribute less to the result hue.
         /// - Returns: Interpolated `NSColor`
-        public static func lerp(_ lhs: NSColor, _ rhs: NSColor, _ t: Double, type: ColorInterpolationType) -> Self {
-            return colorLerp(lhs, rhs, t, type: type) as! Self
+        public static func lerp(_ lhs: NSColor, _ rhs: NSColor, _ t: Double, type: ColorInterpolationType, premultiplied: Bool = true) -> Self {
+            return colorLerp(lhs, rhs, t, type: type, premultiplied: premultiplied) as! Self
         }
     }
 

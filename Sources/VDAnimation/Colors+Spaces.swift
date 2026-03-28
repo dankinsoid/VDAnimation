@@ -25,35 +25,71 @@ protocol AnyColor {
     init(rgba: WithOpacity<DisplayP3>)
 }
 
-func colorLerp<C: AnyColor & Hashable>(_ lhs: C, _ rhs: C, _ t: Double, type: ColorInterpolationType = .default) -> C {
+/// Interpolates between two colors in the specified color space.
+/// - Parameters:
+///   - lhs: Starting color when t = 0
+///   - rhs: Ending color when t = 1
+///   - t: Interpolation factor (typically 0…1)
+///   - type: Color space used for interpolation
+///   - premultiplied: When `true` (default), each color's contribution is weighted
+///     by its opacity — so a fully transparent color does not pull the visible hue
+///     toward itself. When `false`, color components are interpolated independently
+///     of opacity (straight alpha).
+///
+/// ```swift
+/// // Transparent-black → red: premultiplied keeps pure red, only opacity changes
+/// colorLerp(clear, red, 0.5)                       // ~red at 50 % opacity
+/// colorLerp(clear, red, 0.5, premultiplied: false)  // dark-red at 50 % opacity
+/// ```
+func colorLerp<C: AnyColor & Hashable>(
+    _ lhs: C,
+    _ rhs: C,
+    _ t: Double,
+    type: ColorInterpolationType = .default,
+    premultiplied: Bool = true
+) -> C {
     let l = lhs.rgba
     let r = rhs.rgba
+    let opacity = Double.lerp(l.opacity, r.opacity, t)
+
+    // Alpha-weighted interpolation parameter:
+    // shifts t so that a transparent color contributes less to the result hue.
+    let ct: Double
+    if premultiplied {
+        let denom = l.opacity * (1 - t) + r.opacity * t
+        // When both colors are fully transparent the hue is invisible —
+        // any value of ct is valid, so we fall back to the original t.
+        ct = denom < 1e-10 ? t : (r.opacity * t) / denom
+    } else {
+        ct = t
+    }
+
     switch type {
     case .displayP3:
         return C(
             rgba: WithOpacity<DisplayP3>(
-                DisplayP3.lerp(l.color, r.color, t),
-                opacity: .lerp(l.opacity, r.opacity, t)
+                DisplayP3.lerp(l.color, r.color, ct),
+                opacity: opacity
             )
         )
     case .okLCH:
         let lo = oklch(for: l.color)
         let ro = oklch(for: r.color)
-        let value = OKLCH.mix(lo, ro, t)
+        let value = OKLCH.mix(lo, ro, ct)
         return C(
             rgba: WithOpacity<DisplayP3>(
                 DisplayP3(xyz: value.xyz),
-                opacity: .lerp(l.opacity, r.opacity, t)
+                opacity: opacity
             )
         )
     case .okLAB:
         let lo = OKLab(xyz: l.color.xyz)
         let ro = OKLab(xyz: r.color.xyz)
-        let value = OKLab.lerp(lo, ro, t)
+        let value = OKLab.lerp(lo, ro, ct)
         return C(
             rgba: WithOpacity<DisplayP3>(
                 DisplayP3(xyz: value.xyz),
-                opacity: .lerp(l.opacity, r.opacity, t)
+                opacity: opacity
             )
         )
     }
@@ -465,11 +501,10 @@ struct OKLCH: Tweenable {
     }
 
     public static func mix(_ from: OKLCH, _ to: OKLCH, _ t: Double) -> OKLCH {
-        // Blend between OKLab and OKLCH based on minimum chroma:
-        // near-achromatic colors (low chroma) use OKLab to avoid hue singularity;
-        // saturated colors use OKLCH for correct hue interpolation.
-        // 0.25 is an empirically chosen threshold for "near-achromatic" — below this, the hue angle becomes unstable and can cause artifacts in interpolation. The smoothstep function creates a smooth transition between the two interpolation methods.
-        let x = 1.0 - min(1.0, min(from.c, to.c) / 0.25)
+        // Blend between OKLab and OKLCH based on chroma difference:
+        // when colors have similar chroma, use OKLch for accurate hue interpolation; when chroma differs significantly, shift toward OKLab to avoid artifacts from the hue angle discontinuity at low chroma.
+        // 0.25 is an empirically chosen threshold.
+        let x = min(1.0, abs(from.c - to.c) / 0.25)
         let x3 = x * x * x
         let strength = x3 * (x * (6 * x - 15) + 10)
 

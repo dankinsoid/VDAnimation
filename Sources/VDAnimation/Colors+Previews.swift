@@ -10,18 +10,19 @@ import SwiftUI
          { l, r, t in OKLCH.mix(OKLCH(xyz: l), OKLCH(xyz: r), t).xyz }),
     ]
     let gradients: [(String, DisplayP3, DisplayP3)] = [
-        ("Blue→White-Yellow", DisplayP3(r: 0.0, g: 0.2, b: 1.0), DisplayP3(r: 1.0, g: 0.97, b: 0.75)),
-        ("Red→Green",         DisplayP3(r: 1.0, g: 0.0, b: 0.0), DisplayP3(r: 0.0, g: 0.8, b: 0.2)),
-        ("Red→Blue",          DisplayP3(r: 1.0, g: 0.0, b: 0.0), DisplayP3(r: 0.0, g: 0.2, b: 1.0)),
-        ("Red→White",         DisplayP3(r: 1.0, g: 0.0, b: 0.0), DisplayP3(r: 1.0, g: 1.0, b: 1.0)),
-        ("Green→Gray",        DisplayP3(r: 0.0, g: 0.8, b: 0.2), DisplayP3(r: 0.5, g: 0.5, b: 0.5)),
-        ("Black→Orange",      DisplayP3(r: 0.0, g: 0.0, b: 0.0), DisplayP3(r: 1.0, g: 0.5, b: 0.0)),
-        ("White→Black",       DisplayP3(r: 1.0, g: 1.0, b: 1.0), DisplayP3(r: 0.0, g: 0.0, b: 0.0)),
-        ("DarkBlue→Cyan",     DisplayP3(r: 0.0, g: 0.0, b: 0.5), DisplayP3(r: 0.4, g: 0.9, b: 1.0)),
-        ("Pink→Gold",         DisplayP3(r: 0.9, g: 0.3, b: 0.5), DisplayP3(r: 0.85, g: 0.7, b: 0.2)),
-        ("Teal→Coral",        DisplayP3(r: 0.1, g: 0.7, b: 0.7), DisplayP3(r: 0.95, g: 0.4, b: 0.3)),
-        ("Purple→MintGreen",  DisplayP3(r: 0.6, g: 0.1, b: 0.9), DisplayP3(r: 0.4, g: 0.75, b: 0.55)),
+        ("Blue→White-Yellow",   DisplayP3(r: 0.0, g: 0.2, b: 1.0), DisplayP3(r: 1.0, g: 0.97, b: 0.75)),
+        ("Red→Green",           DisplayP3(r: 1.0, g: 0.0, b: 0.0), DisplayP3(r: 0.0, g: 0.8, b: 0.2)),
+        ("Red→Blue",            DisplayP3(r: 1.0, g: 0.0, b: 0.0), DisplayP3(r: 0.0, g: 0.2, b: 1.0)),
+        ("Red→White",           DisplayP3(r: 1.0, g: 0.0, b: 0.0), DisplayP3(r: 1.0, g: 1.0, b: 1.0)),
+        ("Green→Gray",          DisplayP3(r: 0.0, g: 0.8, b: 0.2), DisplayP3(r: 0.5, g: 0.5, b: 0.5)),
+        ("Black→Orange",        DisplayP3(r: 0.0, g: 0.0, b: 0.0), DisplayP3(r: 1.0, g: 0.5, b: 0.0)),
+        ("White→Black",         DisplayP3(r: 1.0, g: 1.0, b: 1.0), DisplayP3(r: 0.0, g: 0.0, b: 0.0)),
+        ("DarkBlue→Cyan",       DisplayP3(r: 0.0, g: 0.0, b: 0.5), DisplayP3(r: 0.4, g: 0.9, b: 1.0)),
+        ("Pink→Gold",           DisplayP3(r: 0.9, g: 0.3, b: 0.5), DisplayP3(r: 0.85, g: 0.7, b: 0.2)),
+        ("Teal→Coral",          DisplayP3(r: 0.1, g: 0.7, b: 0.7), DisplayP3(r: 0.95, g: 0.4, b: 0.3)),
+        ("Purple→MintGreen",    DisplayP3(r: 0.6, g: 0.1, b: 0.9), DisplayP3(r: 0.4, g: 0.75, b: 0.55)),
         ("MutedRose→MutedSage", DisplayP3(r: 0.75, g: 0.58, b: 0.62), DisplayP3(r: 0.58, g: 0.72, b: 0.62)),
+        ("MutedRose→Gray",      DisplayP3(r: 0.75, g: 0.58, b: 0.62), DisplayP3(r: 0.5, g: 0.5, b: 0.5)),
     ]
     ScrollView {
         VStack(spacing: 16) {
