@@ -531,6 +531,34 @@ struct OKLCH: Tweenable {
         )
     }
 
+    /// Chroma-weighted hue interpolation in pure OKLCH — no OKLab fallback.
+    ///
+    /// Analogous to premultiplied alpha: just as opacity weights a color's
+    /// contribution to the blended hue, here **chroma** weights it.
+    /// A near-achromatic color (low chroma) has an unreliable hue angle,
+    /// so it should not pull the result toward itself.
+    ///
+    /// ```swift
+    /// // Gray has low chroma → result hue stays close to the saturated color's hue.
+    /// OKLCH.chromaWeightedMix(saturatedRed, gray, 0.5)
+    /// ```
+    // @ai-generated(paired)
+    static func chromaWeightedMix(_ from: OKLCH, _ to: OKLCH, _ t: Double) -> OKLCH {
+        let l = Double.lerp(from.l, to.l, t)
+        let c = Double.lerp(from.c, to.c, t)
+
+        // Chroma-weighted hue parameter: each endpoint's chroma acts as its
+        // "opacity" for the hue channel — low chroma means the hue is unreliable
+        // and should contribute less.
+        let denom = from.c * (1 - t) + to.c * t
+        // When both chromas are near zero the hue is meaningless —
+        // fall back to plain t (any hue is equally valid).
+        let ht = denom < 1e-10 ? t : (to.c * t) / denom
+
+        let h = cycleLerp(from.h, to.h, ht)
+        return OKLCH(l: l, c: c, h: h)
+    }
+
     static func lerp(_ from: OKLCH, _ to: OKLCH, _ t: Double) -> OKLCH {
         OKLCH(
             l: .lerp(from.l, to.l, t),

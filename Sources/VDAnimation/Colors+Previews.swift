@@ -8,6 +8,8 @@ import SwiftUI
          { l, r, t in OKLCH.lerp(OKLCH(xyz: l), OKLCH(xyz: r), t).xyz }),
         ("OKLCH mix",
          { l, r, t in OKLCH.mix(OKLCH(xyz: l), OKLCH(xyz: r), t).xyz }),
+        ("OKLCH cw",
+         { l, r, t in OKLCH.chromaWeightedMix(OKLCH(xyz: l), OKLCH(xyz: r), t).xyz }),
     ]
     let gradients: [(String, DisplayP3, DisplayP3)] = [
         ("Blue→White-Yellow",   DisplayP3(r: 0.0, g: 0.2, b: 1.0), DisplayP3(r: 1.0, g: 0.97, b: 0.75)),
@@ -35,7 +37,7 @@ import SwiftUI
                     let toLCH = OKLCH(xyz: toXYZ)
                     
                     Text(label)
-                    Text("from: \(fromLCH.c) \(toLCH.c)")
+                    Text("from: \(fromLCH.h) \(toLCH.h)")
                         
                        
                     ForEach(Array(colorSpaces.enumerated()), id: \.offset) { _, space in
