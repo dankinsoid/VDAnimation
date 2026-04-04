@@ -494,9 +494,7 @@ public final class MotionFrameLink<Value>: AnimationDriver {
         let link = frameLinkFactory { [weak self] timestamp, targetTimestamp in
             self?.tick(timestamp: timestamp, targetTimestamp: targetTimestamp)
         }
-        if #available(iOS 15.0, macOS 14.0, tvOS 15.0, watchOS 8.0, *) {
-            link.preferredFrameRateRange = preferredFrameRateRange
-        }
+        link.preferredFrameRateRange = preferredFrameRateRange
         frameLink = link
         return link
     }
