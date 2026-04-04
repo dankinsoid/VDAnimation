@@ -227,12 +227,12 @@ struct ComplexMovement: View {
 }
 ```
 
-### UIKit CADisplayLink wrapper
+### CADisplayLink and UIUpdateLink wrapper for UIKit and AppKit animations
 
 <img src="https://github.com/dankinsoid/Resources/blob/main/VDAnimation/uikit.gif?raw=true" height="80">
 
 ```swift
-motionDisplayLink(Value(amount: 0, color: .systemRed)) { [label] value in
+motionFrameLink(Value(amount: 0, color: .systemRed)) { [label] value in
     label.text = "\(value.amount) USD"
     label.textColor = value.color
 } motion: {
