@@ -17,6 +17,14 @@ public protocol FrameLink: AnyObject {
     /// Pauses or resumes frame callbacks.
     var isPaused: Bool { get set }
 
+    /// The preferred range of frame rates for this link.
+    ///
+    /// ```swift
+    /// link.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 120, preferred: 120)
+    /// ```
+    @available(iOS 15.0, macOS 14.0, tvOS 15.0, watchOS 8.0, *)
+    var preferredFrameRateRange: CAFrameRateRange { get set }
+
     /// Starts delivering frame callbacks.
     func activate()
 
@@ -68,6 +76,12 @@ private final class CADisplayLinkAdapter: FrameLink {
     var isPaused: Bool {
         get { link?.isPaused ?? true }
         set { link?.isPaused = newValue }
+    }
+
+    @available(iOS 15.0, macOS 14.0, tvOS 15.0, watchOS 8.0, *)
+    var preferredFrameRateRange: CAFrameRateRange {
+        get { link?.preferredFrameRateRange ?? .default }
+        set { link?.preferredFrameRateRange = newValue }
     }
 
     func activate() {
@@ -126,6 +140,11 @@ private final class UIUpdateLinkAdapter: FrameLink {
     var isPaused: Bool {
         get { !updateLink.isEnabled }
         set { updateLink.isEnabled = !newValue }
+    }
+
+    var preferredFrameRateRange: CAFrameRateRange {
+        get { updateLink.preferredFrameRateRange }
+        set { updateLink.preferredFrameRateRange = newValue }
     }
 
     func activate() {
@@ -190,6 +209,11 @@ private final class AppKitDisplayLinkAdapter: FrameLink {
     var isPaused: Bool {
         get { link?.isPaused ?? true }
         set { link?.isPaused = newValue }
+    }
+
+    var preferredFrameRateRange: CAFrameRateRange {
+        get { link?.preferredFrameRateRange ?? .default }
+        set { link?.preferredFrameRateRange = newValue }
     }
 
     func activate() {
@@ -284,6 +308,20 @@ public final class MotionFrameLink<Value>: AnimationDriver {
         }
     }
 
+    /// The preferred range of frame rates for this animation.
+    ///
+    /// ```swift
+    /// link.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 120, preferred: 120)
+    /// ```
+    @available(iOS 15.0, macOS 14.0, tvOS 15.0, watchOS 8.0, *)
+    public var preferredFrameRateRange: CAFrameRateRange {
+        get { frameLink?.preferredFrameRateRange ?? _preferredFrameRateRange }
+        set {
+            _preferredFrameRateRange = newValue
+            frameLink?.preferredFrameRateRange = newValue
+        }
+    }
+
     /// The current progress of the animation (between 0.0 and 1.0)
     public var progress: Double {
         get { _progress }
@@ -307,6 +345,7 @@ public final class MotionFrameLink<Value>: AnimationDriver {
     }
 
     private var _progress = 0.0
+    private var _preferredFrameRateRange: CAFrameRateRange = .default
 
     private let apply: (Value) -> Void
     private var info: MotionData<Value>?
@@ -431,6 +470,9 @@ public final class MotionFrameLink<Value>: AnimationDriver {
         if let frameLink { return frameLink }
         let link = frameLinkFactory { [weak self] timestamp, targetTimestamp in
             self?.tick(timestamp: timestamp, targetTimestamp: targetTimestamp)
+        }
+        if #available(iOS 15.0, macOS 14.0, tvOS 15.0, watchOS 8.0, *) {
+            link.preferredFrameRateRange = _preferredFrameRateRange
         }
         frameLink = link
         return link
