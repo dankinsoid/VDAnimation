@@ -1,5 +1,18 @@
 import SwiftUI
 
+// MARK: - CAFrameRateRange + defaults
+
+@available(iOS 15.0, macOS 14.0, tvOS 15.0, watchOS 8.0, *)
+extension CAFrameRateRange {
+
+    /// Default frame rate range for motion animations (60–120 Hz, preferring 120).
+    ///
+    /// ```swift
+    /// link.preferredFrameRateRange = .motionDefault
+    /// ```
+    public static let motionDefault = CAFrameRateRange(minimum: 60, maximum: 120, preferred: 120)
+}
+
 // MARK: - FrameLink
 
 /// Abstraction over frame-driven update sources (`CADisplayLink`, `UIUpdateLink`).
@@ -313,11 +326,21 @@ public final class MotionFrameLink<Value>: AnimationDriver {
     /// ```swift
     /// link.preferredFrameRateRange = CAFrameRateRange(minimum: 60, maximum: 120, preferred: 120)
     /// ```
+    /// The preferred range of frame rates for this animation.
+    ///
+    /// Defaults to ``CAFrameRateRange/motionDefault`` (60–120 Hz, preferring 120).
+    /// Set before calling ``play(from:to:repeat:completion:)`` or change at any time.
+    ///
+    /// ```swift
+    /// if #available(iOS 15.0, *) {
+    ///     link.preferredFrameRateRange = .motionDefault
+    /// }
+    /// ```
     @available(iOS 15.0, macOS 14.0, tvOS 15.0, watchOS 8.0, *)
     public var preferredFrameRateRange: CAFrameRateRange {
-        get { frameLink?.preferredFrameRateRange ?? _preferredFrameRateRange }
+        get { _storedFrameRateRange as? CAFrameRateRange ?? .motionDefault }
         set {
-            _preferredFrameRateRange = newValue
+            _storedFrameRateRange = newValue
             frameLink?.preferredFrameRateRange = newValue
         }
     }
@@ -345,7 +368,7 @@ public final class MotionFrameLink<Value>: AnimationDriver {
     }
 
     private var _progress = 0.0
-    private var _preferredFrameRateRange: CAFrameRateRange = .default
+    private var _storedFrameRateRange: Any?
 
     private let apply: (Value) -> Void
     private var info: MotionData<Value>?
@@ -472,7 +495,7 @@ public final class MotionFrameLink<Value>: AnimationDriver {
             self?.tick(timestamp: timestamp, targetTimestamp: targetTimestamp)
         }
         if #available(iOS 15.0, macOS 14.0, tvOS 15.0, watchOS 8.0, *) {
-            link.preferredFrameRateRange = _preferredFrameRateRange
+            link.preferredFrameRateRange = preferredFrameRateRange
         }
         frameLink = link
         return link
